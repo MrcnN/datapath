@@ -18,7 +18,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import { getStorageSummary } from '../../lib/api';
-import type { StorageSummary, DatabaseFile, LogSpaceUsage, AutogrowthEvent } from '../../lib/types';
+import type { StorageSummary, DatabaseFile, LogSpaceUsage, AutogrowthEvent, FileIOLatency, DriveIOSummary } from '../../lib/types';
 import styles from './StoragePage.module.css';
 
 const LOG_REUSE_EXPLANATIONS: Record<string, string> = {
@@ -37,7 +37,7 @@ export default function StoragePage() {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'logs' | 'trace'>('files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'logs' | 'trace'>('files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -232,6 +232,116 @@ export default function StoragePage() {
     },
   ];
 
+  const ioColumns: Column<FileIOLatency>[] = [
+    {
+      key: 'file_name',
+      label: 'Dosya & Veritabanı',
+      sortable: true,
+      render: (item) => (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{item.file_name}</span>
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '1px 6px',
+                borderRadius: '4px',
+                background: item.file_type === 'ROWS' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+                color: item.file_type === 'ROWS' ? 'var(--accent-blue)' : '#eab308',
+                fontWeight: 600,
+              }}
+            >
+              {item.file_type}
+            </span>
+          </div>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px', fontFamily: 'monospace' }}>
+            {item.database_name} • {item.physical_name}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'drive_letter',
+      label: 'Sürücü',
+      sortable: true,
+      render: (item) => (
+        <span style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--text-primary)' }}>
+          {item.drive_letter}
+        </span>
+      ),
+    },
+    {
+      key: 'read_latency_ms',
+      label: 'Okuma Gecikmesi',
+      sortable: true,
+      render: (item) => (
+        <span style={{ fontWeight: 600, color: item.read_latency_ms > 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
+          {item.read_latency_ms.toFixed(1)} ms
+        </span>
+      ),
+    },
+    {
+      key: 'write_latency_ms',
+      label: 'Yazma Gecikmesi',
+      sortable: true,
+      render: (item) => (
+        <span style={{ fontWeight: 600, color: item.write_latency_ms > 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
+          {item.write_latency_ms.toFixed(1)} ms
+        </span>
+      ),
+    },
+    {
+      key: 'overall_latency_ms',
+      label: 'Toplam Gecikme & Durum',
+      sortable: true,
+      render: (item) => {
+        const isCrit = item.status === 'CRITICAL';
+        const isWarn = item.status === 'WARNING';
+        const isNorm = item.status === 'NORMAL';
+        const badgeColor = isCrit ? 'var(--status-danger)' : isWarn ? '#eab308' : isNorm ? 'var(--accent-blue)' : 'var(--status-success)';
+        const badgeBg = isCrit ? 'rgba(239, 68, 68, 0.15)' : isWarn ? 'rgba(234, 179, 8, 0.15)' : isNorm ? 'rgba(59, 130, 246, 0.15)' : 'rgba(34, 197, 94, 0.15)';
+        const labelText = isCrit ? 'Kritik Darboğaz' : isWarn ? 'Yüksek Gecikme' : isNorm ? 'Normal' : 'Mükemmel';
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 700, fontSize: '13px' }}>{item.overall_latency_ms.toFixed(1)} ms</span>
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '2px 8px',
+                borderRadius: '4px',
+                background: badgeBg,
+                color: badgeColor,
+                fontWeight: 600,
+              }}
+            >
+              {labelText}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'num_of_reads',
+      label: 'İşlem Sayısı (Read / Write)',
+      sortable: true,
+      render: (item) => (
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          {item.num_of_reads.toLocaleString()} okuma / {item.num_of_writes.toLocaleString()} yazma
+        </span>
+      ),
+    },
+    {
+      key: 'io_stall_ms',
+      label: 'Toplam Stall Süresi',
+      sortable: true,
+      render: (item) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+          {(item.io_stall_ms / 1000).toFixed(1)} sn
+        </span>
+      ),
+    },
+  ];
+
   const traceColumns: Column<AutogrowthEvent>[] = [
     {
       key: 'start_time',
@@ -383,6 +493,12 @@ export default function StoragePage() {
           <HardDrive size={16} /> Veritabanı Dosyaları ({summary?.files?.length || 0})
         </button>
         <button
+          className={`${styles.tabBtn} ${activeTab === 'io' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('io')}
+        >
+          <Activity size={16} /> Disk I/O Gecikmesi ({summary?.file_io_latencies?.length || 0})
+        </button>
+        <button
           className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('logs')}
         >
@@ -417,6 +533,75 @@ export default function StoragePage() {
             columns={fileColumns}
             emptyMessage="Eşleşen dosya bulunamadı."
           />
+        </div>
+      )}
+
+      {/* Tab: Disk I/O Latency */}
+      {activeTab === 'io' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {/* Drive Summary Cards */}
+          <div className={styles.driveGrid}>
+            {(summary?.drive_io_summaries || []).map((d) => {
+              const isCrit = d.status === 'CRITICAL';
+              const isWarn = d.status === 'WARNING';
+              const cardBorder = isCrit ? 'rgba(239, 68, 68, 0.4)' : isWarn ? 'rgba(234, 179, 8, 0.4)' : 'var(--border-card)';
+              return (
+                <div key={d.drive_letter} className={styles.driveCard} style={{ borderColor: cardBorder }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                      {d.drive_letter} Sürücüsü
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '11px',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        background: isCrit ? 'rgba(239, 68, 68, 0.15)' : isWarn ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+                        color: isCrit ? 'var(--status-danger)' : isWarn ? '#eab308' : 'var(--status-success)',
+                        fontWeight: 600,
+                      }}
+                    >
+                      {d.status === 'CRITICAL' ? 'I/O Darboğazı' : d.status === 'WARNING' ? 'Yüksek Gecikme' : d.status === 'NORMAL' ? 'Normal' : 'Mükemmel'}
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ort. Okuma</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: d.avg_read_latency_ms > 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
+                        {d.avg_read_latency_ms.toFixed(1)} ms
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ort. Yazma</div>
+                      <div style={{ fontSize: '15px', fontWeight: 600, color: d.avg_write_latency_ms > 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
+                        {d.avg_write_latency_ms.toFixed(1)} ms
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
+                    {d.file_count} dosya • {((d.total_reads + d.total_writes)).toLocaleString()} toplam I/O
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Latency Threshold Guide */}
+          <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--bg-surface)', padding: '10px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            <span><strong>Gecikme Eşikleri:</strong></span>
+            <span style={{ color: 'var(--status-success)' }}>● &lt;5 ms: Mükemmel (SSD / NVMe)</span>
+            <span style={{ color: 'var(--accent-blue)' }}>● 5-15 ms: Normal</span>
+            <span style={{ color: '#eab308' }}>● 15-25 ms: Yüksek Gecikme</span>
+            <span style={{ color: 'var(--status-danger)' }}>● &gt;25 ms: Kritik I/O Darboğazı</span>
+          </div>
+
+          <div className={styles.tableCard}>
+            <DataTable
+              data={summary?.file_io_latencies || []}
+              columns={ioColumns}
+              emptyMessage="Disk I/O gecikme bilgisi bulunamadı."
+            />
+          </div>
         </div>
       )}
 

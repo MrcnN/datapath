@@ -15,7 +15,14 @@ from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole, RoleM
 from app.schemas.high_availability import HAStatusResponse, AvailabilityGroup, AGReplica, AGDatabase
 from app.schemas.indexes import MissingIndex, UnusedIndex, IndexFragmentation, IndexSummary
 from app.schemas.wait_stats import CategoryWaitSummary, WaitStatEntry, WaitStatsSummary
-from app.schemas.storage import DatabaseFile, LogSpaceUsage, AutogrowthEvent, StorageSummary
+from app.schemas.storage import (
+    DatabaseFile,
+    LogSpaceUsage,
+    AutogrowthEvent,
+    StorageSummary,
+    FileIOLatency,
+    DriveIOSummary,
+)
 from app.schemas.tempdb_memory import TempDBSpaceBreakdown, TempDBFile, MemoryClerk, TempDBMemorySummary
 
 DEMO_DATABASES = [
@@ -499,15 +506,112 @@ DEMO_AUTOGROWTH_EVENTS = [
     AutogrowthEvent(start_time="2026-10-27 09:05:12", database_name="AppDb_Production", file_name="AppDb_Production_Data", file_type="Data", growth_mb=512.0, duration_ms=210.0),
 ]
 
+DEMO_FILE_IO_LATENCIES = [
+    FileIOLatency(
+        database_name="AppDb_Staging",
+        file_name="AppDb_Staging_Log",
+        file_type="LOG",
+        physical_name="L:\\SQLLogs\\AppDb_Staging_log.ldf",
+        drive_letter="L:",
+        read_latency_ms=18.5,
+        write_latency_ms=32.4,
+        overall_latency_ms=29.8,
+        num_of_reads=14200,
+        num_of_writes=84500,
+        io_stall_ms=2941000.0,
+        status="CRITICAL",
+    ),
+    FileIOLatency(
+        database_name="Reporting_Warehouse",
+        file_name="Reporting_Warehouse_Data",
+        file_type="ROWS",
+        physical_name="D:\\SQLData\\Reporting_Warehouse.mdf",
+        drive_letter="D:",
+        read_latency_ms=19.2,
+        write_latency_ms=8.5,
+        overall_latency_ms=17.4,
+        num_of_reads=125000,
+        num_of_writes=24000,
+        io_stall_ms=2592600.0,
+        status="WARNING",
+    ),
+    FileIOLatency(
+        database_name="AppDb_Production",
+        file_name="AppDb_Production_Log",
+        file_type="LOG",
+        physical_name="L:\\SQLLogs\\AppDb_Production_log.ldf",
+        drive_letter="L:",
+        read_latency_ms=8.2,
+        write_latency_ms=12.1,
+        overall_latency_ms=11.6,
+        num_of_reads=32000,
+        num_of_writes=198000,
+        io_stall_ms=2668000.0,
+        status="NORMAL",
+    ),
+    FileIOLatency(
+        database_name="AppDb_Production",
+        file_name="AppDb_Production_Data",
+        file_type="ROWS",
+        physical_name="D:\\SQLData\\AppDb_Production.mdf",
+        drive_letter="D:",
+        read_latency_ms=6.1,
+        write_latency_ms=4.8,
+        overall_latency_ms=5.7,
+        num_of_reads=240000,
+        num_of_writes=82000,
+        io_stall_ms=1835400.0,
+        status="NORMAL",
+    ),
+    FileIOLatency(
+        database_name="tempdb",
+        file_name="tempdev",
+        file_type="ROWS",
+        physical_name="T:\\TempDB\\tempdb.mdf",
+        drive_letter="T:",
+        read_latency_ms=1.8,
+        write_latency_ms=2.1,
+        overall_latency_ms=1.9,
+        num_of_reads=95000,
+        num_of_writes=145000,
+        io_stall_ms=456000.0,
+        status="EXCELLENT",
+    ),
+    FileIOLatency(
+        database_name="master",
+        file_name="master",
+        file_type="ROWS",
+        physical_name="C:\\Program Files\\Microsoft SQL Server\\MSSQL16.MSSQLSERVER\\MSSQL\\DATA\\master.mdf",
+        drive_letter="C:",
+        read_latency_ms=3.2,
+        write_latency_ms=2.5,
+        overall_latency_ms=2.9,
+        num_of_reads=8400,
+        num_of_writes=3200,
+        io_stall_ms=33640.0,
+        status="EXCELLENT",
+    ),
+]
+
+DEMO_DRIVE_IO_SUMMARIES = [
+    DriveIOSummary(drive_letter="L:", avg_read_latency_ms=13.35, avg_write_latency_ms=22.25, total_reads=46200, total_writes=282500, status="WARNING", file_count=2),
+    DriveIOSummary(drive_letter="D:", avg_read_latency_ms=12.65, avg_write_latency_ms=6.65, total_reads=365000, total_writes=106000, status="NORMAL", file_count=2),
+    DriveIOSummary(drive_letter="T:", avg_read_latency_ms=1.80, avg_write_latency_ms=2.10, total_reads=95000, total_writes=145000, status="EXCELLENT", file_count=8),
+    DriveIOSummary(drive_letter="C:", avg_read_latency_ms=3.20, avg_write_latency_ms=2.50, total_reads=8400, total_writes=3200, status="EXCELLENT", file_count=2),
+]
+
 DEMO_STORAGE_SUMMARY = StorageSummary(
     total_data_size_mb=214712.5,
     total_log_size_mb=32216.0,
     total_free_space_mb=42355.7,
     files_with_percent_growth_count=2,
     high_log_usage_dbs_count=1,
+    critical_io_files_count=1,
     files=DEMO_STORAGE_FILES,
     log_spaces=DEMO_LOG_SPACE,
     autogrowth_events=DEMO_AUTOGROWTH_EVENTS,
+    file_io_latencies=DEMO_FILE_IO_LATENCIES,
+    drive_io_summaries=DEMO_DRIVE_IO_SUMMARIES,
     is_demo=True,
 )
 

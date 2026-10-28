@@ -1,4 +1,4 @@
-"""tests/test_storage.py — Unit tests for Storage, Autogrowth, and Log Space endpoints."""
+"""tests/test_storage.py — Unit tests for Storage, Autogrowth, and Virtual File Stats (Disk Latency) endpoints."""
 from fastapi.testclient import TestClient
 from app.main import app
 
@@ -17,6 +17,8 @@ def test_storage_summary_endpoint():
     assert "files" in data
     assert "log_spaces" in data
     assert "autogrowth_events" in data
+    assert "file_io_latencies" in data
+    assert "drive_io_summaries" in data
 
     assert len(data["files"]) > 0
     first_file = data["files"][0]
@@ -33,3 +35,11 @@ def test_storage_summary_endpoint():
     assert "database_name" in first_log
     assert "log_size_mb" in first_log
     assert "log_reuse_wait_desc" in first_log
+
+    assert len(data["file_io_latencies"]) > 0
+    first_io = data["file_io_latencies"][0]
+    assert "read_latency_ms" in first_io
+    assert "write_latency_ms" in first_io
+    assert "overall_latency_ms" in first_io
+    assert "status" in first_io
+    assert "drive_letter" in first_io

@@ -541,15 +541,45 @@ export interface AutogrowthEvent {
   [key: string]: any;
 }
 
+export interface FileIOLatency {
+  database_name: string;
+  file_name: string;
+  file_type: string;
+  physical_name: string;
+  drive_letter: string;
+  read_latency_ms: number;
+  write_latency_ms: number;
+  overall_latency_ms: number;
+  num_of_reads: number;
+  num_of_writes: number;
+  io_stall_ms: number;
+  status: 'EXCELLENT' | 'NORMAL' | 'WARNING' | 'CRITICAL' | string;
+  [key: string]: any;
+}
+
+export interface DriveIOSummary {
+  drive_letter: string;
+  avg_read_latency_ms: number;
+  avg_write_latency_ms: number;
+  total_reads: number;
+  total_writes: number;
+  status: 'EXCELLENT' | 'NORMAL' | 'WARNING' | 'CRITICAL' | string;
+  file_count: number;
+  [key: string]: any;
+}
+
 export interface StorageSummary {
   total_data_size_mb: number;
   total_log_size_mb: number;
   total_free_space_mb: number;
   files_with_percent_growth_count: number;
   high_log_usage_dbs_count: number;
+  critical_io_files_count?: number;
   files: DatabaseFile[];
   log_spaces: LogSpaceUsage[];
   autogrowth_events: AutogrowthEvent[];
+  file_io_latencies?: FileIOLatency[];
+  drive_io_summaries?: DriveIOSummary[];
   is_demo?: boolean;
   [key: string]: any;
 }

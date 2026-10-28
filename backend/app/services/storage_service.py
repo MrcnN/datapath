@@ -10,6 +10,8 @@ from app.schemas.storage import (
     DatabaseFile,
     LogSpaceUsage,
     StorageSummary,
+    FileIOLatency,
+    DriveIOSummary,
 )
 from app.services.demo_data import DEMO_STORAGE_SUMMARY
 
@@ -176,6 +178,102 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
         except Exception as e:
             logger.warning("Default trace query failed: %s", e)
 
+        # 4. Disk I/O Virtual File Stats (sys.dm_io_virtual_file_stats)
+        file_io_latencies: List[FileIOLatency] = []
+        drive_io_summaries: List[DriveIOSummary] = []
+        critical_io_count = 0
+        try:
+            io_query = """
+            SELECT 
+                d.name AS database_name,
+                mf.name AS file_name,
+                mf.type_desc AS file_type,
+                mf.physical_name,
+                UPPER(LEFT(mf.physical_name, 2)) AS drive_letter,
+                vfs.num_of_reads,
+                vfs.num_of_writes,
+                CAST(vfs.io_stall_read_ms AS FLOAT) AS io_stall_read_ms,
+                CAST(vfs.io_stall_write_ms AS FLOAT) AS io_stall_write_ms,
+                CAST(vfs.io_stall AS FLOAT) AS io_stall_ms,
+                CAST(CASE WHEN vfs.num_of_reads > 0 THEN ROUND(vfs.io_stall_read_ms * 1.0 / vfs.num_of_reads, 2) ELSE 0.0 END AS FLOAT) AS read_latency_ms,
+                CAST(CASE WHEN vfs.num_of_writes > 0 THEN ROUND(vfs.io_stall_write_ms * 1.0 / vfs.num_of_writes, 2) ELSE 0.0 END AS FLOAT) AS write_latency_ms,
+                CAST(CASE WHEN (vfs.num_of_reads + vfs.num_of_writes) > 0 THEN ROUND(vfs.io_stall * 1.0 / (vfs.num_of_reads + vfs.num_of_writes), 2) ELSE 0.0 END AS FLOAT) AS overall_latency_ms
+            FROM sys.dm_io_virtual_file_stats(NULL, NULL) vfs
+            JOIN sys.master_files mf 
+                ON vfs.database_id = mf.database_id AND vfs.file_id = mf.file_id
+            JOIN sys.databases d 
+                ON d.database_id = mf.database_id
+            WHERE d.state_desc = 'ONLINE'
+            ORDER BY overall_latency_ms DESC;
+            """
+            cursor.execute(io_query)
+            io_rows = rows_to_dicts(cursor)
+
+            drive_groups = {}
+            for ior in io_rows:
+                lat = float(ior.get("overall_latency_ms", 0.0) or 0.0)
+                if lat > 25.0:
+                    status_val = "CRITICAL"
+                    critical_io_count += 1
+                elif lat > 15.0:
+                    status_val = "WARNING"
+                elif lat > 5.0:
+                    status_val = "NORMAL"
+                else:
+                    status_val = "EXCELLENT"
+
+                dl = str(ior.get("drive_letter", "C:"))
+                file_io_latencies.append(
+                    FileIOLatency(
+                        database_name=str(ior.get("database_name", "")),
+                        file_name=str(ior.get("file_name", "")),
+                        file_type=str(ior.get("file_type", "ROWS")),
+                        physical_name=str(ior.get("physical_name", "")),
+                        drive_letter=dl,
+                        read_latency_ms=float(ior.get("read_latency_ms", 0.0) or 0.0),
+                        write_latency_ms=float(ior.get("write_latency_ms", 0.0) or 0.0),
+                        overall_latency_ms=lat,
+                        num_of_reads=int(ior.get("num_of_reads", 0) or 0),
+                        num_of_writes=int(ior.get("num_of_writes", 0) or 0),
+                        io_stall_ms=float(ior.get("io_stall_ms", 0.0) or 0.0),
+                        status=status_val,
+                    )
+                )
+
+                if dl not in drive_groups:
+                    drive_groups[dl] = {
+                        "reads": 0,
+                        "writes": 0,
+                        "read_stall": 0.0,
+                        "write_stall": 0.0,
+                        "files": 0,
+                    }
+                dg = drive_groups[dl]
+                dg["reads"] += int(ior.get("num_of_reads", 0) or 0)
+                dg["writes"] += int(ior.get("num_of_writes", 0) or 0)
+                dg["read_stall"] += float(ior.get("io_stall_read_ms", 0.0) or 0.0)
+                dg["write_stall"] += float(ior.get("io_stall_write_ms", 0.0) or 0.0)
+                dg["files"] += 1
+
+            for dl, dg in drive_groups.items():
+                avg_r = round(dg["read_stall"] / dg["reads"], 2) if dg["reads"] > 0 else 0.0
+                avg_w = round(dg["write_stall"] / dg["writes"], 2) if dg["writes"] > 0 else 0.0
+                max_lat = max(avg_r, avg_w)
+                dstatus = "CRITICAL" if max_lat > 25.0 else "WARNING" if max_lat > 15.0 else "NORMAL" if max_lat > 5.0 else "EXCELLENT"
+                drive_io_summaries.append(
+                    DriveIOSummary(
+                        drive_letter=dl,
+                        avg_read_latency_ms=avg_r,
+                        avg_write_latency_ms=avg_w,
+                        total_reads=dg["reads"],
+                        total_writes=dg["writes"],
+                        status=dstatus,
+                        file_count=dg["files"],
+                    )
+                )
+        except Exception as e:
+            logger.warning("Virtual file stats query failed: %s", e)
+
         cursor.close()
         conn.close()
 
@@ -191,9 +289,12 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
             total_free_space_mb=round(total_free, 2),
             files_with_percent_growth_count=pct_files,
             high_log_usage_dbs_count=high_log_dbs,
+            critical_io_files_count=critical_io_count,
             files=files,
             log_spaces=log_spaces,
             autogrowth_events=autogrowth_events,
+            file_io_latencies=file_io_latencies,
+            drive_io_summaries=drive_io_summaries,
             is_demo=False,
         )
 

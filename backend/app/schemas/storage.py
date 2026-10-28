@@ -1,4 +1,4 @@
-"""schemas/storage.py — Data models for database files, log space, and autogrowth tracking."""
+"""schemas/storage.py — Data models for database files, log space, autogrowth tracking, and Virtual File Stats (Disk Latency)."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -38,13 +38,41 @@ class AutogrowthEvent(BaseModel):
     duration_ms: float
 
 
+class FileIOLatency(BaseModel):
+    database_name: str
+    file_name: str
+    file_type: str
+    physical_name: str
+    drive_letter: str
+    read_latency_ms: float
+    write_latency_ms: float
+    overall_latency_ms: float
+    num_of_reads: int
+    num_of_writes: int
+    io_stall_ms: float
+    status: str  # "EXCELLENT", "NORMAL", "WARNING", "CRITICAL"
+
+
+class DriveIOSummary(BaseModel):
+    drive_letter: str
+    avg_read_latency_ms: float
+    avg_write_latency_ms: float
+    total_reads: int
+    total_writes: int
+    status: str  # "EXCELLENT", "NORMAL", "WARNING", "CRITICAL"
+    file_count: int
+
+
 class StorageSummary(BaseModel):
     total_data_size_mb: float
     total_log_size_mb: float
     total_free_space_mb: float
     files_with_percent_growth_count: int
     high_log_usage_dbs_count: int
+    critical_io_files_count: int = 0
     files: List[DatabaseFile] = []
     log_spaces: List[LogSpaceUsage] = []
     autogrowth_events: List[AutogrowthEvent] = []
+    file_io_latencies: List[FileIOLatency] = []
+    drive_io_summaries: List[DriveIOSummary] = []
     is_demo: bool = False
