@@ -1,0 +1,240 @@
+import type {
+  ConnectionConfig,
+  ConnectionTestResult,
+  InstanceMetadata,
+  Session,
+  BlockingResult,
+  DeadlockResult,
+  AgentJobResult,
+  ErrorLogEntry,
+  TimelineEvent,
+  QueryStoreOverview,
+  ExpensiveQuery,
+  QueryRegression,
+  BackupEntry,
+  RecoveryReadiness,
+  SchemaDiffConfig,
+  SchemaDiffResult,
+  Script,
+  Login,
+  DbUser,
+  Role,
+  HAStatus,
+  Database,
+} from './types';
+
+const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+
+// ── Core fetch helper ─────────────────────────────────────────
+
+async function apiFetch<T>(
+  path: string,
+  options?: RequestInit
+): Promise<T> {
+  const url = `${BASE_URL}${path}`;
+  let response: Response;
+
+  try {
+    response = await fetch(url, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...options?.headers,
+      },
+      ...options,
+    });
+  } catch (err) {
+    throw new Error(
+      `Cannot reach the Traceforge API at ${BASE_URL}. Make sure the backend is running.`
+    );
+  }
+
+  if (!response.ok) {
+    let detail = `HTTP ${response.status} ${response.statusText}`;
+    try {
+      const body = await response.json();
+      if (body?.detail) detail = String(body.detail);
+    } catch {
+      // ignore
+    }
+    throw new Error(detail);
+  }
+
+  const contentType = response.headers.get('content-type') ?? '';
+  if (contentType.includes('application/json')) {
+    return response.json() as Promise<T>;
+  }
+  // Return empty object for 204 / no-content
+  return {} as T;
+}
+
+function buildQuery(params: Record<string, string | number | boolean | undefined | null>): string {
+  const qs = Object.entries(params)
+    .filter(([, v]) => v !== undefined && v !== null)
+    .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(String(v))}`)
+    .join('&');
+  return qs ? `?${qs}` : '';
+}
+
+// ── Connection ────────────────────────────────────────────────
+
+export async function testConnection(
+  config: ConnectionConfig
+): Promise<ConnectionTestResult> {
+  return apiFetch<ConnectionTestResult>('/api/connection/test', {
+    method: 'POST',
+    body: JSON.stringify(config),
+  });
+}
+
+// ── Instance ──────────────────────────────────────────────────
+
+export async function getInstanceMetadata(): Promise<InstanceMetadata> {
+  return apiFetch<InstanceMetadata>('/api/instance/metadata');
+}
+
+export async function getDatabases(): Promise<Database[]> {
+  return apiFetch<Database[]>('/api/instance/databases');
+}
+
+// ── Sessions ──────────────────────────────────────────────────
+
+export async function getSessions(params?: {
+  active_only?: boolean;
+  include_system?: boolean;
+}): Promise<Session[]> {
+  return apiFetch<Session[]>(`/api/sessions${buildQuery(params ?? {})}`);
+}
+
+// ── Blocking ──────────────────────────────────────────────────
+
+export async function getBlocking(): Promise<BlockingResult> {
+  return apiFetch<BlockingResult>('/api/blocking');
+}
+
+// ── Deadlocks ─────────────────────────────────────────────────
+
+export async function parseDeadlock(xmlContent: string): Promise<DeadlockResult> {
+  return apiFetch<DeadlockResult>('/api/deadlocks/parse', {
+    method: 'POST',
+    body: JSON.stringify({ xml_content: xmlContent }),
+  });
+}
+
+// ── Agent Jobs ────────────────────────────────────────────────
+
+export async function getAgentJobs(params?: {
+  days_back?: number;
+  failed_only?: boolean;
+}): Promise<AgentJobResult> {
+  return apiFetch<AgentJobResult>(`/api/agent-jobs${buildQuery(params ?? {})}`);
+}
+
+// ── Error Log ─────────────────────────────────────────────────
+
+export async function getErrorLog(params?: {
+  search?: string;
+  log_number?: number;
+  rows?: number;
+}): Promise<ErrorLogEntry[]> {
+  return apiFetch<ErrorLogEntry[]>(`/api/error-log${buildQuery(params ?? {})}`);
+}
+
+// ── Timeline ──────────────────────────────────────────────────
+
+export async function getIncidentTimeline(
+  hoursBack = 24
+): Promise<TimelineEvent[]> {
+  return apiFetch<TimelineEvent[]>(
+    `/api/incident-timeline${buildQuery({ hours_back: hoursBack })}`
+  );
+}
+
+// ── Query Store ───────────────────────────────────────────────
+
+export async function getQueryStoreOverview(
+  database?: string
+): Promise<QueryStoreOverview> {
+  return apiFetch<QueryStoreOverview>(
+    `/api/query-store/overview${buildQuery({ database })}`
+  );
+}
+
+export async function getExpensiveQueries(params: {
+  database: string;
+  metric?: string;
+  top_n?: number;
+}): Promise<ExpensiveQuery[]> {
+  return apiFetch<ExpensiveQuery[]>(
+    `/api/query-store/expensive${buildQuery(params)}`
+  );
+}
+
+export async function getQueryRegressions(params: {
+  database: string;
+  min_exec_count?: number;
+}): Promise<QueryRegression[]> {
+  return apiFetch<QueryRegression[]>(
+    `/api/query-store/regressions${buildQuery(params)}`
+  );
+}
+
+// ── Backups ───────────────────────────────────────────────────
+
+export async function getBackupHistory(params?: {
+  database?: string;
+  days_back?: number;
+  backup_type?: string;
+}): Promise<BackupEntry[]> {
+  return apiFetch<BackupEntry[]>(`/api/backups/history${buildQuery(params ?? {})}`);
+}
+
+export async function getRecoveryReadiness(): Promise<RecoveryReadiness[]> {
+  return apiFetch<RecoveryReadiness[]>('/api/backups/recovery-readiness');
+}
+
+// ── Schema Diff ───────────────────────────────────────────────
+
+export async function compareSchemas(
+  config: SchemaDiffConfig
+): Promise<SchemaDiffResult> {
+  return apiFetch<SchemaDiffResult>('/api/schema-diff/compare', {
+    method: 'POST',
+    body: JSON.stringify(config),
+  });
+}
+
+// ── Toolkit ───────────────────────────────────────────────────
+
+export async function getToolkitScripts(params?: {
+  category?: string;
+  search?: string;
+}): Promise<Script[]> {
+  return apiFetch<Script[]>(`/api/toolkit/scripts${buildQuery(params ?? {})}`);
+}
+
+export async function getToolkitCategories(): Promise<string[]> {
+  return apiFetch<string[]>('/api/toolkit/categories');
+}
+
+// ── Permissions ───────────────────────────────────────────────
+
+export async function getLogins(): Promise<Login[]> {
+  return apiFetch<Login[]>('/api/permissions/logins');
+}
+
+export async function getDatabaseUsers(dbName: string): Promise<DbUser[]> {
+  return apiFetch<DbUser[]>(
+    `/api/permissions/users${buildQuery({ database: dbName })}`
+  );
+}
+
+export async function getRoles(): Promise<Role[]> {
+  return apiFetch<Role[]>('/api/permissions/roles');
+}
+
+// ── High Availability ─────────────────────────────────────────
+
+export async function getHAStatus(): Promise<HAStatus> {
+  return apiFetch<HAStatus>('/api/high-availability/status');
+}
+
