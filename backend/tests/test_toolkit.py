@@ -1,0 +1,34 @@
+"""tests/test_toolkit.py — DBA script library endpoint tests."""
+from fastapi.testclient import TestClient
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_get_all_scripts():
+    res = client.get("/api/toolkit/scripts")
+    assert res.status_code == 200
+    scripts = res.json()
+    assert len(scripts) >= 10
+    # Every script must have required fields
+    for s in scripts:
+        assert "id" in s
+        assert "name" in s
+        assert "category" in s
+        assert "sql" in s
+        assert s["risk_level"] in ["read_only", "caution", "destructive"]
+
+
+def test_search_scripts():
+    res = client.get("/api/toolkit/scripts?search=session")
+    assert res.status_code == 200
+    scripts = res.json()
+    assert len(scripts) > 0
+
+
+def test_get_categories():
+    res = client.get("/api/toolkit/categories")
+    assert res.status_code == 200
+    cats = res.json()
+    assert "Sessions" in cats
+    assert "Blocking" in cats
