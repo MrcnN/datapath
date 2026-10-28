@@ -1,0 +1,32 @@
+.meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.itemKey {
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.itemVal {
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+  font-weight: 500;
+  word-break: break-all;
+}
+
+.divider {
+  grid-column: 1 / -1;
+  height: 1px;
+  background-color: var(--border);
+  margin: var(--space-1) 0;
+}

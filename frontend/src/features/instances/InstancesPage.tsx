@@ -1,0 +1,47 @@
+import React from 'react';
+import { Server, Database, ShieldCheck } from 'lucide-react';
+import PageHeader from '../../components/layout/PageHeader';
+import ConnectionForm from './components/ConnectionForm';
+import InstanceMetadata from './components/InstanceMetadata';
+import DatabaseTable from './components/DatabaseTable';
+import styles from './InstancesPage.module.css';
+
+export default function InstancesPage() {
+  return (
+    <div className={styles.page}>
+      <PageHeader
+        title="Sunucular & Bağlantı Yönetimi"
+        subtitle="SQL Server bağlantı profilini yapılandırın, kaynak kullanımını ve veritabanı durumunu inceleyin"
+      />
+
+      <div className={styles.grid}>
+        {/* Sol: Bağlantı Yapılandırma Formu */}
+        <div className={styles.card}>
+          <div className={styles.cardTitle}>
+            <Server size={16} color="var(--accent)" />
+            Bağlantı Yapılandırması (Connection Profile)
+          </div>
+          <ConnectionForm />
+        </div>
+
+        {/* Sağ: Sunucu Meta Verileri */}
+        <div className={styles.card}>
+          <div className={styles.cardTitle}>
+            <ShieldCheck size={16} color="var(--accent)" />
+            Sunucu Kaynak & Sürüm Bilgileri
+          </div>
+          <InstanceMetadata />
+        </div>
+      </div>
+
+      {/* Veritabanı Tablosu */}
+      <div className={styles.card}>
+        <div className={styles.cardTitle}>
+          <Database size={16} color="var(--accent)" />
+          Bağlı Sunucudaki Veritabanları
+        </div>
+        <DatabaseTable />
+      </div>
+    </div>
+  );
+}
