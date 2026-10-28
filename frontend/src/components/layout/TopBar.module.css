@@ -132,3 +132,23 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.themeToggleBtn {
+  width: 28px;
+  height: 28px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.themeToggleBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--accent);
+  border-color: var(--border-hover);
+}

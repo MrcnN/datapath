@@ -120,3 +120,80 @@
   --transition-base: 0.15s ease;
   --transition-slow: 0.2s ease;
 }
+
+/* ============================================
+   Light Theme Override Palette
+   ============================================ */
+:root[data-theme="light"],
+[data-theme="light"] {
+  /* Neutral Light Backgrounds */
+  --bg-base: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-elevated: #f1f5f9;
+  --bg-overlay: #e2e8f0;
+  --bg-hover: #f1f5f9;
+  --bg-subtle: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-glass: #ffffff;
+
+  /* Primary Accent & Brand */
+  --accent: #0284c7;
+  --accent-dim: #0369a1;
+  --accent-teal: #0d9488;
+  --accent-muted: rgba(2, 132, 199, 0.1);
+
+  /* Text Colors */
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --text-accent: #0284c7;
+  --text-white: #0f172a;
+
+  /* Status Colors */
+  --status-critical: #e11d48;
+  --status-critical-bg: rgba(225, 29, 72, 0.1);
+  --status-critical-border: rgba(225, 29, 72, 0.3);
+
+  --status-high: #ea580c;
+  --status-high-bg: rgba(234, 88, 12, 0.1);
+  --status-high-border: rgba(234, 88, 12, 0.3);
+
+  --status-medium: #ca8a04;
+  --status-medium-bg: rgba(202, 138, 4, 0.1);
+  --status-medium-border: rgba(202, 138, 4, 0.3);
+
+  --status-low: #0284c7;
+  --status-low-bg: rgba(2, 132, 199, 0.1);
+  --status-low-border: rgba(2, 132, 199, 0.3);
+
+  --status-info: #64748b;
+  --status-info-bg: rgba(100, 116, 139, 0.1);
+  --status-info-border: rgba(100, 116, 139, 0.3);
+
+  --status-success: #10b981;
+  --status-success-bg: rgba(16, 185, 129, 0.12);
+  --status-success-border: rgba(16, 185, 129, 0.3);
+
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.12);
+  --status-warning-border: rgba(245, 158, 11, 0.3);
+
+  --status-error: #ef4444;
+  --status-error-bg: rgba(239, 68, 68, 0.12);
+  --status-error-border: rgba(239, 68, 68, 0.3);
+
+  --status-neutral: #64748b;
+  --status-neutral-bg: rgba(100, 116, 139, 0.08);
+
+  /* Borders */
+  --border: #e2e8f0;
+  --border-subtle: #f1f5f9;
+  --border-card: #e2e8f0;
+  --border-hover: #cbd5e1;
+  --border-focus: #0284c7;
+
+  /* Light Theme Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 6px 18px rgba(0, 0, 0, 0.1);
+}
