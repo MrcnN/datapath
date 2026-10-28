@@ -12,11 +12,13 @@ from app.api import (
     health,
     high_availability,
     incidents,
+    indexes,
     instances,
     permissions,
     query_performance,
     schema_diff,
     toolkit,
+    wait_stats,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -61,6 +63,8 @@ app.include_router(schema_diff.router, prefix="/api")
 app.include_router(toolkit.router, prefix="/api")
 app.include_router(permissions.router, prefix="/api")
 app.include_router(high_availability.router, prefix="/api")
+app.include_router(indexes.router, prefix="/api")
+app.include_router(wait_stats.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

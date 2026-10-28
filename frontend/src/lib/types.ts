@@ -408,3 +408,101 @@ export interface Database {
   [key: string]: any;
 }
 
+// ── Index Intelligence ────────────────────────────────────────
+export interface MissingIndex {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  impact_score: number;
+  user_seeks: number;
+  user_scans: number;
+  avg_total_user_cost: number;
+  avg_user_impact: number;
+  equality_columns?: string | null;
+  inequality_columns?: string | null;
+  included_columns?: string | null;
+  suggested_index_name: string;
+  create_statement: string;
+  [key: string]: any;
+}
+
+export interface UnusedIndex {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  index_name: string;
+  index_type: string;
+  size_mb: number;
+  user_seeks: number;
+  user_scans: number;
+  user_lookups: number;
+  user_updates: number;
+  read_writes_ratio: string;
+  drop_statement: string;
+  [key: string]: any;
+}
+
+export interface IndexFragmentation {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  index_name: string;
+  index_type: string;
+  avg_fragmentation_percent: number;
+  page_count: number;
+  size_mb: number;
+  recommended_action: 'REBUILD' | 'REORGANIZE' | 'HEALTHY' | string;
+  maintenance_statement: string;
+  [key: string]: any;
+}
+
+export interface IndexSummary {
+  total_missing_indexes: number;
+  max_impact_score: number;
+  total_unused_indexes: number;
+  total_wasted_mb: number;
+  fragmented_indexes_count: number;
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+// ── Wait Statistics ───────────────────────────────────────────
+export interface WaitStatEntry {
+  wait_type: string;
+  category: string;
+  waiting_tasks_count: number;
+  wait_time_ms: number;
+  wait_time_sec: number;
+  max_wait_time_ms: number;
+  signal_wait_time_ms: number;
+  signal_wait_percent: number;
+  resource_wait_ms: number;
+  percentage_of_total: number;
+  description: string;
+  recommendation: string;
+  [key: string]: any;
+}
+
+export interface CategoryWaitSummary {
+  category: string;
+  total_wait_ms: number;
+  percentage: number;
+  wait_count: number;
+  [key: string]: any;
+}
+
+export interface WaitStatsSummary {
+  total_wait_time_ms: number;
+  total_signal_wait_ms: number;
+  signal_wait_ratio_percent: number;
+  has_cpu_pressure: boolean;
+  top_category: string;
+  total_waiting_tasks: number;
+  categories: CategoryWaitSummary[];
+  wait_stats: WaitStatEntry[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+
+

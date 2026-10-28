@@ -21,6 +21,11 @@ import type {
   Role,
   HAStatus,
   Database,
+  MissingIndex,
+  UnusedIndex,
+  IndexFragmentation,
+  IndexSummary,
+  WaitStatsSummary,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -237,4 +242,40 @@ export async function getRoles(): Promise<Role[]> {
 export async function getHAStatus(): Promise<HAStatus> {
   return apiFetch<HAStatus>('/api/high-availability/status');
 }
+
+// ── Index Intelligence ────────────────────────────────────────
+
+export async function getIndexSummary(database?: string): Promise<IndexSummary> {
+  return apiFetch<IndexSummary>(
+    `/api/indexes/summary${buildQuery({ database: database ?? '' })}`
+  );
+}
+
+export async function getMissingIndexes(database?: string): Promise<MissingIndex[]> {
+  return apiFetch<MissingIndex[]>(
+    `/api/indexes/missing${buildQuery({ database: database ?? '' })}`
+  );
+}
+
+export async function getUnusedIndexes(database?: string): Promise<UnusedIndex[]> {
+  return apiFetch<UnusedIndex[]>(
+    `/api/indexes/unused${buildQuery({ database: database ?? '' })}`
+  );
+}
+
+export async function getIndexFragmentation(
+  database?: string
+): Promise<IndexFragmentation[]> {
+  return apiFetch<IndexFragmentation[]>(
+    `/api/indexes/fragmentation${buildQuery({ database: database ?? '' })}`
+  );
+}
+
+// ── Wait Statistics ───────────────────────────────────────────
+
+export async function getWaitStatistics(): Promise<WaitStatsSummary> {
+  return apiFetch<WaitStatsSummary>('/api/waits');
+}
+
+
 

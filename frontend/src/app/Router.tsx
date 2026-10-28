@@ -9,6 +9,8 @@ import SchemaDiffPage from '../features/schema-diff/SchemaDiffPage';
 import ToolkitPage from '../features/toolkit/ToolkitPage';
 import PermissionsPage from '../features/permissions/PermissionsPage';
 import HAPage from '../features/high-availability/HAPage';
+import IndexesPage from '../features/indexes/IndexesPage';
+import WaitStatsPage from '../features/wait-stats/WaitStatsPage';
 
 export default function Router() {
   return (
@@ -17,6 +19,8 @@ export default function Router() {
       <Route path="/instances" element={<InstancesPage />} />
       <Route path="/incidents" element={<IncidentCenterPage />} />
       <Route path="/query-performance" element={<QueryPerformancePage />} />
+      <Route path="/indexes" element={<IndexesPage />} />
+      <Route path="/waits" element={<WaitStatsPage />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/toolkit" element={<ToolkitPage />} />

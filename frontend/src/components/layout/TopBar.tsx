@@ -12,6 +12,10 @@ import {
   Activity,
   Clock,
   Sparkles,
+  Layers,
+  Hourglass,
+  Sun,
+  Moon,
   type LucideIcon,
 } from 'lucide-react';
 import { getInstanceMetadata } from '../../lib/api';
@@ -29,6 +33,8 @@ const routeMap: Record<string, RouteInfo> = {
   '/instances': { label: 'Sunucular & Bağlantı', category: 'Genel Bakış', icon: Server },
   '/incidents': { label: 'Olay Merkezi', category: 'Tanı & İzleme', icon: AlertTriangle },
   '/query-performance': { label: 'Sorgu Performansı', category: 'Tanı & İzleme', icon: TrendingUp },
+  '/indexes': { label: 'İndeks Zekası', category: 'Tanı & İzleme', icon: Layers },
+  '/waits': { label: 'Bekleme İstatistikleri', category: 'Tanı & İzleme', icon: Hourglass },
   '/backups': { label: 'Yedekleme & Kurtarma', category: 'Tanı & İzleme', icon: Database },
   '/high-availability': { label: 'Yüksek Erişilebilirlik', category: 'Tanı & İzleme', icon: Activity },
   '/toolkit': { label: 'DBA Araç Seti', category: 'Yönetim & Araçlar', icon: Wrench },
@@ -51,6 +57,18 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const [metadata, setMetadata] = useState<InstanceMetadata | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<string>('');
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('datapath-theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -103,8 +121,18 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
         </div>
       </div>
 
-      {/* Right: Clock & Solid Clean Status Badge */}
+      {/* Right: Theme Toggle, Clock & Connection Status Badge */}
       <div className={styles.rightSection}>
+        <button
+          type="button"
+          className={styles.themeToggleBtn}
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
+          aria-label={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
+        >
+          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
+        </button>
+
         <div className={styles.clockPill} title="İstemci Saati">
           <Clock size={12} className={styles.clockIcon} />
           <span>{currentTime}</span>

@@ -10,6 +10,8 @@ import {
   Wrench,
   Shield,
   Activity,
+  Layers,
+  Hourglass,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -40,6 +42,8 @@ const navSections: NavSection[] = [
     items: [
       { path: '/incidents', label: 'Olay Merkezi', icon: AlertTriangle },
       { path: '/query-performance', label: 'Sorgu Performansı', icon: TrendingUp },
+      { path: '/indexes', label: 'İndeks Zekası', icon: Layers },
+      { path: '/waits', label: 'Bekleme İstatistikleri', icon: Hourglass },
       { path: '/backups', label: 'Yedekleme & Kurtarma', icon: Database },
       { path: '/high-availability', label: 'Yüksek Erişilebilirlik', icon: Activity },
     ],
@@ -83,7 +87,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         {!collapsed && (
           <div className={styles.logoText}>
             <span className={styles.logoName}>{brand.name}</span>
-            <span className={styles.versionBadge}>v{brand.version}</span>
           </div>
         )}
       </div>
@@ -119,19 +122,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
           </div>
         ))}
       </nav>
-
-      {/* Footer info (Simple, static) */}
-      <div className={styles.footer}>
-        <div className={styles.engineBadge}>
-          <div className={styles.engineStatusDot} />
-          {!collapsed && (
-            <div className={styles.engineInfo}>
-              <span className={styles.engineTitle}>SQL Server İzleme</span>
-              <span className={styles.engineSub}>{brand.tagline}</span>
-            </div>
-          )}
-        </div>
-      </div>
     </aside>
   );
 }
