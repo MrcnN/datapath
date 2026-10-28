@@ -16,6 +16,7 @@ import {
   Hourglass,
   HardDrive,
   Cpu,
+  CalendarClock,
   Sun,
   Moon,
   type LucideIcon,
@@ -42,6 +43,7 @@ const routeMap: Record<string, RouteInfo> = {
   '/backups': { label: 'Yedekleme & Kurtarma', category: 'Tanı & İzleme', icon: Database },
   '/high-availability': { label: 'Yüksek Erişilebilirlik', category: 'Tanı & İzleme', icon: Activity },
   '/toolkit': { label: 'DBA Araç Seti', category: 'Yönetim & Araçlar', icon: Wrench },
+  '/agent-jobs': { label: 'SQL Agent İşleri', category: 'Yönetim & Araçlar', icon: CalendarClock },
   '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim & Araçlar', icon: GitCompare },
   '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim & Araçlar', icon: Shield },
 };

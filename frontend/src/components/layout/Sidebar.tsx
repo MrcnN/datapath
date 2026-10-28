@@ -14,6 +14,7 @@ import {
   Hourglass,
   HardDrive,
   Cpu,
+  CalendarClock,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -56,6 +57,7 @@ const navSections: NavSection[] = [
     title: 'Yönetim & Araçlar',
     items: [
       { path: '/toolkit', label: 'DBA Araç Seti', icon: Wrench },
+      { path: '/agent-jobs', label: 'SQL Agent İşleri', icon: CalendarClock },
       { path: '/schema-diff', label: 'Şema Karşılaştırması', icon: GitCompare },
       { path: '/permissions', label: 'İzinler & Güvenlik', icon: Shield },
     ],

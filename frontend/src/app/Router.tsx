@@ -13,6 +13,7 @@ import IndexesPage from '../features/indexes/IndexesPage';
 import WaitStatsPage from '../features/wait-stats/WaitStatsPage';
 import StoragePage from '../features/storage/StoragePage';
 import TempDBPage from '../features/tempdb/TempDBPage';
+import AgentJobsPage from '../features/agent-jobs/AgentJobsPage';
 
 export default function Router() {
   return (
@@ -26,6 +27,7 @@ export default function Router() {
       <Route path="/storage" element={<StoragePage />} />
       <Route path="/tempdb" element={<TempDBPage />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
+      <Route path="/agent-jobs" element={<AgentJobsPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/toolkit" element={<ToolkitPage />} />
       <Route path="/permissions" element={<PermissionsPage />} />

@@ -23,6 +23,7 @@ from app.schemas.storage import (
     FileIOLatency,
     DriveIOSummary,
 )
+from app.schemas.agent_jobs import AgentJobDetail, AgentJobsSummary, JobStepHistory
 from app.schemas.tempdb_memory import TempDBSpaceBreakdown, TempDBFile, MemoryClerk, TempDBMemorySummary
 
 DEMO_DATABASES = [
@@ -787,6 +788,105 @@ DEMO_INTEGRITY_CHECKS = [
         integrity_check_sql="DBCC CHECKDB ([msdb]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
     ),
 ]
+
+DEMO_AGENT_JOBS_SUMMARY = AgentJobsSummary(
+    agent_running=True,
+    total_jobs=6,
+    enabled_jobs=5,
+    disabled_jobs=1,
+    failed_jobs_count=1,
+    running_jobs_count=0,
+    jobs=[
+        AgentJobDetail(
+            job_id="9A5B4C3D-1E2F-4A5B-6C7D-8E9F0A1B2C3D",
+            name="ETL - DataWarehouse - DailySync",
+            enabled=True,
+            category="Data Collector",
+            description="Veri ambarı günlük veri aktarımı ve dönüşüm işi.",
+            last_run_status="FAILED",
+            last_run_date="2026-10-28 05:00:00",
+            last_run_duration_sec=180,
+            next_run_date="2026-10-29 05:00:00",
+            last_failed_step_id=2,
+            last_failed_message="Adım 2 (Load Staging to Production) başarısız oldu: Violation of PRIMARY KEY constraint 'PK_FactOrders'. Cannot insert duplicate key in object 'dbo.FactOrders'. The duplicate key value is (904812). [SQLSTATE 23000] (Error 2627).",
+            steps=[
+                JobStepHistory(step_id=1, step_name="Truncate Staging Tables", run_status="SUCCESS", run_date="2026-10-28 05:00:00", run_duration_sec=15, message="The step succeeded."),
+                JobStepHistory(step_id=2, step_name="Load Staging to Production", run_status="FAILED", run_date="2026-10-28 05:00:15", run_duration_sec=165, message="Adım başarısız oldu: Violation of PRIMARY KEY constraint 'PK_FactOrders'. Duplicate key (904812)."),
+                JobStepHistory(step_id=3, step_name="Rebuild DW Indexes", run_status="CANCELLED", run_date="2026-10-28 05:03:00", run_duration_sec=0, message="Önceki adım başarısız olduğu için çalıştırılmadı."),
+            ],
+        ),
+        AgentJobDetail(
+            job_id="1A2B3C4D-5E6F-7A8B-9C0D-1E2F3A4B5C6D",
+            name="DBA - DatabaseBackup - USER_DATABASES - FULL",
+            enabled=True,
+            category="Database Maintenance",
+            description="Tüm kullanıcı veritabanları için günlük tam (Full) yedekleme işi.",
+            last_run_status="SUCCESS",
+            last_run_date="2026-10-28 01:00:00",
+            last_run_duration_sec=1420,
+            next_run_date="2026-10-29 01:00:00",
+            steps=[
+                JobStepHistory(step_id=1, step_name="Execute Ola Hallengren Full Backup", run_status="SUCCESS", run_date="2026-10-28 01:00:00", run_duration_sec=1420, message="The step succeeded. Output files written to backup drive."),
+            ],
+        ),
+        AgentJobDetail(
+            job_id="2B3C4D5E-6F7A-8B9C-0D1E-2F3A4B5C6D7E",
+            name="DBA - DatabaseBackup - USER_DATABASES - LOG",
+            enabled=True,
+            category="Database Maintenance",
+            description="Full recovery modelindeki veritabanları için 15 dakikalık işlem günlüğü yedeği.",
+            last_run_status="SUCCESS",
+            last_run_date="2026-10-28 23:45:00",
+            last_run_duration_sec=35,
+            next_run_date="2026-10-29 00:00:00",
+            steps=[
+                JobStepHistory(step_id=1, step_name="Execute Transaction Log Backup", run_status="SUCCESS", run_date="2026-10-28 23:45:00", run_duration_sec=35, message="The step succeeded."),
+            ],
+        ),
+        AgentJobDetail(
+            job_id="3C4D5E6F-7A8B-9C0D-1E2F-3A4B5C6D7E8F",
+            name="DBA - IndexOptimize - USER_DATABASES",
+            enabled=True,
+            category="Database Maintenance",
+            description="Haftalık indeks parçalanma optimizasyonu (Reorganize/Rebuild) ve istatistik güncelleme.",
+            last_run_status="SUCCESS",
+            last_run_date="2026-10-26 02:00:00",
+            last_run_duration_sec=3600,
+            next_run_date="2026-11-02 02:00:00",
+            steps=[
+                JobStepHistory(step_id=1, step_name="Execute Ola Hallengren IndexOptimize", run_status="SUCCESS", run_date="2026-10-26 02:00:00", run_duration_sec=3600, message="The step succeeded."),
+            ],
+        ),
+        AgentJobDetail(
+            job_id="4D5E6F7A-8B9C-0D1E-2F3A-4B5C6D7E8F9A",
+            name="DBA - SystemHealth - ErrorLogPurge",
+            enabled=True,
+            category="Database Maintenance",
+            description="Günlük Error Log döngüsü ve eski dosyaların temizlenmesi.",
+            last_run_status="SUCCESS",
+            last_run_date="2026-10-28 00:00:00",
+            last_run_duration_sec=12,
+            next_run_date="2026-10-29 00:00:00",
+            steps=[
+                JobStepHistory(step_id=1, step_name="sp_cycle_errorlog", run_status="SUCCESS", run_date="2026-10-28 00:00:00", run_duration_sec=12, message="The step succeeded."),
+            ],
+        ),
+        AgentJobDetail(
+            job_id="5E6F7A8B-9C0D-1E2F-3A4B-5C6D7E8F9A0B",
+            name="SYS - sp_server_diagnostics_trace",
+            enabled=False,
+            category="Data Collector",
+            description="Eski teşhis izleme oturumu (devre dışı bırakıldı).",
+            last_run_status="NEVER_RUN",
+            last_run_date=None,
+            last_run_duration_sec=None,
+            next_run_date=None,
+            steps=[],
+        ),
+    ],
+    is_demo=True,
+)
+
 
 
 

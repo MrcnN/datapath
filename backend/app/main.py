@@ -7,6 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.api import (
+    agent_jobs,
     backups,
     connections,
     health,
@@ -69,6 +70,7 @@ app.include_router(indexes.router, prefix="/api")
 app.include_router(wait_stats.router, prefix="/api")
 app.include_router(storage.router, prefix="/api")
 app.include_router(tempdb_memory.router, prefix="/api")
+app.include_router(agent_jobs.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

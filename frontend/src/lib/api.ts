@@ -30,6 +30,8 @@ import type {
   WaitStatsSummary,
   StorageSummary,
   TempDBMemorySummary,
+  AgentJobsSummary,
+  JobStepHistory,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -303,6 +305,16 @@ export async function getStorageSummary(): Promise<StorageSummary> {
 
 export async function getTempDBMemorySummary(): Promise<TempDBMemorySummary> {
   return apiFetch<TempDBMemorySummary>('/api/tempdb-memory');
+}
+
+// ── SQL Server Agent Jobs ─────────────────────────────────────
+
+export async function getAgentJobsSummary(): Promise<AgentJobsSummary> {
+  return apiFetch<AgentJobsSummary>('/api/agent-jobs/summary');
+}
+
+export async function getJobStepHistory(jobId: string): Promise<JobStepHistory[]> {
+  return apiFetch<JobStepHistory[]>(`/api/agent-jobs/${jobId}/history`);
 }
 
 

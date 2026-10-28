@@ -667,6 +667,46 @@ export interface TempDBMemorySummary {
   [key: string]: any;
 }
 
+// ── SQL Server Agent Jobs ─────────────────────────────────────
+export interface JobStepHistory {
+  step_id: number;
+  step_name: string;
+  run_status: 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'IN_PROGRESS' | 'RETRY' | 'UNKNOWN' | string;
+  run_date: string;
+  run_duration_sec: number;
+  message: string;
+  [key: string]: any;
+}
+
+export interface AgentJobDetail {
+  job_id: string;
+  name: string;
+  enabled: boolean;
+  category: string;
+  description?: string | null;
+  last_run_status: 'SUCCESS' | 'FAILED' | 'CANCELLED' | 'NEVER_RUN' | 'UNKNOWN' | string;
+  last_run_date?: string | null;
+  last_run_duration_sec?: number | null;
+  next_run_date?: string | null;
+  last_failed_step_id?: number | null;
+  last_failed_message?: string | null;
+  steps?: JobStepHistory[];
+  [key: string]: any;
+}
+
+export interface AgentJobsSummary {
+  agent_running: boolean;
+  total_jobs: number;
+  enabled_jobs: number;
+  disabled_jobs: number;
+  failed_jobs_count: number;
+  running_jobs_count: number;
+  jobs: AgentJobDetail[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+
 
 
 
