@@ -1,0 +1,122 @@
+/* ============================================
+   CSS Custom Properties — Traceforge Design System
+   Professional Dark DBA Intelligence Platform
+   Clean, Static, High-Performance, Low-Fatigue
+   ============================================ */
+
+:root {
+  /* Neutral Dark Backgrounds */
+  --bg-base: #0c1017;
+  --bg-surface: #131822;
+  --bg-elevated: #1a202c;
+  --bg-overlay: #212938;
+  --bg-hover: #222b3b;
+  --bg-subtle: #0f141d;
+  --bg-card: #131822;
+  --bg-glass: #131822;
+
+  /* Primary Accent & Brand */
+  --accent: #38bdf8;
+  --accent-dim: #0284c7;
+  --accent-teal: #0d9488;
+  --accent-muted: rgba(56, 189, 248, 0.1);
+
+  /* Text Colors */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+  --text-accent: #38bdf8;
+  --text-white: #ffffff;
+
+  /* Status Colors */
+  --status-critical: #f43f5e;
+  --status-critical-bg: rgba(244, 63, 94, 0.1);
+  --status-critical-border: rgba(244, 63, 94, 0.3);
+
+  --status-high: #f97316;
+  --status-high-bg: rgba(249, 115, 22, 0.1);
+  --status-high-border: rgba(249, 115, 22, 0.3);
+
+  --status-medium: #eab308;
+  --status-medium-bg: rgba(234, 179, 8, 0.1);
+  --status-medium-border: rgba(234, 179, 8, 0.3);
+
+  --status-low: #38bdf8;
+  --status-low-bg: rgba(56, 189, 248, 0.1);
+  --status-low-border: rgba(56, 189, 248, 0.3);
+
+  --status-info: #64748b;
+  --status-info-bg: rgba(100, 116, 139, 0.1);
+  --status-info-border: rgba(100, 116, 139, 0.3);
+
+  --status-success: #10b981;
+  --status-success-bg: rgba(16, 185, 129, 0.1);
+  --status-success-border: rgba(16, 185, 129, 0.3);
+
+  --status-warning: #f59e0b;
+  --status-warning-bg: rgba(245, 158, 11, 0.1);
+  --status-warning-border: rgba(245, 158, 11, 0.3);
+
+  --status-error: #ef4444;
+  --status-error-bg: rgba(239, 68, 68, 0.1);
+  --status-error-border: rgba(239, 68, 68, 0.3);
+
+  --status-neutral: #94a3b8;
+  --status-neutral-bg: rgba(148, 163, 184, 0.08);
+
+  /* Borders */
+  --border: #232c3d;
+  --border-subtle: #1a2230;
+  --border-card: #20293a;
+  --border-hover: #334155;
+  --border-focus: #38bdf8;
+
+  /* Layout Dimensions */
+  --sidebar-width: 230px;
+  --sidebar-width-collapsed: 58px;
+  --topbar-height: 52px;
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', Consolas, Monaco, monospace;
+
+  /* Font sizes */
+  --text-xs: 11px;
+  --text-sm: 12.5px;
+  --text-base: 13.5px;
+  --text-md: 15px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 20px;
+  --text-3xl: 24px;
+  --text-4xl: 30px;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+
+  /* Border radius */
+  --radius-xs: 3px;
+  --radius-sm: 5px;
+  --radius-md: 7px;
+  --radius-lg: 9px;
+  --radius-xl: 12px;
+  --radius-full: 9999px;
+
+  /* Clean solid shadows, no glowing auras */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 6px 18px rgba(0, 0, 0, 0.4);
+
+  /* Snappy, fast transitions, no sluggish motion */
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.15s ease;
+  --transition-slow: 0.2s ease;
+}
