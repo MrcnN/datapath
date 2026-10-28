@@ -1,4 +1,4 @@
-"""services/toolkit_service.py — Hardcoded DBA script library (20+ scripts)."""
+"""services/toolkit_service.py — Hardcoded DBA script library (20+ scripts) in Turkish."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -6,14 +6,14 @@ from typing import List, Optional
 from app.schemas.toolkit import DBAScript, ScriptCategory
 
 _SCRIPTS: List[DBAScript] = [
-    # ── Sessions ────────────────────────────────────────────────────────────
+    # ── Oturumlar ───────────────────────────────────────────────────────────
     DBAScript(
         id="sessions-001",
-        name="Active User Sessions",
-        category="Sessions",
-        description="List all active user sessions with their current SQL text and wait info.",
+        name="Aktif Kullanıcı Oturumları",
+        category="Oturumlar",
+        description="Mevcut SQL metinleri ve bekleme bilgileriyle birlikte tüm aktif kullanıcı oturumlarını listeler.",
         risk_level="read_only",
-        tags=["sessions", "active", "wait"],
+        tags=["oturumlar", "aktif", "bekleme", "sessions", "active", "wait"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -39,11 +39,11 @@ ORDER BY s.cpu_time DESC;
     ),
     DBAScript(
         id="sessions-002",
-        name="Long-Running Queries (>30s)",
-        category="Sessions",
-        description="Find queries running longer than 30 seconds.",
+        name="Uzun Süren Sorgular (>30sn)",
+        category="Oturumlar",
+        description="30 saniyeden uzun süredir çalışan sorguları, bekleme türlerini ve yürütme planlarını gösterir.",
         risk_level="read_only",
-        tags=["sessions", "long-running", "performance"],
+        tags=["oturumlar", "uzun-suren", "performans", "long-running"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -67,11 +67,11 @@ ORDER BY elapsed_sec DESC;
     ),
     DBAScript(
         id="sessions-003",
-        name="Open Transactions",
-        category="Sessions",
-        description="Sessions with open transactions and their age.",
+        name="Açık Kalan İşlemler (Transactions)",
+        category="Oturumlar",
+        description="Açık işlem (transaction) tutan oturumları, bekleme sürelerini ve son SQL komutlarını listeler.",
         risk_level="read_only",
-        tags=["sessions", "transactions", "locks"],
+        tags=["oturumlar", "islemler", "kilitler", "transactions"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -89,14 +89,14 @@ WHERE s.open_transaction_count > 0
 ORDER BY s.open_transaction_count DESC, idle_min DESC;
 """.strip(),
     ),
-    # ── Blocking ────────────────────────────────────────────────────────────
+    # ── Engellemeler ────────────────────────────────────────────────────────
     DBAScript(
         id="blocking-001",
-        name="Current Blocking Chains",
-        category="Blocking",
-        description="Identify all blocking chains with blocker and blocked session details.",
+        name="Canlı Engelleme Zincirleri (Blocking)",
+        category="Engellemeler",
+        description="Kök engelleyici (head blocker) ve engellenen tüm oturumların ayrıntılarını hiyerarşik olarak sunar.",
         risk_level="read_only",
-        tags=["blocking", "locks", "performance"],
+        tags=["engelleme", "kilitler", "performans", "blocking"],
         min_sql_version="2008",
         sql="""
 WITH blockers AS (
@@ -121,11 +121,11 @@ ORDER BY r.wait_time DESC;
     ),
     DBAScript(
         id="blocking-002",
-        name="Lock Wait Statistics",
-        category="Blocking",
-        description="Cumulative lock wait stats by wait type since last restart.",
+        name="Kilit Bekleme İstatistikleri",
+        category="Engellemeler",
+        description="Sunucunun son başlangıcından bu yana bekleme türlerine göre kümülatif kilit bekleme istatistikleri.",
         risk_level="read_only",
-        tags=["blocking", "waits", "statistics"],
+        tags=["engelleme", "beklemeler", "istatistikler", "waits"],
         min_sql_version="2008",
         sql="""
 SELECT TOP 20
@@ -154,16 +154,16 @@ AND waiting_tasks_count > 0
 ORDER BY wait_time_ms DESC;
 """.strip(),
     ),
-    # ── Index Analysis ──────────────────────────────────────────────────────
+    # ── İndeks Analizi ──────────────────────────────────────────────────────
     DBAScript(
         id="index-001",
-        name="Missing Index Suggestions",
-        category="Index Analysis",
-        description="Top missing indexes ranked by potential improvement impact.",
+        name="Eksik İndeks Önerileri",
+        category="İndeks Analizi",
+        description="Tahmini performans iyileştirme etkisine (impact score) göre sıralanmış en kritik eksik indeksler.",
         risk_level="read_only",
-        tags=["indexes", "missing", "performance", "tuning"],
+        tags=["indeksler", "eksik", "performans", "tuning", "missing"],
         min_sql_version="2008",
-        notes="Reset on SQL Server restart. Validate before adding indexes.",
+        notes="SQL Server yeniden başlatıldığında sıfırlanır. İndeks oluşturmadan önce doğrulayınız.",
         sql="""
 SELECT TOP 25
     ROUND(s.avg_total_user_cost * s.avg_user_impact * (s.user_seeks + s.user_scans), 0)
@@ -186,13 +186,13 @@ ORDER BY improvement_measure DESC;
     ),
     DBAScript(
         id="index-002",
-        name="Unused Indexes",
-        category="Index Analysis",
-        description="Indexes that have never been used for seeks/scans but still consume write overhead.",
+        name="Kullanılmayan İndeksler",
+        category="İndeks Analizi",
+        description="Sorgularda hiç seek/scan almayan ancak veri güncellemelerinde (write) maliyet yaratan indeksler.",
         risk_level="caution",
-        tags=["indexes", "unused", "maintenance"],
+        tags=["indeksler", "kullanilmayan", "bakim", "unused"],
         min_sql_version="2008",
-        notes="Data resets on restart. Cross-check with Query Store before dropping.",
+        notes="Yeniden başlatmada veriler sıfırlanır. İndeksi silmeden önce Query Store ile doğrulayınız.",
         sql="""
 SELECT
     OBJECT_NAME(i.object_id)       AS table_name,
@@ -222,13 +222,13 @@ ORDER BY ISNULL(s.user_updates, 0) DESC;
     ),
     DBAScript(
         id="index-003",
-        name="Index Fragmentation",
-        category="Index Analysis",
-        description="Check fragmentation for indexes with > 1000 pages.",
+        name="İndeks Parçalanma Analizi (Fragmentation)",
+        category="İndeks Analizi",
+        description="1000'den fazla sayfaya sahip indekslerin parçalanma oranlarını ve bakım aksiyonu önerilerini listeler.",
         risk_level="read_only",
-        tags=["indexes", "fragmentation", "maintenance"],
+        tags=["indeksler", "parcalanma", "bakim", "fragmentation"],
         min_sql_version="2008",
-        notes="Can be slow on large databases. Consider sampling mode (SAMPLED).",
+        notes="Büyük veritabanlarında yavaş çalışabilir. Örnekleme (SAMPLED) modu kullanılması tavsiye edilir.",
         sql="""
 SELECT
     DB_NAME()                       AS database_name,
@@ -251,11 +251,11 @@ ORDER BY ps.avg_fragmentation_in_percent DESC;
     ),
     DBAScript(
         id="index-004",
-        name="Duplicate Indexes",
-        category="Index Analysis",
-        description="Find indexes with identical leading key columns on the same table.",
+        name="Mükerrer (Duplicate) İndeksler",
+        category="İndeks Analizi",
+        description="Aynı tablo üzerinde aynı öncü anahtar sütunlarına sahip mükerrer ve gereksiz indeksleri bulur.",
         risk_level="caution",
-        tags=["indexes", "duplicates", "optimization"],
+        tags=["indeksler", "mukerrer", "optimizasyon", "duplicate"],
         min_sql_version="2012",
         sql="""
 WITH idx_cols AS (
@@ -280,14 +280,14 @@ JOIN idx_cols b ON b.object_id = a.object_id AND b.key_cols = a.key_cols AND b.i
 ORDER BY table_name, a.key_cols;
 """.strip(),
     ),
-    # ── Database Files ──────────────────────────────────────────────────────
+    # ── Veritabanı Dosyaları ────────────────────────────────────────────────
     DBAScript(
         id="files-001",
-        name="Database File Sizes & Autogrowth",
-        category="Database Files",
-        description="Data and log file sizes, free space, and autogrowth settings.",
+        name="Dosya Boyutları ve Autogrowth",
+        category="Veritabanı Dosyaları",
+        description="Veri ve log dosyalarının disk boyutları, boş alanları ve otomatik büyüme (autogrowth) ayarları.",
         risk_level="read_only",
-        tags=["files", "autogrowth", "space", "storage"],
+        tags=["dosyalar", "autogrowth", "alan", "depolama", "storage"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -297,8 +297,8 @@ SELECT
     type_desc,
     CAST(size * 8.0 / 1024 AS DECIMAL(10,2))   AS size_mb,
     CASE max_size
-        WHEN -1 THEN 'Unlimited'
-        WHEN  0 THEN 'No growth'
+        WHEN -1 THEN 'Sınırsız'
+        WHEN  0 THEN 'Büyüme Kapalı'
         ELSE CAST(CAST(max_size * 8.0 / 1024 AS DECIMAL(10,2)) AS VARCHAR) + ' MB'
     END                         AS max_size,
     CASE is_percent_growth
@@ -312,11 +312,11 @@ ORDER BY database_name, type_desc;
     ),
     DBAScript(
         id="files-002",
-        name="TempDB File Contention",
-        category="Database Files",
-        description="Check TempDB file allocation contention via wait stats.",
+        name="TempDB Tahsisat Çekişmesi (Contention)",
+        category="Veritabanı Dosyaları",
+        description="PAGELATCH bekleme istatistikleri üzerinden TempDB dosya tahsisat çekişmelerini denetler.",
         risk_level="read_only",
-        tags=["tempdb", "contention", "waits"],
+        tags=["tempdb", "cekisme", "beklemeler", "contention"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -330,14 +330,14 @@ WHERE wait_type IN ('PAGELATCH_UP','PAGELATCH_EX','PAGELATCH_SH',
 ORDER BY wait_time_ms DESC;
 """.strip(),
     ),
-    # ── Backup ──────────────────────────────────────────────────────────────
+    # ── Yedekleme ───────────────────────────────────────────────────────────
     DBAScript(
         id="backup-001",
-        name="Last Backup per Database",
-        category="Backup",
-        description="Most recent full, differential and log backup per database.",
+        name="Veritabanı Başına Son Alınan Yedekler",
+        category="Yedekleme",
+        description="Her veritabanı için en güncel Tam (Full), Fark (Diff) ve Günlük (Log) yedek tarihleri ve yaşları.",
         risk_level="read_only",
-        tags=["backup", "recovery", "monitoring"],
+        tags=["yedekleme", "kurtarma", "izleme", "backup"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -358,11 +358,11 @@ ORDER BY full_age_hours DESC;
     ),
     DBAScript(
         id="backup-002",
-        name="Backup Size Trend (30 days)",
-        category="Backup",
-        description="Daily backup sizes grouped by database and type for the last 30 days.",
+        name="Yedek Boyut Eğilimleri (Son 30 Gün)",
+        category="Yedekleme",
+        description="Son 30 güne ait veritabanı ve yedek türü bazında günlük yedek boyutları ve sıkıştırma oranları.",
         risk_level="read_only",
-        tags=["backup", "size", "trend"],
+        tags=["yedekleme", "boyut", "egilim", "trend"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -381,11 +381,11 @@ ORDER BY backup_date DESC, database_name;
     # ── Query Store ─────────────────────────────────────────────────────────
     DBAScript(
         id="qs-001",
-        name="Query Store Status All Databases",
+        name="Query Store Durumu (Tüm Veritabanları)",
         category="Query Store",
-        description="Query Store enabled/disabled state for all user databases.",
+        description="Tüm kullanıcı veritabanlarında Query Store özelliğinin etkin ve çalışma durumunu listeler.",
         risk_level="read_only",
-        tags=["query store", "monitoring", "configuration"],
+        tags=["query store", "izleme", "yapilandirma"],
         min_sql_version="2016",
         sql="""
 SELECT
@@ -400,11 +400,11 @@ ORDER BY name;
     ),
     DBAScript(
         id="qs-002",
-        name="Top CPU Queries (Query Store)",
+        name="En Çok CPU Tüketen Sorgular (Query Store)",
         category="Query Store",
-        description="Top 25 queries by average CPU from Query Store. Run in target database context.",
+        description="Query Store verilerine göre son 24 saatte ortalama CPU tüketimi en yüksek 25 sorgu.",
         risk_level="read_only",
-        tags=["query store", "cpu", "performance", "tuning"],
+        tags=["query store", "cpu", "performans", "tuning"],
         min_sql_version="2016",
         sql="""
 SELECT TOP 25
@@ -426,27 +426,27 @@ WHERE rsi.start_time >= DATEADD(HOUR, -24, GETUTCDATE())
 ORDER BY rs.avg_cpu_time DESC;
 """.strip(),
     ),
-    # ── Error Log ───────────────────────────────────────────────────────────
+    # ── Hata Günlüğü ────────────────────────────────────────────────────────
     DBAScript(
         id="errorlog-001",
-        name="Recent Errors (Error Log)",
-        category="Error Log",
-        description="Read last 500 lines of the SQL Server error log.",
+        name="Son Sunucu Hataları (Error Log)",
+        category="Hata Günlüğü",
+        description="SQL Server hata günlüğündeki (error log) kritik hata kayıtlarını sorgular.",
         risk_level="read_only",
-        tags=["error log", "monitoring", "diagnostics"],
+        tags=["hata gunlugu", "izleme", "tani", "error log"],
         min_sql_version="2008",
         sql="""
 EXEC xp_readerrorlog 0, 1, N'error';
 """.strip(),
-        notes="Requires VIEW SERVER STATE or sysadmin.",
+        notes="VIEW SERVER STATE veya sysadmin yetkisi gerektirir.",
     ),
     DBAScript(
         id="errorlog-002",
-        name="SQL Server Restart History",
-        category="Error Log",
-        description="Detect server restarts from error log startup messages.",
+        name="Sunucu Yeniden Başlatma Geçmişi",
+        category="Hata Günlüğü",
+        description="Hata günlüğündeki başlatma kayıtlarından SQL Server'ın geçmiş yeniden başlama tarihlerini listeler.",
         risk_level="read_only",
-        tags=["error log", "restart", "uptime"],
+        tags=["hata gunlugu", "yeniden baslatma", "uptime"],
         min_sql_version="2008",
         sql="""
 EXEC xp_readerrorlog 0, 1, N'SQL Server is starting';
@@ -454,14 +454,14 @@ EXEC xp_readerrorlog 1, 1, N'SQL Server is starting';
 EXEC xp_readerrorlog 2, 1, N'SQL Server is starting';
 """.strip(),
     ),
-    # ── Configuration ───────────────────────────────────────────────────────
+    # ── Yapılandırma ────────────────────────────────────────────────────────
     DBAScript(
         id="config-001",
-        name="Server Configuration Settings",
-        category="Configuration",
-        description="All SQL Server sp_configure values with current and run-value.",
+        name="Sunucu Yapılandırma Ayarları (sp_configure)",
+        category="Yapılandırma",
+        description="SQL Server'ın tüm sp_configure ayarlarını geçerli ve yapılandırılmış değerleriyle listeler.",
         risk_level="read_only",
-        tags=["configuration", "settings", "sp_configure"],
+        tags=["yapilandirma", "ayarlar", "sp_configure", "config"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -477,11 +477,11 @@ ORDER BY name;
     ),
     DBAScript(
         id="config-002",
-        name="Database Compatibility Levels",
-        category="Configuration",
-        description="List all databases with their compatibility levels and SQL Server version mapping.",
+        name="Veritabanı Uyumluluk Seviyeleri (Compatibility)",
+        category="Yapılandırma",
+        description="Tüm veritabanlarının uyumluluk seviyelerini ve denk gelen SQL Server sürümlerini gösterir.",
         risk_level="read_only",
-        tags=["configuration", "compatibility", "version"],
+        tags=["yapilandirma", "uyumluluk", "surum"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -495,7 +495,7 @@ SELECT
         WHEN 120 THEN 'SQL Server 2014'
         WHEN 110 THEN 'SQL Server 2012'
         WHEN 100 THEN 'SQL Server 2008/R2'
-        ELSE 'Unknown'
+        ELSE 'Bilinmiyor'
     END                     AS sql_version_equiv,
     state_desc,
     recovery_model_desc
@@ -506,11 +506,11 @@ ORDER BY name;
     ),
     DBAScript(
         id="config-003",
-        name="Max Memory & CPU Settings",
-        category="Configuration",
-        description="Quick overview of memory and CPU configuration.",
+        name="Maksimum Bellek ve CPU Ayarları",
+        category="Yapılandırma",
+        description="Max/Min Server Memory, MAXDOP, Cost Threshold ve mantıksal işlemci çekirdeklerinin genel özeti.",
         risk_level="read_only",
-        tags=["configuration", "memory", "cpu"],
+        tags=["yapilandirma", "bellek", "cpu", "memory"],
         min_sql_version="2008",
         sql="""
 SELECT
@@ -525,11 +525,11 @@ SELECT
     ),
     DBAScript(
         id="config-004",
-        name="Trace Flags Enabled",
-        category="Configuration",
-        description="Currently enabled global and session trace flags.",
+        name="Aktif Trace Flag Listesi",
+        category="Yapılandırma",
+        description="Sunucu genelinde ve oturum düzeyinde etkinleştirilmiş olan global trace flag'leri listeler.",
         risk_level="read_only",
-        tags=["configuration", "trace flags", "diagnostics"],
+        tags=["yapilandirma", "trace flags", "tani"],
         min_sql_version="2008",
         sql="""
 DBCC TRACESTATUS(-1) WITH NO_INFOMSGS;
@@ -558,14 +558,14 @@ def get_categories() -> List[ScriptCategory]:
     from collections import Counter
     counts = Counter(s.category for s in _SCRIPTS)
     category_descs = {
-        "Sessions": "View active sessions, long-running queries, and open transactions.",
-        "Blocking": "Identify blocking chains and analyze wait statistics.",
-        "Index Analysis": "Find missing, unused, fragmented, or duplicate indexes.",
-        "Database Files": "Inspect file sizes, autogrowth settings, and TempDB contention.",
-        "Backup": "Review backup history, sizes, and recovery readiness.",
-        "Query Store": "Analyze Query Store status and top expensive queries.",
-        "Error Log": "Read and search SQL Server error log entries.",
-        "Configuration": "Review SQL Server configuration settings.",
+        "Oturumlar": "Aktif kullanıcı oturumlarını, uzun süren sorguları ve açık kalan işlemleri görüntüleyin.",
+        "Engellemeler": "Canlı engelleme zincirlerini tespit edin ve kilit bekleme istatistiklerini analiz edin.",
+        "İndeks Analizi": "Eksik, kullanılmayan, parçalanmış veya mükerrer indeksleri inceleyin.",
+        "Veritabanı Dosyaları": "Dosya boyutlarını, autogrowth ayarlarını ve TempDB tahsisat çekişmesini denetleyin.",
+        "Yedekleme": "Yedekleme geçmişini, boyut eğilimlerini ve kurtarma hazırlığını gözden geçirin.",
+        "Query Store": "Query Store durumunu ve en çok kaynak tüketen sorguları analiz edin.",
+        "Hata Günlüğü": "SQL Server hata günlüğü (error log) kayıtlarını okuyun ve inceleyin.",
+        "Yapılandırma": "SQL Server sunucu ve veritabanı yapılandırma ayarlarını denetleyin.",
     }
     return [
         ScriptCategory(name=cat, description=category_descs.get(cat, ""), script_count=cnt)

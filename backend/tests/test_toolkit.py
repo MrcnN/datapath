@@ -30,5 +30,5 @@ def test_get_categories():
     res = client.get("/api/toolkit/categories")
     assert res.status_code == 200
     cats = res.json()
-    assert "Sessions" in cats
-    assert "Blocking" in cats
+    assert "Oturumlar" in cats
+    assert "Engellemeler" in cats
