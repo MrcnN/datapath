@@ -8,7 +8,8 @@ from typing import List, Optional
 import pyodbc
 
 from app.db.connection import ConnectionParams, get_db_connection, rows_to_dicts
-from app.schemas.backups import BackupRecord, RecoveryReadiness
+from app.schemas.backups import BackupRecord, DatabaseIntegrityCheck, RecoveryReadiness
+from app.services.demo_data import DEMO_INTEGRITY_CHECKS
 
 logger = logging.getLogger(__name__)
 
@@ -181,3 +182,77 @@ def get_recovery_readiness(params: ConnectionParams) -> List[RecoveryReadiness]:
                 )
             )
         return results
+
+
+def get_database_integrity_checks(params: ConnectionParams) -> List[DatabaseIntegrityCheck]:
+    """Retrieve last known clean DBCC CHECKDB execution dates and page verification integrity status."""
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            cursor.execute("""
+            SELECT 
+                d.name AS database_name,
+                d.page_verify_option_desc AS page_verify_option,
+                d.is_read_only,
+                CONVERT(VARCHAR(19), d.create_date, 120) AS create_date
+            FROM sys.databases d
+            WHERE d.state_desc = 'ONLINE';
+            """)
+            dbs = rows_to_dicts(cursor)
+
+            results: List[DatabaseIntegrityCheck] = []
+            for db in dbs:
+                dbname = str(db["database_name"])
+                pv = str(db.get("page_verify_option", "CHECKSUM"))
+                ro = bool(db.get("is_read_only", 0))
+
+                # Try reading dbi_dbccLastKnownGood via DBCC DBINFO
+                last_good = None
+                try:
+                    cursor.execute(f"DBCC DBINFO ('{dbname}') WITH TABLERESULTS, NO_INFOMSGS;")
+                    for row in cursor.fetchall():
+                        if row and len(row) >= 4 and str(row[2]).strip() == "dbi_dbccLastKnownGood":
+                            val = str(row[3]).strip()
+                            if val and not val.startswith("1900"):
+                                last_good = val[:19]
+                            break
+                except Exception:
+                    pass
+
+                days_since = None
+                if last_good:
+                    try:
+                        dt = datetime.strptime(last_good, "%Y-%m-%d %H:%M:%S")
+                        days_since = max(0, (datetime.now() - dt).days)
+                    except Exception:
+                        pass
+
+                if days_since is None:
+                    status_val = "CRITICAL"
+                    display_date = "Hiç Çalıştırılmadı"
+                elif days_since <= 7:
+                    status_val = "HEALTHY"
+                    display_date = f"{last_good} ({days_since} gün önce)"
+                elif days_since <= 14:
+                    status_val = "WARNING"
+                    display_date = f"{last_good} ({days_since} gün önce)"
+                else:
+                    status_val = "CRITICAL"
+                    display_date = f"{last_good} ({days_since} gün önce)"
+
+                results.append(
+                    DatabaseIntegrityCheck(
+                        database_name=dbname,
+                        last_clean_checkdb=display_date,
+                        days_since_checkdb=days_since,
+                        status=status_val,
+                        page_verify_option=pv,
+                        is_read_only=ro,
+                        integrity_check_sql=f"DBCC CHECKDB ([{dbname}]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+                    )
+                )
+            return results
+    except Exception as exc:
+        logger.warning("Could not fetch live integrity checks, falling back to demo data: %s", exc)
+        return DEMO_INTEGRITY_CHECKS
+

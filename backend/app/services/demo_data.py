@@ -10,7 +10,7 @@ from app.schemas.instances import (
     ServerMetadata,
     SessionInfo,
 )
-from app.schemas.backups import BackupRecord, RecoveryReadiness
+from app.schemas.backups import BackupRecord, RecoveryReadiness, DatabaseIntegrityCheck
 from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole, RoleMember
 from app.schemas.high_availability import HAStatusResponse, AvailabilityGroup, AGReplica, AGDatabase
 from app.schemas.indexes import MissingIndex, UnusedIndex, IndexFragmentation, IndexSummary, TableStatistic
@@ -730,6 +730,64 @@ DEMO_TEMPDB_MEMORY_SUMMARY = TempDBMemorySummary(
     ],
     is_demo=True,
 )
+
+DEMO_INTEGRITY_CHECKS = [
+    DatabaseIntegrityCheck(
+        database_name="AppDb_Production",
+        last_clean_checkdb="2026-10-26 03:00:00",
+        days_since_checkdb=2,
+        status="HEALTHY",
+        page_verify_option="CHECKSUM",
+        is_read_only=False,
+        integrity_check_sql="DBCC CHECKDB ([AppDb_Production]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+    ),
+    DatabaseIntegrityCheck(
+        database_name="AppDb_Staging",
+        last_clean_checkdb="2026-10-19 02:30:00",
+        days_since_checkdb=9,
+        status="WARNING",
+        page_verify_option="CHECKSUM",
+        is_read_only=False,
+        integrity_check_sql="DBCC CHECKDB ([AppDb_Staging]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+    ),
+    DatabaseIntegrityCheck(
+        database_name="Reporting_Warehouse",
+        last_clean_checkdb="2026-10-24 01:15:00",
+        days_since_checkdb=4,
+        status="HEALTHY",
+        page_verify_option="CHECKSUM",
+        is_read_only=False,
+        integrity_check_sql="DBCC CHECKDB ([Reporting_Warehouse]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+    ),
+    DatabaseIntegrityCheck(
+        database_name="Archive_2023",
+        last_clean_checkdb="2026-09-30 00:00:00",
+        days_since_checkdb=28,
+        status="CRITICAL",
+        page_verify_option="TORN_PAGE_DETECTION",
+        is_read_only=True,
+        integrity_check_sql="DBCC CHECKDB ([Archive_2023]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+    ),
+    DatabaseIntegrityCheck(
+        database_name="master",
+        last_clean_checkdb="2026-10-27 00:00:00",
+        days_since_checkdb=1,
+        status="HEALTHY",
+        page_verify_option="CHECKSUM",
+        is_read_only=False,
+        integrity_check_sql="DBCC CHECKDB ([master]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+    ),
+    DatabaseIntegrityCheck(
+        database_name="msdb",
+        last_clean_checkdb="2026-10-27 00:00:00",
+        days_since_checkdb=1,
+        status="HEALTHY",
+        page_verify_option="CHECKSUM",
+        is_read_only=False,
+        integrity_check_sql="DBCC CHECKDB ([msdb]) WITH NO_INFOMSGS, ALL_ERRORMSGS;",
+    ),
+]
+
 
 
 

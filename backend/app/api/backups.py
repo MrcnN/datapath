@@ -7,8 +7,12 @@ from fastapi import APIRouter, Query, HTTPException
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.backups import BackupRecord, RecoveryReadiness
-from app.services.backup_service import get_backup_history, get_recovery_readiness
+from app.schemas.backups import BackupRecord, DatabaseIntegrityCheck, RecoveryReadiness
+from app.services.backup_service import (
+    get_backup_history,
+    get_database_integrity_checks,
+    get_recovery_readiness,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -56,3 +60,15 @@ def read_recovery_readiness():
     except Exception as exc:
         logger.error("Recovery readiness error: %s", exc)
         return []
+
+
+@router.get("/backups/integrity", response_model=List[DatabaseIntegrityCheck])
+def read_database_integrity():
+    """Check last clean DBCC CHECKDB execution dates and page verification options."""
+    params = _get_connection_params()
+    try:
+        return get_database_integrity_checks(params)
+    except Exception as exc:
+        logger.error("Database integrity check error: %s", exc)
+        return []
+

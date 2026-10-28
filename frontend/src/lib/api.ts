@@ -12,6 +12,7 @@ import type {
   ExpensiveQuery,
   QueryRegression,
   BackupEntry,
+  DatabaseIntegrityCheck,
   RecoveryReadiness,
   SchemaDiffConfig,
   SchemaDiffResult,
@@ -198,6 +199,10 @@ export async function getBackupHistory(params?: {
 
 export async function getRecoveryReadiness(): Promise<RecoveryReadiness[]> {
   return apiFetch<RecoveryReadiness[]>('/api/backups/recovery-readiness');
+}
+
+export async function getDatabaseIntegrityChecks(): Promise<DatabaseIntegrityCheck[]> {
+  return apiFetch<DatabaseIntegrityCheck[]>('/api/backups/integrity');
 }
 
 // ── Schema Diff ───────────────────────────────────────────────

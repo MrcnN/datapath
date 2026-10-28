@@ -263,6 +263,17 @@ export interface RecoveryReadiness {
   [key: string]: any;
 }
 
+export interface DatabaseIntegrityCheck {
+  database_name: string;
+  last_clean_checkdb: string;
+  days_since_checkdb?: number | null;
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | string;
+  page_verify_option: string;
+  is_read_only: boolean;
+  integrity_check_sql: string;
+  [key: string]: any;
+}
+
 // ── Schema Diff ───────────────────────────────────────────────
 export interface SchemaDiffConfig {
   source_db: string;

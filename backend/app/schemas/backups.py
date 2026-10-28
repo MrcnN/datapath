@@ -1,4 +1,4 @@
-"""schemas/backups.py"""
+"""schemas/backups.py — Backup records, recovery readiness, and database integrity (DBCC CHECKDB)."""
 from __future__ import annotations
 
 from datetime import datetime
@@ -34,3 +34,13 @@ class RecoveryReadiness(BaseModel):
     recovery_point_objective_risk: str = "unknown"  # low | medium | high | critical
     issues: List[str] = []
     recommendations: List[str] = []
+
+
+class DatabaseIntegrityCheck(BaseModel):
+    database_name: str
+    last_clean_checkdb: str
+    days_since_checkdb: Optional[int] = None
+    status: str  # "HEALTHY", "WARNING", "CRITICAL"
+    page_verify_option: str
+    is_read_only: bool
+    integrity_check_sql: str
