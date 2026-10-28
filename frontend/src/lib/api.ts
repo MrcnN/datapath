@@ -26,6 +26,8 @@ import type {
   IndexFragmentation,
   IndexSummary,
   WaitStatsSummary,
+  StorageSummary,
+  TempDBMemorySummary,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -276,6 +278,19 @@ export async function getIndexFragmentation(
 export async function getWaitStatistics(): Promise<WaitStatsSummary> {
   return apiFetch<WaitStatsSummary>('/api/waits');
 }
+
+// ── Storage & Autogrowth ──────────────────────────────────────
+
+export async function getStorageSummary(): Promise<StorageSummary> {
+  return apiFetch<StorageSummary>('/api/storage');
+}
+
+// ── TempDB & Memory Intelligence ──────────────────────────────
+
+export async function getTempDBMemorySummary(): Promise<TempDBMemorySummary> {
+  return apiFetch<TempDBMemorySummary>('/api/tempdb-memory');
+}
+
 
 
 

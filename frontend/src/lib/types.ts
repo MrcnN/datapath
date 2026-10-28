@@ -504,5 +504,112 @@ export interface WaitStatsSummary {
   [key: string]: any;
 }
 
+// ── Storage & Files ───────────────────────────────────────────
+export interface DatabaseFile {
+  database_name: string;
+  file_id: number;
+  name: string;
+  file_type: string;
+  physical_name: string;
+  size_mb: number;
+  used_mb: number;
+  free_mb: number;
+  free_percent: number;
+  growth: string;
+  is_percent_growth: boolean;
+  max_size: string;
+  growth_recommendation_sql?: string | null;
+  [key: string]: any;
+}
+
+export interface LogSpaceUsage {
+  database_name: string;
+  log_size_mb: number;
+  log_space_used_percent: number;
+  status: number;
+  log_reuse_wait_desc: string;
+  [key: string]: any;
+}
+
+export interface AutogrowthEvent {
+  start_time: string;
+  database_name: string;
+  file_name: string;
+  file_type: string;
+  growth_mb: number;
+  duration_ms: number;
+  [key: string]: any;
+}
+
+export interface StorageSummary {
+  total_data_size_mb: number;
+  total_log_size_mb: number;
+  total_free_space_mb: number;
+  files_with_percent_growth_count: number;
+  high_log_usage_dbs_count: number;
+  files: DatabaseFile[];
+  log_spaces: LogSpaceUsage[];
+  autogrowth_events: AutogrowthEvent[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+// ── TempDB & Memory Intelligence ──────────────────────────────
+export interface TempDBSpaceBreakdown {
+  user_objects_mb: number;
+  internal_objects_mb: number;
+  version_store_mb: number;
+  unallocated_space_mb: number;
+  total_size_mb: number;
+  user_objects_pct: number;
+  internal_objects_pct: number;
+  version_store_pct: number;
+  unallocated_pct: number;
+  [key: string]: any;
+}
+
+export interface TempDBFile {
+  file_id: number;
+  name: string;
+  physical_name: string;
+  size_mb: number;
+  free_mb: number;
+  free_percent: number;
+  growth: string;
+  is_percent_growth: boolean;
+  [key: string]: any;
+}
+
+export interface MemoryClerk {
+  clerk_type: string;
+  friendly_name: string;
+  size_mb: number;
+  percentage_of_total: number;
+  [key: string]: any;
+}
+
+export interface TempDBMemorySummary {
+  space_breakdown: TempDBSpaceBreakdown;
+  tempdb_files: TempDBFile[];
+  file_count: number;
+  cpu_cores: number;
+  sizing_equal: boolean;
+  file_count_status: 'OPTIMAL' | 'WARNING' | string;
+  file_count_recommendation: string;
+  allocation_contention_detected: boolean;
+  contention_description: string;
+  page_life_expectancy_sec: number;
+  ple_status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | string;
+  ple_recommendation: string;
+  buffer_cache_hit_ratio: number;
+  total_server_memory_mb: number;
+  target_server_memory_mb: number;
+  memory_utilization_pct: number;
+  top_memory_clerks: MemoryClerk[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+
 
 

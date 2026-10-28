@@ -11,6 +11,8 @@ import PermissionsPage from '../features/permissions/PermissionsPage';
 import HAPage from '../features/high-availability/HAPage';
 import IndexesPage from '../features/indexes/IndexesPage';
 import WaitStatsPage from '../features/wait-stats/WaitStatsPage';
+import StoragePage from '../features/storage/StoragePage';
+import TempDBPage from '../features/tempdb/TempDBPage';
 
 export default function Router() {
   return (
@@ -21,6 +23,8 @@ export default function Router() {
       <Route path="/query-performance" element={<QueryPerformancePage />} />
       <Route path="/indexes" element={<IndexesPage />} />
       <Route path="/waits" element={<WaitStatsPage />} />
+      <Route path="/storage" element={<StoragePage />} />
+      <Route path="/tempdb" element={<TempDBPage />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/toolkit" element={<ToolkitPage />} />

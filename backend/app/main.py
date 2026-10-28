@@ -17,6 +17,8 @@ from app.api import (
     permissions,
     query_performance,
     schema_diff,
+    storage,
+    tempdb_memory,
     toolkit,
     wait_stats,
 )
@@ -65,6 +67,8 @@ app.include_router(permissions.router, prefix="/api")
 app.include_router(high_availability.router, prefix="/api")
 app.include_router(indexes.router, prefix="/api")
 app.include_router(wait_stats.router, prefix="/api")
+app.include_router(storage.router, prefix="/api")
+app.include_router(tempdb_memory.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---
