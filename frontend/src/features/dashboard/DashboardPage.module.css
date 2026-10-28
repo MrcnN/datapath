@@ -1,0 +1,660 @@
+.dashboardContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.loadingContainer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+}
+
+.loadingText {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+}
+
+/* ============================================
+   1. Compact Top Bar Strip
+   ============================================ */
+.topBarStrip {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.serverInfoGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.serverIconBox {
+  width: 28px;
+  height: 28px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.serverMetaRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.serverName {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.2px;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 7px;
+  border-radius: var(--radius-xs);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.statusBadgeLive {
+  background-color: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  color: #10b981;
+}
+
+.statusBadgeDemo {
+  background-color: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+}
+
+.statusDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.editionText {
+  color: var(--text-secondary);
+  font-size: 11.5px;
+}
+
+.sep {
+  color: var(--border-hover);
+  font-size: 11px;
+}
+
+.hardwareText {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.miniIcon {
+  color: var(--accent);
+}
+
+.agentGreen {
+  color: #10b981;
+}
+
+.agentRed {
+  color: #f43f5e;
+}
+
+.refreshControlGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.refreshLabel {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.refreshSelect {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: var(--radius-xs);
+  padding: 2px 6px;
+  font-size: 11px;
+  outline: none;
+}
+
+.refreshBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  border-radius: var(--radius-xs);
+  font-size: 11.5px;
+  font-weight: 500;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.refreshBtn:hover:not(:disabled) {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.refreshBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lastSyncText {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+/* ============================================
+   2. Alert Banners
+   ============================================ */
+.alertBanner {
+  background-color: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--text-primary);
+}
+
+.alertBannerWarning {
+  background-color: var(--status-warning-bg);
+  border-color: var(--status-warning-border);
+}
+
+.alertLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alertIconCritical {
+  color: var(--status-critical);
+  flex-shrink: 0;
+}
+
+.alertIconWarning {
+  color: var(--status-warning);
+  flex-shrink: 0;
+}
+
+.alertBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background-color: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 3px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.alertBtn:hover {
+  background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* ============================================
+   3. KPI Metric Cards
+   ============================================ */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-3);
+}
+
+.kpiCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.kpiHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.kpiLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kpiIconAccent {
+  color: var(--accent);
+}
+
+.kpiIconSuccess {
+  color: var(--status-success);
+}
+
+.kpiIconWarning {
+  color: var(--status-warning);
+}
+
+.kpiIconCritical {
+  color: var(--status-critical);
+}
+
+.kpiValue {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+  margin-bottom: 4px;
+}
+
+.kpiValSuccess {
+  color: var(--status-success);
+}
+
+.kpiValWarning {
+  color: var(--status-warning);
+}
+
+.kpiValCritical {
+  color: var(--status-critical);
+}
+
+.kpiSub {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.kpiSub strong {
+  color: var(--text-primary);
+}
+
+/* ============================================
+   4. Visual Charts Row (2 Equal Columns)
+   ============================================ */
+.chartsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+@media (max-width: 980px) {
+  .chartsRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sectionCard {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-sm);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sectionIcon {
+  color: var(--accent);
+}
+
+.sectionTitle {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sectionBadge {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background-color: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+}
+
+.chartWrapper {
+  flex: 1;
+  min-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.noData {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.quickActionsStrip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+}
+
+.quickBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 6px 8px;
+  border-radius: var(--radius-xs);
+  font-size: 11px;
+  font-weight: 500;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.quickBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+/* ============================================
+   5. Full-Width Database Registry Table
+   ============================================ */
+.tableControlsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.filterTabs {
+  display: inline-flex;
+  gap: 2px;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 2px;
+}
+
+.tabBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 4px 9px;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.tabBtn:hover {
+  color: var(--text-primary);
+}
+
+.tabBtnActive {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+  width: 200px;
+}
+
+.searchIcon {
+  color: var(--text-muted);
+}
+
+.searchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-size: 11.5px;
+  width: 100%;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.tableContainer {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead th {
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-elevated);
+  white-space: nowrap;
+}
+
+.tableRow {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background-color var(--transition-fast);
+}
+
+.tableRow:hover {
+  background-color: var(--bg-hover);
+}
+
+.table td {
+  padding: 9px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  vertical-align: middle;
+}
+
+.dbNameCol {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.dbIcon {
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.dbNameText {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.systemPill {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  background-color: var(--bg-elevated);
+  padding: 1px 4px;
+  border-radius: 2px;
+  border: 1px solid var(--border-subtle);
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 6px;
+  border-radius: var(--radius-xs);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+
+.pillOnline {
+  background-color: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.pillOther {
+  background-color: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.solidDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: currentColor;
+}
+
+.recoveryTag {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background-color: var(--bg-elevated);
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+}
+
+.monoCell {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+}
+
+.sizeCell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  width: 90px;
+}
+
+.sizeBar {
+  width: 100%;
+  height: 3px;
+  background-color: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.sizeBarFill {
+  height: 100%;
+  background-color: var(--accent);
+  border-radius: 1px;
+}
+
+.tagReadOnly {
+  font-size: 10.5px;
+  color: #f59e0b;
+  background-color: rgba(245, 158, 11, 0.1);
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+}
+
+.tagReadWrite {
+  font-size: 10.5px;
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.1);
+  padding: 1px 5px;
+  border-radius: var(--radius-xs);
+}
+
+.actionBtns {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 5px;
+}
+
+.rowActionBtn {
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: var(--radius-xs);
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.rowActionBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.emptyCell {
+  text-align: center;
+  padding: var(--space-6) !important;
+  color: var(--text-muted);
+  font-size: 12px;
+}
