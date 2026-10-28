@@ -1,0 +1,77 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.tabs {
+  display: inline-flex;
+  gap: 4px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  width: fit-content;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.tabBtn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 16px;
+  cursor: pointer;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.tabBtn:hover {
+  color: #ffffff;
+  background: var(--bg-hover);
+}
+
+.tabBtnActive {
+  color: #ffffff;
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.18), rgba(2, 132, 199, 0.22));
+  border-color: rgba(0, 210, 255, 0.35);
+  font-weight: 600;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-3);
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-3) var(--space-5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.controls label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.select {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  font-size: 12.5px;
+  outline: none;
+  min-width: 160px;
+  transition: all var(--transition-fast);
+}
+
+.select:focus {
+  border-color: var(--border-focus);
+}
