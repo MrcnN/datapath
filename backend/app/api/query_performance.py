@@ -12,11 +12,13 @@ from app.schemas.query_performance import (
     ExpensiveQuery,
     QueryStoreOverview,
     RegressionResult,
+    PlanAntiPatternsSummary,
 )
 from app.services.query_performance_service import (
     get_expensive_queries,
     get_query_store_overview,
     get_regressions,
+    get_plan_anti_patterns,
 )
 
 logger = logging.getLogger(__name__)
@@ -100,3 +102,16 @@ def read_query_regressions(
     except Exception as exc:
         logger.debug("Regressions unavailable: %s", exc)
         return []
+
+
+@router.get("/query-performance/plan-anti-patterns", response_model=PlanAntiPatternsSummary)
+def read_plan_anti_patterns():
+    """Detect execution plan warnings, implicit conversions, TempDB spills and high memory grants across the plan cache."""
+    params = _get_connection_params()
+    try:
+        return get_plan_anti_patterns(params)
+    except Exception as exc:
+        logger.error("Plan anti-patterns retrieval failed: %s", exc)
+        from app.services.demo_data import DEMO_PLAN_ANTI_PATTERNS
+        return DEMO_PLAN_ANTI_PATTERNS
+

@@ -231,6 +231,36 @@ export interface QueryRegression {
   [key: string]: any;
 }
 
+export interface PlanWarningQuery {
+  plan_handle: string;
+  query_hash?: string | null;
+  database_name: string;
+  query_text: string;
+  warning_type: string;
+  warning_severity: 'CRITICAL' | 'WARNING' | 'INFO';
+  warning_details: string;
+  recommendation: string;
+  execution_count: number;
+  total_cpu_ms: number;
+  avg_cpu_ms: number;
+  total_logical_reads: number;
+  avg_logical_reads: number;
+  max_grant_kb?: number | null;
+  last_execution_time?: string | null;
+  [key: string]: any;
+}
+
+export interface PlanAntiPatternsSummary {
+  is_demo?: boolean;
+  total_flagged_plans: number;
+  spill_count: number;
+  implicit_conversion_count: number;
+  missing_index_count: number;
+  high_grant_count: number;
+  queries: PlanWarningQuery[];
+  [key: string]: any;
+}
+
 // ── Backups ───────────────────────────────────────────────────
 export interface BackupEntry {
   database_name: string;

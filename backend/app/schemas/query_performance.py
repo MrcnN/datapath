@@ -49,3 +49,32 @@ class RegressionResult(BaseModel):
     duration_delta_pct: Optional[float] = None
     old_execution_count: Optional[int] = None
     new_execution_count: Optional[int] = None
+
+
+class PlanWarningQuery(BaseModel):
+    plan_handle: str
+    query_hash: Optional[str] = None
+    database_name: str
+    query_text: str
+    warning_type: str
+    warning_severity: str
+    warning_details: str
+    recommendation: str
+    execution_count: int
+    total_cpu_ms: float
+    avg_cpu_ms: float
+    total_logical_reads: int
+    avg_logical_reads: float
+    max_grant_kb: Optional[int] = None
+    last_execution_time: Optional[str] = None
+
+
+class PlanAntiPatternsSummary(BaseModel):
+    is_demo: bool = False
+    total_flagged_plans: int
+    spill_count: int
+    implicit_conversion_count: int
+    missing_index_count: int
+    high_grant_count: int
+    queries: List[PlanWarningQuery] = []
+

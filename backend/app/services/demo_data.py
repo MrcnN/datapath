@@ -25,6 +25,7 @@ from app.schemas.storage import (
 )
 from app.schemas.agent_jobs import AgentJobDetail, AgentJobsSummary, JobStepHistory
 from app.schemas.tempdb_memory import TempDBSpaceBreakdown, TempDBFile, MemoryClerk, TempDBMemorySummary
+from app.schemas.query_performance import PlanWarningQuery, PlanAntiPatternsSummary
 
 DEMO_DATABASES = [
     DatabaseInfo(name="master", state="ONLINE", recovery_model="SIMPLE", size_mb=12.5, log_size_mb=4.0, compatibility_level=160, is_read_only=False, create_date="2023-01-10T10:00:00"),
@@ -732,6 +733,7 @@ DEMO_TEMPDB_MEMORY_SUMMARY = TempDBMemorySummary(
     is_demo=True,
 )
 
+
 DEMO_INTEGRITY_CHECKS = [
     DatabaseIntegrityCheck(
         database_name="AppDb_Production",
@@ -886,6 +888,87 @@ DEMO_AGENT_JOBS_SUMMARY = AgentJobsSummary(
     ],
     is_demo=True,
 )
+
+
+DEMO_PLAN_ANTI_PATTERNS = PlanAntiPatternsSummary(
+    is_demo=True,
+    total_flagged_plans=4,
+    spill_count=1,
+    implicit_conversion_count=1,
+    missing_index_count=1,
+    high_grant_count=1,
+    queries=[
+        PlanWarningQuery(
+            plan_handle="0x06000500A1B2C3D4E5F60718293A4B5C6D7E8F9012345678",
+            query_hash="0x9A8B7C6D5E4F3A2B",
+            database_name="AppDb_Production (Demo)",
+            query_text="SELECT o.OrderId, o.CustomerId, SUM(od.Quantity * od.UnitPrice) AS TotalAmount FROM dbo.Orders o INNER JOIN dbo.OrderDetails od ON o.OrderId = od.OrderId WHERE o.OrderDate >= '2026-01-01' GROUP BY o.OrderId, o.CustomerId ORDER BY TotalAmount DESC",
+            warning_type="Sort Warning (TempDB Spill)",
+            warning_severity="CRITICAL",
+            warning_details="Sıralama (Sort) operatörüne ayrılan bellek (Memory Grant) yetersiz kaldığı için 14.820 sayfa (115 MB) veri TempDB diskine taştı (Spill Level 1). Bu durum diske I/O baskısı oluşturup sorgu süresini 12 kat uzatmıştır.",
+            recommendation="İlgili sorguya OrderId ve CustomerId içeren covering indeks ekleyerek fiziksel Sort adımını eleyin veya kardinalite tahmin hatasına yol açan güncel olmayan istatistikleri güncelleyin.",
+            execution_count=4820,
+            total_cpu_ms=1544810.0,
+            avg_cpu_ms=320.5,
+            total_logical_reads=217864000,
+            avg_logical_reads=45200.0,
+            max_grant_kb=32768,
+            last_execution_time="2026-10-28 23:42:15",
+        ),
+        PlanWarningQuery(
+            plan_handle="0x06000500B2C3D4E5F60718293A4B5C6D7E8F90123456789A",
+            query_hash="0x8B7C6D5E4F3A2B1C",
+            database_name="AppDb_Production (Demo)",
+            query_text="SELECT CustomerId, AccountNumber, Balance, Email, CreatedDate FROM dbo.Customers WHERE IdentificationNumber = @p_IdNum",
+            warning_type="Implicit Conversion (CONVERT_IMPLICIT)",
+            warning_severity="CRITICAL",
+            warning_details="IdentificationNumber kolonu VARCHAR(11) olarak tanımlı iken parametre NVARCHAR(11) tipinde iletildiğinden optimizatör CONVERT_IMPLICIT kuralı uygulamıştır. Bu nedenle indeks Seek yerine 2.500.000 satırlık Index Scan yapılmış ve aşırı CPU tüketilmiştir.",
+            recommendation="Uygulama ORM / Veri sağlayıcısında parametre veri tipini VarChar(11) olarak eşleştirin ya da T-SQL sorgu seviyesinde CAST(IdentificationNumber AS VARCHAR(11)) uyumsuzluğunu giderin.",
+            execution_count=182400,
+            total_cpu_ms=17364480.0,
+            avg_cpu_ms=95.2,
+            total_logical_reads=3365280000,
+            avg_logical_reads=18450.0,
+            max_grant_kb=1024,
+            last_execution_time="2026-10-28 23:58:30",
+        ),
+        PlanWarningQuery(
+            plan_handle="0x06000500C3D4E5F60718293A4B5C6D7E8F90123456789AB1",
+            query_hash="0x7C6D5E4F3A2B1C0D",
+            database_name="Reporting_Warehouse (Demo)",
+            query_text="SELECT p.*, inv.StockQuantity, inv.WarehouseCode FROM dbo.Products p INNER HASH JOIN dbo.Inventory inv ON p.ProductId = inv.ProductId WHERE p.IsActive = 1",
+            warning_type="Excessive Memory Grant (Bellek İsrafı)",
+            warning_severity="WARNING",
+            warning_details="Sorgu yürütme planı 1.450 MB bellek (Memory Grant) rezerve etmiş ancak sorgu tamamlandığında fiilen sadece 18 MB (%1.2) kullanmıştır. Bu gereksiz rezervasyon diğer oturumların RESOURCE_SEMAPHORE beklemesine yol açmaktadır.",
+            recommendation="İlgili tabloların istatistiklerini (FULLSCAN) güncelleyin veya sorgudaki HASH JOIN yerine indeks destekli NESTED LOOPS yönlendirmesini değerlendirin.",
+            execution_count=850,
+            total_cpu_ms=348500.0,
+            avg_cpu_ms=410.0,
+            total_logical_reads=78455000,
+            avg_logical_reads=92300.0,
+            max_grant_kb=1484800,
+            last_execution_time="2026-10-28 22:15:00",
+        ),
+        PlanWarningQuery(
+            plan_handle="0x06000500D4E5F60718293A4B5C6D7E8F90123456789AB1C2",
+            query_hash="0x6D5E4F3A2B1C0D9E",
+            database_name="AppDb_Production (Demo)",
+            query_text="SELECT TransactionId, Amount, Status, TransactionDate FROM dbo.AccountTransactions WHERE Status = 'PENDING' AND TransactionDate >= DATEADD(day, -7, GETDATE())",
+            warning_type="Missing Index in Plan (%94.2 Maliyet Kazancı)",
+            warning_severity="WARNING",
+            warning_details="SQL Server Optimizatörü yürütme planı derlenirken eksik indeks uyarısı üretmiştir. [Status, TransactionDate] üzerinde indeks oluşturulması durumunda sorgu maliyetinin %94.2 oranında düşeceği hesaplanmıştır.",
+            recommendation="CREATE NONCLUSTERED INDEX IX_AccountTransactions_StatusDate ON dbo.AccountTransactions(Status, TransactionDate) INCLUDE (Amount);",
+            execution_count=24100,
+            total_cpu_ms=1031480.0,
+            avg_cpu_ms=42.8,
+            total_logical_reads=298840000,
+            avg_logical_reads=12400.0,
+            max_grant_kb=2048,
+            last_execution_time="2026-10-28 23:55:12",
+        ),
+    ],
+)
+
 
 
 

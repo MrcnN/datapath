@@ -11,6 +11,7 @@ import type {
   QueryStoreOverview,
   ExpensiveQuery,
   QueryRegression,
+  PlanAntiPatternsSummary,
   BackupEntry,
   DatabaseIntegrityCheck,
   RecoveryReadiness,
@@ -187,6 +188,10 @@ export async function getQueryRegressions(params: {
   return apiFetch<QueryRegression[]>(
     `/api/query-store/regressions${buildQuery(params)}`
   );
+}
+
+export async function getPlanAntiPatterns(): Promise<PlanAntiPatternsSummary> {
+  return apiFetch<PlanAntiPatternsSummary>('/api/query-performance/plan-anti-patterns');
 }
 
 // ── Backups ───────────────────────────────────────────────────

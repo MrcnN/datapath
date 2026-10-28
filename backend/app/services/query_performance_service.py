@@ -13,6 +13,8 @@ from app.schemas.query_performance import (
     QueryStoreDatabaseInfo,
     QueryStoreOverview,
     RegressionResult,
+    PlanWarningQuery,
+    PlanAntiPatternsSummary,
 )
 
 logger = logging.getLogger(__name__)
@@ -245,3 +247,133 @@ def get_regressions(
             )
             for r in rows
         ]
+
+
+def get_plan_anti_patterns(params: ConnectionParams) -> PlanAntiPatternsSummary:
+    """Retrieve execution plan warnings, implicit conversions, TempDB spills and excessive memory grants."""
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            query = """
+            SELECT TOP 40
+                CONVERT(VARCHAR(64), qs.plan_handle, 1) AS plan_handle,
+                CONVERT(VARCHAR(64), qs.query_hash, 1) AS query_hash,
+                ISNULL(DB_NAME(CAST(pa.value AS INT)), 'master') AS database_name,
+                SUBSTRING(st.text, (qs.statement_start_offset/2)+1, 
+                    ((CASE qs.statement_end_offset
+                      WHEN -1 THEN DATALENGTH(st.text)
+                     ELSE qs.statement_end_offset
+                     END - qs.statement_start_offset)/2) + 1) AS query_text,
+                CAST(qp.query_plan AS NVARCHAR(MAX)) AS query_plan,
+                qs.execution_count,
+                qs.total_worker_time / 1000.0 AS total_cpu_ms,
+                (qs.total_worker_time / 1000.0) / NULLIF(qs.execution_count, 0) AS avg_cpu_ms,
+                qs.total_logical_reads,
+                qs.total_logical_reads / NULLIF(qs.execution_count, 0) AS avg_logical_reads,
+                qs.max_grant_kb,
+                CONVERT(VARCHAR(19), qs.last_execution_time, 120) AS last_execution_time
+            FROM sys.dm_exec_query_stats qs
+            CROSS APPLY sys.dm_exec_sql_text(qs.sql_handle) st
+            CROSS APPLY sys.dm_exec_query_plan(qs.plan_handle) qp
+            OUTER APPLY sys.dm_exec_plan_attributes(qs.plan_handle) pa
+            WHERE pa.attribute = 'dbid'
+              AND (
+                  CAST(qp.query_plan AS NVARCHAR(MAX)) LIKE '%<Warnings%'
+                  OR CAST(qp.query_plan AS NVARCHAR(MAX)) LIKE '%SpillToTempDb%'
+                  OR CAST(qp.query_plan AS NVARCHAR(MAX)) LIKE '%ConvertType="CONVERT_IMPLICIT"%'
+                  OR CAST(qp.query_plan AS NVARCHAR(MAX)) LIKE '%<MissingIndexes>%'
+                  OR qs.max_grant_kb > 102400
+              )
+            ORDER BY qs.total_worker_time DESC;
+            """
+            cursor.execute(query)
+            rows = cursor.fetchall()
+
+            queries: List[PlanWarningQuery] = []
+            spill_cnt = 0
+            implicit_cnt = 0
+            missing_idx_cnt = 0
+            high_grant_cnt = 0
+
+            for r in rows:
+                plan_handle = r[0] or ""
+                query_hash = r[1]
+                db_name = r[2] or "master"
+                query_text = (r[3] or "").strip()
+                plan_xml = r[4] or ""
+                exec_cnt = int(r[5] or 0)
+                tot_cpu = float(r[6] or 0.0)
+                avg_cpu = float(r[7] or 0.0)
+                tot_reads = int(r[8] or 0)
+                avg_reads = float(r[9] or 0.0)
+                max_grant = int(r[10]) if r[10] is not None else None
+                last_exec = r[11]
+
+                warning_type = "Genel Plan Uyarısı"
+                warning_severity = "WARNING"
+                details = "Yürütme planında optimizasyon uyarıları tespit edildi."
+                rec = "Sorgu yürütme planını SSMS veya Datapath ile açarak operatör maliyetlerini inceleyin."
+
+                if "SpillToTempDb" in plan_xml or "SortWarning" in plan_xml or "HashWarning" in plan_xml:
+                    warning_type = "Sort / Hash Warning (TempDB Spill)"
+                    warning_severity = "CRITICAL"
+                    details = "Yürütme planında operatör belleği yetersiz kaldığı için veriler TempDB diskine taşmıştır."
+                    rec = "İlgili tablolardaki istatistikleri güncelleyin veya sıralama operatörünü eleyecek indeks tanımlayın."
+                    spill_cnt += 1
+                elif 'ConvertType="CONVERT_IMPLICIT"' in plan_xml:
+                    warning_type = "Implicit Conversion (CONVERT_IMPLICIT)"
+                    warning_severity = "CRITICAL"
+                    details = "Sorgudaki parametre ile kolon veri tipi uyuşmadığı için gizli tip dönüşümü yapılmakta ve indeks seek engellenmektedir."
+                    rec = "Uygulama katmanında parametre tipini kolon tipiyle (örn. VARCHAR / NVARCHAR) birebir eşitleyin."
+                    implicit_cnt += 1
+                elif "<MissingIndexes>" in plan_xml:
+                    warning_type = "Eksik İndeks (Missing Index)"
+                    warning_severity = "WARNING"
+                    details = "SQL Server sorgu optimizatörü bu sorgu için eksik indeks tespit etmiştir."
+                    rec = "İndeks Zekası sekmesinden ilgili tablo için önerilen indeksi oluşturun."
+                    missing_idx_cnt += 1
+                elif max_grant and max_grant > 102400:
+                    warning_type = "Yüksek Bellek Rezervasyonu (Memory Grant)"
+                    warning_severity = "WARNING"
+                    details = f"Sorgu {max_grant // 1024} MB bellek rezerve ederek diğer oturumları bekletebilir."
+                    rec = "İstatistikleri güncelleyin ve büyük HASH JOIN operatörlerini optimize edin."
+                    high_grant_cnt += 1
+
+                queries.append(
+                    PlanWarningQuery(
+                        plan_handle=plan_handle,
+                        query_hash=query_hash,
+                        database_name=db_name,
+                        query_text=query_text,
+                        warning_type=warning_type,
+                        warning_severity=warning_severity,
+                        warning_details=details,
+                        recommendation=rec,
+                        execution_count=exec_cnt,
+                        total_cpu_ms=tot_cpu,
+                        avg_cpu_ms=avg_cpu,
+                        total_logical_reads=tot_reads,
+                        avg_logical_reads=avg_reads,
+                        max_grant_kb=max_grant,
+                        last_execution_time=last_exec,
+                    )
+                )
+
+            if not queries:
+                from app.services.demo_data import DEMO_PLAN_ANTI_PATTERNS
+                return DEMO_PLAN_ANTI_PATTERNS
+
+            return PlanAntiPatternsSummary(
+                is_demo=False,
+                total_flagged_plans=len(queries),
+                spill_count=spill_cnt,
+                implicit_conversion_count=implicit_cnt,
+                missing_index_count=missing_idx_cnt,
+                high_grant_count=high_grant_cnt,
+                queries=queries,
+            )
+    except Exception as exc:
+        logger.warning("Could not fetch live plan anti-patterns, falling back to demo data: %s", exc)
+        from app.services.demo_data import DEMO_PLAN_ANTI_PATTERNS
+        return DEMO_PLAN_ANTI_PATTERNS
+
