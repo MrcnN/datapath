@@ -1,0 +1,68 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.searchBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.searchBar input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+}
+
+.logTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.logRow {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background 0.15s ease;
+}
+
+.logRow:hover {
+  background: var(--bg-hover);
+}
+
+.logRowError {
+  background: rgba(248, 81, 73, 0.08);
+}
+
+.logRowError:hover {
+  background: rgba(248, 81, 73, 0.14);
+}
+
+.cellDate {
+  white-space: nowrap;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+  width: 170px;
+}
+
+.cellProcess {
+  white-space: nowrap;
+  padding: 8px 12px;
+  color: var(--accent);
+  width: 100px;
+}
+
+.cellText {
+  padding: 8px 12px;
+  color: var(--text-primary);
+  word-break: break-word;
+}
