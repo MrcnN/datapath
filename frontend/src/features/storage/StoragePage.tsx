@@ -1,0 +1,481 @@
+import React, { useState, useEffect } from 'react';
+import {
+  HardDrive,
+  Database,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  Copy,
+  Check,
+  Search,
+  Activity,
+  Calendar,
+} from 'lucide-react';
+import PageHeader from '../../components/layout/PageHeader';
+import DataTable, { type Column } from '../../components/ui/DataTable';
+import StatusBadge from '../../components/ui/StatusBadge';
+import LoadingSpinner from '../../components/ui/LoadingSpinner';
+import ErrorState from '../../components/ui/ErrorState';
+import DemoDataBanner from '../../components/ui/DemoDataBanner';
+import { getStorageSummary } from '../../lib/api';
+import type { StorageSummary, DatabaseFile, LogSpaceUsage, AutogrowthEvent } from '../../lib/types';
+import styles from './StoragePage.module.css';
+
+const LOG_REUSE_EXPLANATIONS: Record<string, string> = {
+  NOTHING: 'Log alanı şu an yeniden kullanılabilir durumda. Aktif engel yok.',
+  CHECKPOINT: 'Checkpoint bekleniyor (Simple Recovery modelinde normaldir).',
+  LOG_BACKUP: 'Transaction Log yedeği alınması gerekiyor (Full Recovery modelinde zorunludur).',
+  ACTIVE_TRANSACTION: 'Açık kalmış uzun bir transaction log alanının serbest kalmasını engelliyor.',
+  ACTIVE_BACKUP_OR_RESTORE: 'Veritabanı yedeği veya geri yükleme işlemi devam ediyor.',
+  DATABASE_MIRRORING: 'Mirroring / Veri aynalama replikasyon aktarımı bekleniyor.',
+  AVAILABILITY_GROUP: 'Always On Availability Group ikincil replika senkronizasyonu bekleniyor.',
+  REPLICATION: 'Snapshot veya Transactional Replication dağıtımı bekleniyor.',
+  DATABASE_SNAPSHOT_CREATION: 'Veritabanı anlık görüntüsü (Snapshot) oluşturuluyor.',
+};
+
+export default function StoragePage() {
+  const [summary, setSummary] = useState<StorageSummary | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'files' | 'logs' | 'trace'>('files');
+  const [search, setSearch] = useState<string>('');
+  const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getStorageSummary();
+        setSummary(data);
+      } catch (err: any) {
+        setError(err.message || 'Depolama bilgileri alınırken hata oluştu.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, []);
+
+  const handleCopySql = (sql: string) => {
+    navigator.clipboard.writeText(sql);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const filteredFiles = (summary?.files || []).filter((f) => {
+    if (!search) return true;
+    const term = search.toLowerCase();
+    return (
+      f.database_name.toLowerCase().includes(term) ||
+      f.name.toLowerCase().includes(term) ||
+      f.file_type.toLowerCase().includes(term) ||
+      f.physical_name.toLowerCase().includes(term)
+    );
+  });
+
+  const fileColumns: Column<DatabaseFile>[] = [
+    {
+      key: 'name',
+      label: 'Dosya & Veritabanı',
+      sortable: true,
+      render: (f) => (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{f.name}</span>
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '1px 6px',
+                borderRadius: '4px',
+                background: f.file_type === 'ROWS' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+                color: f.file_type === 'ROWS' ? 'var(--accent-blue)' : '#eab308',
+                fontWeight: 600,
+              }}
+            >
+              {f.file_type}
+            </span>
+          </div>
+          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>
+            {f.database_name} • <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{f.physical_name}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'size_mb',
+      label: 'Toplam Boyut',
+      sortable: true,
+      render: (f) => (
+        <span style={{ fontWeight: 600 }}>
+          {f.size_mb >= 1024 ? `${(f.size_mb / 1024).toFixed(2)} GB` : `${f.size_mb.toFixed(1)} MB`}
+        </span>
+      ),
+    },
+    {
+      key: 'free_percent',
+      label: 'Doluluk Oranı',
+      sortable: true,
+      render: (f) => {
+        const usedPct = 100 - f.free_percent;
+        const barColor = usedPct > 90 ? 'var(--status-danger)' : usedPct > 75 ? 'var(--status-warning)' : 'var(--status-success)';
+        return (
+          <div style={{ minWidth: '130px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+              <span>{usedPct.toFixed(1)}% Dolu</span>
+              <span style={{ color: 'var(--text-muted)' }}>{f.free_percent.toFixed(1)}% Boş</span>
+            </div>
+            <div className={styles.progressBarBg}>
+              <div
+                className={styles.progressBarFill}
+                style={{ width: `${Math.min(100, usedPct)}%`, background: barColor }}
+              />
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'growth',
+      label: 'Büyüme Ayarı (Autogrowth)',
+      sortable: true,
+      render: (f) => {
+        if (f.is_percent_growth) {
+          return (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span className={styles.dangerBadge}>
+                <AlertTriangle size={12} /> {f.growth} (Yüzdesel Risk!)
+              </span>
+              <button
+                className={styles.fixBtn}
+                onClick={() => setSelectedFileForSql(f)}
+                title="T-SQL Düzeltme Kodunu İncele"
+              >
+                Düzelt
+              </button>
+            </div>
+          );
+        }
+        return <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>{f.growth} (Sabit)</span>;
+      },
+    },
+    {
+      key: 'max_size',
+      label: 'Maks. Boyut',
+      sortable: true,
+      render: (f) => <span style={{ color: 'var(--text-secondary)' }}>{f.max_size}</span>,
+    },
+  ];
+
+  const logColumns: Column<LogSpaceUsage>[] = [
+    {
+      key: 'database_name',
+      label: 'Veritabanı',
+      sortable: true,
+      render: (l) => <strong style={{ color: 'var(--text-primary)' }}>{l.database_name}</strong>,
+    },
+    {
+      key: 'log_size_mb',
+      label: 'Log Dosyası Boyutu',
+      sortable: true,
+      render: (l) => (
+        <span>{l.log_size_mb >= 1024 ? `${(l.log_size_mb / 1024).toFixed(2)} GB` : `${l.log_size_mb.toFixed(1)} MB`}</span>
+      ),
+    },
+    {
+      key: 'log_space_used_percent',
+      label: 'Log Doluluğu',
+      sortable: true,
+      render: (l) => {
+        const barColor = l.log_space_used_percent > 85 ? 'var(--status-danger)' : l.log_space_used_percent > 65 ? 'var(--status-warning)' : 'var(--status-success)';
+        return (
+          <div style={{ minWidth: '140px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '4px' }}>
+              <span style={{ fontWeight: 600 }}>{l.log_space_used_percent.toFixed(1)}%</span>
+            </div>
+            <div className={styles.progressBarBg}>
+              <div
+                className={styles.progressBarFill}
+                style={{ width: `${Math.min(100, l.log_space_used_percent)}%`, background: barColor }}
+              />
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'log_reuse_wait_desc',
+      label: 'Log Boşaltma Beklemesi (log_reuse_wait)',
+      sortable: true,
+      render: (l) => {
+        const isProblem = l.log_reuse_wait_desc !== 'NOTHING';
+        const expl = LOG_REUSE_EXPLANATIONS[l.log_reuse_wait_desc] || l.log_reuse_wait_desc;
+        return (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span
+                style={{
+                  fontFamily: 'monospace',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: isProblem ? '#eab308' : 'var(--status-success)',
+                }}
+              >
+                {l.log_reuse_wait_desc}
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>{expl}</div>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const traceColumns: Column<AutogrowthEvent>[] = [
+    {
+      key: 'start_time',
+      label: 'Zaman Damgası',
+      sortable: true,
+      render: (t) => (
+        <span style={{ color: 'var(--text-primary)', fontFamily: 'monospace' }}>
+          <Calendar size={13} style={{ display: 'inline', marginRight: '4px', verticalAlign: '-1px' }} />
+          {t.start_time}
+        </span>
+      ),
+    },
+    {
+      key: 'database_name',
+      label: 'Veritabanı',
+      sortable: true,
+      render: (t) => <strong>{t.database_name}</strong>,
+    },
+    {
+      key: 'file_name',
+      label: 'Dosya Adı & Türü',
+      sortable: true,
+      render: (t) => (
+        <div>
+          <span>{t.file_name}</span>
+          <span
+            style={{
+              marginLeft: '8px',
+              fontSize: '11px',
+              padding: '1px 5px',
+              borderRadius: '4px',
+              background: t.file_type === 'Data' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(234, 179, 8, 0.15)',
+              color: t.file_type === 'Data' ? 'var(--accent-blue)' : '#eab308',
+            }}
+          >
+            {t.file_type}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'growth_mb',
+      label: 'Büyüme Miktarı',
+      sortable: true,
+      render: (t) => <span style={{ fontWeight: 600 }}>+{t.growth_mb.toFixed(1)} MB</span>,
+    },
+    {
+      key: 'duration_ms',
+      label: 'Büyüme Süresi',
+      sortable: true,
+      render: (t) => {
+        const isSlow = t.duration_ms > 1000;
+        return (
+          <span style={{ color: isSlow ? 'var(--status-danger)' : 'var(--text-secondary)', fontWeight: isSlow ? 600 : 400 }}>
+            {t.duration_ms.toFixed(0)} ms {isSlow && '(Yavaş Disk I/O)'}
+          </span>
+        );
+      },
+    },
+  ];
+
+  if (loading) return <LoadingSpinner />;
+  if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
+
+  const formatSize = (mb: number) => {
+    if (mb >= 1024 * 1024) return `${(mb / (1024 * 1024)).toFixed(2)} TB`;
+    if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`;
+    return `${mb.toFixed(0)} MB`;
+  };
+
+  return (
+    <div className={styles.container}>
+      <PageHeader
+        title="Depolama & Dosyalar"
+        subtitle="Veritabanı dosyaları (MDF/NDF/LDF), disk doluluk oranları, yüzdesel büyüme uyarıları ve Default Trace büyüme olayları."
+      />
+
+      {summary?.is_demo && <DemoDataBanner />}
+
+      {/* Metric Cards */}
+      <div className={styles.metricsGrid}>
+        <div className={styles.metricCard}>
+          <div className={styles.metricIconWrap} style={{ background: 'rgba(59, 130, 246, 0.15)', color: 'var(--accent-blue)' }}>
+            <Database size={22} />
+          </div>
+          <div>
+            <div className={styles.metricLabel}>Toplam Veri Boyutu (Data)</div>
+            <div className={styles.metricValue}>{formatSize(summary?.total_data_size_mb || 0)}</div>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricIconWrap} style={{ background: 'rgba(234, 179, 8, 0.15)', color: '#eab308' }}>
+            <FileText size={22} />
+          </div>
+          <div>
+            <div className={styles.metricLabel}>Toplam Log Boyutu (LDF)</div>
+            <div className={styles.metricValue}>{formatSize(summary?.total_log_size_mb || 0)}</div>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div className={styles.metricIconWrap} style={{ background: 'rgba(34, 197, 94, 0.15)', color: 'var(--status-success)' }}>
+            <CheckCircle size={22} />
+          </div>
+          <div>
+            <div className={styles.metricLabel}>Tahmini Boş Alan</div>
+            <div className={styles.metricValue}>{formatSize(summary?.total_free_space_mb || 0)}</div>
+          </div>
+        </div>
+
+        <div className={styles.metricCard}>
+          <div
+            className={styles.metricIconWrap}
+            style={{
+              background: (summary?.files_with_percent_growth_count || 0) > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+              color: (summary?.files_with_percent_growth_count || 0) > 0 ? 'var(--status-danger)' : 'var(--status-success)',
+            }}
+          >
+            <AlertTriangle size={22} />
+          </div>
+          <div>
+            <div className={styles.metricLabel}>Yüzdesel Büyüme (Riskli)</div>
+            <div className={styles.metricValue} style={{ color: (summary?.files_with_percent_growth_count || 0) > 0 ? 'var(--status-danger)' : 'inherit' }}>
+              {summary?.files_with_percent_growth_count || 0} Dosya
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Warning Alert if Percent Growth Exists */}
+      {(summary?.files_with_percent_growth_count || 0) > 0 && (
+        <div className={styles.alertBanner}>
+          <AlertTriangle size={20} className={styles.alertIcon} />
+          <div>
+            <strong>Yüzdesel Otomatik Büyüme (Percent Autogrowth) Uyarısı:</strong> Sistemde yüzdesel büyüyen dosyalar bulundu.
+            Veritabanı boyutu büyüdükçe (örn. 500GB olduğunda %10 büyüme tek seferde 50GB tahsis etmeye çalışır) disk ani kilitlenmelere ve sorgu zaman aşımlarına yol açar.
+            SQL Server best practice olarak sabit MB (örn. 512MB veya 1024MB) ile büyütülmelidir.
+          </div>
+        </div>
+      )}
+
+      {/* Tabs */}
+      <div className={styles.tabBar}>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'files' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('files')}
+        >
+          <HardDrive size={16} /> Veritabanı Dosyaları ({summary?.files?.length || 0})
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('logs')}
+        >
+          <Activity size={16} /> Transaction Log Doluluğu ({summary?.log_spaces?.length || 0})
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'trace' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('trace')}
+        >
+          <Calendar size={16} /> Default Trace Büyüme Geçmişi ({summary?.autogrowth_events?.length || 0})
+        </button>
+      </div>
+
+      {/* Tab 1: Files */}
+      {activeTab === 'files' && (
+        <div className={styles.tableCard}>
+          <div className={styles.filterBar}>
+            <div className={styles.searchWrap}>
+              <Search size={16} className={styles.searchIcon} />
+              <input
+                type="text"
+                placeholder="Veritabanı veya dosya adına göre ara..."
+                className={styles.searchInput}
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <DataTable
+            data={filteredFiles}
+            columns={fileColumns}
+            emptyMessage="Eşleşen dosya bulunamadı."
+          />
+        </div>
+      )}
+
+      {/* Tab 2: Logs */}
+      {activeTab === 'logs' && (
+        <div className={styles.tableCard}>
+          <DataTable
+            data={summary?.log_spaces || []}
+            columns={logColumns}
+            emptyMessage="Transaction Log bilgisi bulunamadı."
+          />
+        </div>
+      )}
+
+      {/* Tab 3: Trace Events */}
+      {activeTab === 'trace' && (
+        <div className={styles.tableCard}>
+          <DataTable
+            data={summary?.autogrowth_events || []}
+            columns={traceColumns}
+            emptyMessage="Default Trace üzerinde kayıtlı büyüme olayı bulunamadı."
+          />
+        </div>
+      )}
+
+      {/* T-SQL Review Modal */}
+      {selectedFileForSql && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedFileForSql(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3>Sabit Büyümeye Geçiş T-SQL Kodu</h3>
+                <p>
+                  <strong>{selectedFileForSql.database_name}</strong> veritabanındaki{' '}
+                  <strong>{selectedFileForSql.name}</strong> dosyası için önerilen güvenli T-SQL:
+                </p>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setSelectedFileForSql(null)}>✕</button>
+            </div>
+
+            <div className={styles.sqlCodeBox}>
+              <pre>{selectedFileForSql.growth_recommendation_sql}</pre>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <span className={styles.reviewNotice}>
+                * Güvenlik ilkesi: Bu komut otomatik çalıştırılmaz. İnceleyip SSMS üzerinde yürütebilirsiniz.
+              </span>
+              <button
+                className={styles.copyBtn}
+                onClick={() => handleCopySql(selectedFileForSql.growth_recommendation_sql || '')}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Kopyalandı!' : 'Kodu Kopyala'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
