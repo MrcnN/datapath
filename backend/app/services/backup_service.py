@@ -99,7 +99,10 @@ def get_recovery_readiness(params: ConnectionParams) -> List[RecoveryReadiness]:
                 d.recovery_model_desc               AS recovery_model,
                 MAX(CASE WHEN bs.type = 'D' THEN bs.backup_finish_date END) AS last_full,
                 MAX(CASE WHEN bs.type = 'I' THEN bs.backup_finish_date END) AS last_diff,
-                MAX(CASE WHEN bs.type = 'L' THEN bs.backup_finish_date END) AS last_log
+                MAX(CASE WHEN bs.type = 'L' THEN bs.backup_finish_date END) AS last_log,
+                DATEDIFF(SECOND, MAX(CASE WHEN bs.type = 'D' THEN bs.backup_finish_date END), GETDATE()) AS full_age_sec,
+                DATEDIFF(SECOND, MAX(CASE WHEN bs.type = 'I' THEN bs.backup_finish_date END), GETDATE()) AS diff_age_sec,
+                DATEDIFF(SECOND, MAX(CASE WHEN bs.type = 'L' THEN bs.backup_finish_date END), GETDATE()) AS log_age_sec
             FROM sys.databases d
             LEFT JOIN msdb.dbo.backupset bs ON bs.database_name = d.name
             WHERE d.database_id > 4
@@ -109,7 +112,6 @@ def get_recovery_readiness(params: ConnectionParams) -> List[RecoveryReadiness]:
             """
         )
         rows = rows_to_dicts(cursor)
-        now = datetime.now(timezone.utc)
         results: List[RecoveryReadiness] = []
 
         for r in rows:
@@ -119,41 +121,47 @@ def get_recovery_readiness(params: ConnectionParams) -> List[RecoveryReadiness]:
             last_diff: Optional[datetime] = r.get("last_diff")
             last_log: Optional[datetime] = r.get("last_log")
 
-            def age_hours(dt: Optional[datetime]) -> Optional[float]:
-                if dt is None:
-                    return None
-                if dt.tzinfo is None:
-                    dt = dt.replace(tzinfo=timezone.utc)
-                return (now - dt).total_seconds() / 3600
+            full_age_sec = r.get("full_age_sec")
+            diff_age_sec = r.get("diff_age_sec")
+            log_age_sec = r.get("log_age_sec")
 
-            full_age = age_hours(last_full)
-            diff_age = age_hours(last_diff)
-            log_age = age_hours(last_log)
+            full_age = round(max(0, full_age_sec) / 3600.0, 2) if full_age_sec is not None else None
+            diff_age = round(max(0, diff_age_sec) / 3600.0, 2) if diff_age_sec is not None else None
+            log_age = round(max(0, log_age_sec) / 3600.0, 2) if log_age_sec is not None else None
+
+            # Fallback if server didn't compute age but dates exist
+            now_local = datetime.now()
+            if full_age is None and last_full is not None:
+                full_age = round(max(0.0, (now_local - last_full.replace(tzinfo=None)).total_seconds() / 3600.0), 2)
+            if diff_age is None and last_diff is not None:
+                diff_age = round(max(0.0, (now_local - last_diff.replace(tzinfo=None)).total_seconds() / 3600.0), 2)
+            if log_age is None and last_log is not None:
+                log_age = round(max(0.0, (now_local - last_log.replace(tzinfo=None)).total_seconds() / 3600.0), 2)
 
             issues: List[str] = []
             recs: List[str] = []
             risk = "low"
 
             if last_full is None:
-                issues.append("No full backup found.")
-                recs.append("Take an immediate full backup.")
+                issues.append("Tam yedek (Full backup) bulunamadı.")
+                recs.append("Derhal tam yedek (Full backup) alınız.")
                 risk = "critical"
             elif full_age and full_age > 168:  # 7 days
-                issues.append(f"Full backup is {full_age:.1f} hours old (> 7 days).")
-                recs.append("Schedule more frequent full backups.")
+                issues.append(f"Son tam yedek {full_age:.1f} saat önce alınmış (> 7 gün).")
+                recs.append("Daha sık tam yedekleme planlayınız.")
                 risk = "high"
             elif full_age and full_age > 48:
-                issues.append(f"Full backup is {full_age:.1f} hours old.")
+                issues.append(f"Son tam yedek {full_age:.1f} saat önce alınmış.")
                 risk = max(risk, "medium") if risk == "low" else risk
 
             if rm == "FULL":
                 if last_log is None:
-                    issues.append("No transaction log backup found (FULL recovery model).")
-                    recs.append("Configure log backups immediately to prevent log growth.")
+                    issues.append("İşlem günlüğü (Log) yedeği bulunamadı (FULL model).")
+                    recs.append("Noktadan noktaya kurtarma (RPO) için log yedeği alınız veya test ortamıysa kurtarma modelini SIMPLE yapınız.")
                     risk = "critical"
                 elif log_age and log_age > 1:
-                    issues.append(f"Last log backup is {log_age:.1f} hours ago.")
-                    recs.append("Increase log backup frequency.")
+                    issues.append(f"Son log yedeği {log_age:.1f} saat önce alınmış.")
+                    recs.append("RPO veri kaybı riskini azaltmak için log yedekleme sıklığını artırınız.")
                     if risk not in ("critical", "high"):
                         risk = "medium"
 
@@ -164,9 +172,9 @@ def get_recovery_readiness(params: ConnectionParams) -> List[RecoveryReadiness]:
                     last_full_backup=last_full,
                     last_diff_backup=last_diff,
                     last_log_backup=last_log,
-                    full_backup_age_hours=round(full_age, 2) if full_age is not None else None,
-                    diff_backup_age_hours=round(diff_age, 2) if diff_age is not None else None,
-                    log_backup_age_hours=round(log_age, 2) if log_age is not None else None,
+                    full_backup_age_hours=full_age,
+                    diff_backup_age_hours=diff_age,
+                    log_backup_age_hours=log_age,
                     recovery_point_objective_risk=risk,
                     issues=issues,
                     recommendations=recs,

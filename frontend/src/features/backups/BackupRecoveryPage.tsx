@@ -9,6 +9,21 @@ import { getBackupHistory, getRecoveryReadiness } from '../../lib/api';
 import type { BackupEntry, RecoveryReadiness } from '../../lib/types';
 import styles from './BackupRecoveryPage.module.css';
 
+function formatAge(hours?: number | null, dateStr?: string | null): string {
+  if (!dateStr && (hours === undefined || hours === null)) return 'Hiç alınmadı!';
+  if (hours === undefined || hours === null) return 'Hiç alınmadı!';
+  if (hours <= 0 || hours < 0.05) return 'Az önce';
+  if (hours < 1) {
+    const mins = Math.max(1, Math.round(hours * 60));
+    return `${mins} dakika önce`;
+  }
+  if (hours < 24) {
+    return `${hours.toFixed(1)} saat önce`;
+  }
+  const days = (hours / 24).toFixed(1);
+  return `${days} gün önce`;
+}
+
 export default function BackupRecoveryPage() {
   const [history, setHistory] = useState<BackupEntry[]>([]);
   const [readiness, setReadiness] = useState<RecoveryReadiness[]>([]);
@@ -117,20 +132,12 @@ export default function BackupRecoveryPage() {
                   </div>
                   <div className={styles.detailRow}>
                     <span>Son Tam Yedek:</span>
-                    <span>
-                      {item.last_full_backup
-                        ? `${item.full_backup_age_hours ?? 0} saat önce`
-                        : 'Hiç alınmadı!'}
-                    </span>
+                    <span>{formatAge(item.full_backup_age_hours, item.last_full_backup)}</span>
                   </div>
                   {item.recovery_model === 'FULL' && (
                     <div className={styles.detailRow}>
                       <span>Son Log Yedeği:</span>
-                      <span>
-                        {item.last_log_backup
-                          ? `${item.log_backup_age_hours ?? 0} saat önce`
-                          : 'Hiç alınmadı!'}
-                      </span>
+                      <span>{formatAge(item.log_backup_age_hours, item.last_log_backup)}</span>
                     </div>
                   )}
                   {item.issues && item.issues.length > 0 && (
