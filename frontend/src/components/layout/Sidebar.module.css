@@ -1,0 +1,244 @@
+.sidebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: var(--sidebar-width);
+  height: 100vh;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  overflow-y: auto;
+  user-select: none;
+  transition: width var(--transition-base);
+}
+
+.sidebarCollapsed {
+  width: var(--sidebar-width-collapsed);
+}
+
+.logoHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 0 var(--space-3);
+  border-bottom: 1px solid var(--border);
+  height: var(--topbar-height);
+  min-height: var(--topbar-height);
+  flex-shrink: 0;
+  background-color: var(--bg-subtle);
+}
+
+.sidebarCollapsed .logoHeader {
+  justify-content: center;
+  padding: 0;
+}
+
+.collapseToggleBtn {
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.collapseToggleBtn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: #ffffff;
+}
+
+.toggleIcon {
+  stroke-width: 2;
+}
+
+.logoText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.logoName {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  letter-spacing: -0.3px;
+}
+
+.versionBadge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  padding: 1px 4px;
+  border-radius: var(--radius-xs);
+  font-weight: 500;
+}
+
+.nav {
+  flex: 1;
+  padding: var(--space-3) var(--space-2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebarCollapsed .nav {
+  padding: var(--space-3) 6px;
+  align-items: center;
+}
+
+.sectionGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+}
+
+.navSectionLabel {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  padding: 4px 8px 3px 8px;
+  font-weight: 700;
+}
+
+.collapsedDivider {
+  height: 1px;
+  background-color: var(--border-subtle);
+  margin: 4px 2px;
+}
+
+.sectionItems {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  width: 100%;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 7px 9px;
+  color: var(--text-secondary);
+  font-size: 12.5px;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  outline: none;
+  width: 100%;
+}
+
+.sidebarCollapsed .navItem {
+  justify-content: center;
+  padding: 8px;
+  gap: 0;
+}
+
+.navItem:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.navItem.active {
+  background-color: var(--bg-elevated);
+  color: var(--text-primary);
+  font-weight: 600;
+  border-left: 2px solid var(--accent);
+}
+
+.sidebarCollapsed .navItem.active {
+  border-left: none;
+  background-color: var(--bg-elevated);
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+
+.navIconBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.navIcon {
+  color: var(--text-muted);
+}
+
+.navItem:hover .navIcon {
+  color: var(--text-primary);
+}
+
+.navItem.active .navIcon {
+  color: var(--accent);
+}
+
+.navLabel {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.footer {
+  padding: var(--space-2) var(--space-3);
+  border-top: 1px solid var(--border);
+  background: var(--bg-subtle);
+}
+
+.sidebarCollapsed .footer {
+  padding: var(--space-2) 6px;
+  display: flex;
+  justify-content: center;
+}
+
+.engineBadge {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.engineStatusDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--status-success);
+  flex-shrink: 0;
+}
+
+.engineInfo {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.engineTitle {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.engineSub {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
