@@ -1,0 +1,129 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  animation: fadeIn 0.25s ease-in-out;
+}
+
+.readinessGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: var(--space-4);
+}
+
+.readinessCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  transition: all var(--transition-base);
+}
+
+.readinessCard:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.cardHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.dbName {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+}
+
+.detailRow span:last-child {
+  color: #e2e8f0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.issueList {
+  margin: var(--space-1) 0 0;
+  padding-left: var(--space-4);
+  font-size: 11.5px;
+  color: var(--status-critical);
+  background: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px 8px 24px;
+}
+
+.issueList li {
+  list-style: disc;
+  margin-bottom: 2px;
+}
+
+.recommendations {
+  font-size: 11.5px;
+  color: var(--accent);
+  background: var(--accent-muted);
+  border: 1px solid rgba(0, 210, 255, 0.25);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+}
+
+.controls {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  flex-wrap: wrap;
+}
+
+.selectGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.label {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.select {
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-primary);
+  padding: 6px 12px;
+  font-size: 12.5px;
+  outline: none;
+  min-width: 140px;
+  transition: all var(--transition-fast);
+}
+
+.select:focus {
+  border-color: var(--border-focus);
+}
+
+.tableSection {
+  margin-top: var(--space-2);
+}
