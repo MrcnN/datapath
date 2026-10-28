@@ -13,7 +13,7 @@ from app.schemas.instances import (
 from app.schemas.backups import BackupRecord, RecoveryReadiness
 from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole, RoleMember
 from app.schemas.high_availability import HAStatusResponse, AvailabilityGroup, AGReplica, AGDatabase
-from app.schemas.indexes import MissingIndex, UnusedIndex, IndexFragmentation, IndexSummary
+from app.schemas.indexes import MissingIndex, UnusedIndex, IndexFragmentation, IndexSummary, TableStatistic
 from app.schemas.wait_stats import CategoryWaitSummary, WaitStatEntry, WaitStatsSummary
 from app.schemas.storage import (
     DatabaseFile,
@@ -267,12 +267,81 @@ DEMO_INDEX_FRAGMENTATION = [
     ),
 ]
 
+DEMO_TABLE_STATISTICS = [
+    TableStatistic(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="Orders",
+        stats_name="IX_Orders_OrderDate",
+        last_updated="2026-10-14 02:15:00",
+        rows_total=1250000,
+        rows_sampled=1250000,
+        modification_counter=480000,
+        staleness_percent=38.4,
+        status="STALE",
+        update_statement="UPDATE STATISTICS [dbo].[Orders] [IX_Orders_OrderDate] WITH RESAMPLE;",
+    ),
+    TableStatistic(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="OrderItems",
+        stats_name="IX_OrderItems_ProductID",
+        last_updated="2026-10-07 03:30:00",
+        rows_total=3800000,
+        rows_sampled=3800000,
+        modification_counter=1420000,
+        staleness_percent=37.37,
+        status="STALE",
+        update_statement="UPDATE STATISTICS [dbo].[OrderItems] [IX_OrderItems_ProductID] WITH RESAMPLE;",
+    ),
+    TableStatistic(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="Customers",
+        stats_name="PK_Customers",
+        last_updated="2026-10-20 18:00:00",
+        rows_total=85000,
+        rows_sampled=85000,
+        modification_counter=14200,
+        staleness_percent=16.71,
+        status="WARNING",
+        update_statement="UPDATE STATISTICS [dbo].[Customers] [PK_Customers] WITH RESAMPLE;",
+    ),
+    TableStatistic(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="InventoryLogs",
+        stats_name="PK__InventoryLogs__MovementID",
+        last_updated="2026-10-27 04:00:00",
+        rows_total=420000,
+        rows_sampled=420000,
+        modification_counter=8200,
+        staleness_percent=1.95,
+        status="FRESH",
+        update_statement="UPDATE STATISTICS [dbo].[InventoryLogs] [PK__InventoryLogs__MovementID] WITH RESAMPLE;",
+    ),
+    TableStatistic(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="Products",
+        stats_name="PK_Products",
+        last_updated="2026-10-26 12:00:00",
+        rows_total=12400,
+        rows_sampled=12400,
+        modification_counter=120,
+        staleness_percent=0.97,
+        status="FRESH",
+        update_statement="UPDATE STATISTICS [dbo].[Products] [PK_Products] WITH RESAMPLE;",
+    ),
+]
+
 DEMO_INDEX_SUMMARY = IndexSummary(
     total_missing_indexes=len(DEMO_MISSING_INDEXES),
     max_impact_score=89.4,
     total_unused_indexes=len(DEMO_UNUSED_INDEXES),
     total_wasted_mb=61.2,
     fragmented_indexes_count=2,
+    stale_statistics_count=2,
     is_demo=True,
 )
 

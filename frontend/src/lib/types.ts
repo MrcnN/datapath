@@ -456,12 +456,28 @@ export interface IndexFragmentation {
   [key: string]: any;
 }
 
+export interface TableStatistic {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  stats_name: string;
+  last_updated?: string | null;
+  rows_total: number;
+  rows_sampled: number;
+  modification_counter: number;
+  staleness_percent: number;
+  status: 'FRESH' | 'WARNING' | 'STALE' | string;
+  update_statement: string;
+  [key: string]: any;
+}
+
 export interface IndexSummary {
   total_missing_indexes: number;
   max_impact_score: number;
   total_unused_indexes: number;
   total_wasted_mb: number;
   fragmented_indexes_count: number;
+  stale_statistics_count?: number;
   is_demo?: boolean;
   [key: string]: any;
 }

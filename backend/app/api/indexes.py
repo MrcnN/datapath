@@ -11,12 +11,14 @@ from app.schemas.indexes import (
     IndexFragmentation,
     IndexSummary,
     MissingIndex,
+    TableStatistic,
     UnusedIndex,
 )
 from app.services.index_service import (
     get_index_fragmentation,
     get_index_summary,
     get_missing_indexes,
+    get_table_statistics,
     get_unused_indexes,
 )
 
@@ -71,3 +73,12 @@ def read_index_fragmentation(
     """Retrieve index fragmentation stats and reorganization / rebuild recommendations."""
     params = _get_connection_params()
     return get_index_fragmentation(params, database)
+
+
+@router.get("/indexes/statistics", response_model=List[TableStatistic])
+def read_table_statistics(
+    database: Optional[str] = Query(None, description="Database name filter")
+):
+    """Retrieve table statistics staleness, row modification counts, and cardinality status."""
+    params = _get_connection_params()
+    return get_table_statistics(params, database)

@@ -25,6 +25,7 @@ import type {
   UnusedIndex,
   IndexFragmentation,
   IndexSummary,
+  TableStatistic,
   WaitStatsSummary,
   StorageSummary,
   TempDBMemorySummary,
@@ -270,6 +271,14 @@ export async function getIndexFragmentation(
 ): Promise<IndexFragmentation[]> {
   return apiFetch<IndexFragmentation[]>(
     `/api/indexes/fragmentation${buildQuery({ database: database ?? '' })}`
+  );
+}
+
+export async function getTableStatistics(
+  database?: string
+): Promise<TableStatistic[]> {
+  return apiFetch<TableStatistic[]>(
+    `/api/indexes/statistics${buildQuery({ database: database ?? '' })}`
   );
 }
 

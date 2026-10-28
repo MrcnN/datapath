@@ -14,6 +14,7 @@ import {
   getMissingIndexes,
   getUnusedIndexes,
   getIndexFragmentation,
+  getTableStatistics,
   getDatabases,
 } from '../../lib/api';
 import type {
@@ -21,11 +22,12 @@ import type {
   MissingIndex,
   UnusedIndex,
   IndexFragmentation,
+  TableStatistic,
   Database,
 } from '../../lib/types';
 import styles from './IndexesPage.module.css';
 
-type TabType = 'missing' | 'unused' | 'fragmentation';
+type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics';
 
 export default function IndexesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('missing');
@@ -33,6 +35,7 @@ export default function IndexesPage() {
   const [missingIndexes, setMissingIndexes] = useState<MissingIndex[]>([]);
   const [unusedIndexes, setUnusedIndexes] = useState<UnusedIndex[]>([]);
   const [fragmentationList, setFragmentationList] = useState<IndexFragmentation[]>([]);
+  const [statisticsList, setStatisticsList] = useState<TableStatistic[]>([]);
   const [databases, setDatabases] = useState<Database[]>([]);
   const [selectedDb, setSelectedDb] = useState<string>('');
 
@@ -69,6 +72,9 @@ export default function IndexesPage() {
         } else if (activeTab === 'fragmentation') {
           const frag = await getIndexFragmentation(selectedDb || undefined);
           setFragmentationList(frag);
+        } else if (activeTab === 'statistics') {
+          const stats = await getTableStatistics(selectedDb || undefined);
+          setStatisticsList(stats);
         }
       } catch (err: any) {
         setError(err.message || 'İndeks verileri alınırken hata oluştu.');
@@ -292,6 +298,88 @@ export default function IndexesPage() {
     },
   ];
 
+  const statisticsColumns: Column<TableStatistic>[] = [
+    {
+      key: 'table_name',
+      label: 'Tablo & İstatistik',
+      sortable: true,
+      render: (s) => (
+        <div>
+          <strong style={{ color: 'var(--text-primary)' }}>{s.stats_name}</strong>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            {s.schema_name}.{s.table_name} ({s.database_name})
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'staleness_percent',
+      label: 'Bayatlık Oranı (Staleness)',
+      sortable: true,
+      render: (s) => {
+        const isStale = s.status === 'STALE';
+        const isWarn = s.status === 'WARNING';
+        const badgeBg = isStale ? 'rgba(239, 68, 68, 0.15)' : isWarn ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)';
+        const badgeColor = isStale ? 'var(--status-danger)' : isWarn ? '#eab308' : 'var(--status-success)';
+        const labelText = isStale ? 'Kritik Bayat (%20+)' : isWarn ? 'Orta Değişim' : 'Güncel';
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontWeight: 700 }}>%{s.staleness_percent.toFixed(1)}</span>
+            <span style={{ fontSize: '11px', padding: '2px 8px', borderRadius: '4px', background: badgeBg, color: badgeColor, fontWeight: 600 }}>
+              {labelText}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'modification_counter',
+      label: 'Değişen Satır Sayısı',
+      sortable: true,
+      render: (s) => (
+        <span style={{ fontWeight: 600 }}>
+          {s.modification_counter.toLocaleString()} satır ({((s.modification_counter / (s.rows_total || 1)) * 100).toFixed(1)}%)
+        </span>
+      ),
+    },
+    {
+      key: 'rows_total',
+      label: 'Toplam / Örneklenen Satır',
+      sortable: true,
+      render: (s) => `${s.rows_total.toLocaleString()} / ${s.rows_sampled.toLocaleString()}`,
+    },
+    {
+      key: 'last_updated',
+      label: 'Son Güncelleme',
+      sortable: true,
+      render: (s) => (
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
+          {s.last_updated || 'Bilinmiyor'}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'İşlem',
+      render: (s) => (
+        <button
+          type="button"
+          className={styles.tabBtn}
+          style={{ padding: '4px 10px', fontSize: '11px' }}
+          onClick={() =>
+            setActiveScript({
+              title: `İstatistik Güncelleme Betiği — ${s.stats_name}`,
+              sql: s.update_statement,
+            })
+          }
+        >
+          <Code2 size={13} />
+          Güncelleme Kodu
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className={styles.container}>
       <PageHeader
@@ -331,6 +419,14 @@ export default function IndexesPage() {
             </div>
             <div className={styles.kpiSub}>Rebuild / Reorganize gerektirir</div>
           </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiTitle}>Bayat İstatistikler (Stale Stats)</div>
+            <div className={styles.kpiValue} style={{ color: (summary.stale_statistics_count || 0) > 0 ? '#ef4444' : 'var(--status-success)' }}>
+              {summary.stale_statistics_count ?? 0}
+            </div>
+            <div className={styles.kpiSub}>Optimizer için %10+ değişen tablolar</div>
+          </div>
         </div>
       )}
 
@@ -360,6 +456,14 @@ export default function IndexesPage() {
           >
             <Layers size={15} />
             Parçalanma Analizi
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === 'statistics' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('statistics')}
+          >
+            <RefreshCw size={15} />
+            İstatistik Güncelliği ({statisticsList.length})
           </button>
         </div>
 
@@ -436,6 +540,14 @@ export default function IndexesPage() {
               <EmptyState title="Parçalanma Verisi Yok" message="İncelenen veritabanında taranabilecek kullanıcı indeksi bulunamadı." />
             ) : (
               <DataTable data={fragmentationList} columns={fragColumns} />
+            )
+          )}
+
+          {activeTab === 'statistics' && (
+            statisticsList.length === 0 ? (
+              <EmptyState title="İstatistik Verisi Yok" message="İncelenen veritabanında tablo istatistiği bulunamadı." />
+            ) : (
+              <DataTable data={statisticsList} columns={statisticsColumns} />
             )
           )}
         </>

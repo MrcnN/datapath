@@ -9,12 +9,14 @@ from app.schemas.indexes import (
     IndexFragmentation,
     IndexSummary,
     MissingIndex,
+    TableStatistic,
     UnusedIndex,
 )
 from app.services.demo_data import (
     DEMO_INDEX_FRAGMENTATION,
     DEMO_INDEX_SUMMARY,
     DEMO_MISSING_INDEXES,
+    DEMO_TABLE_STATISTICS,
     DEMO_UNUSED_INDEXES,
 )
 
@@ -247,6 +249,76 @@ def get_index_fragmentation(
         return DEMO_INDEX_FRAGMENTATION
 
 
+def get_table_statistics(
+    params: ConnectionParams, database: Optional[str] = None
+) -> List[TableStatistic]:
+    """Analyze table statistics staleness and modification counters via sys.dm_db_stats_properties."""
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            target_db = database or params.database or "master"
+            if target_db:
+                cursor.execute(f"USE [{target_db}];")
+
+            query = """
+            SELECT TOP 50
+                DB_NAME() AS database_name,
+                s.name AS schema_name,
+                o.name AS table_name,
+                st.name AS stats_name,
+                CONVERT(VARCHAR(19), sp.last_updated, 120) AS last_updated,
+                ISNULL(sp.rows, 0) AS rows_total,
+                ISNULL(sp.rows_sampled, 0) AS rows_sampled,
+                ISNULL(sp.modification_counter, 0) AS modification_counter,
+                CAST(ROUND(CASE WHEN ISNULL(sp.rows, 0) > 0 
+                    THEN (ISNULL(sp.modification_counter, 0) * 100.0) / sp.rows 
+                    ELSE 0.0 END, 2) AS FLOAT) AS staleness_percent
+            FROM sys.stats st
+            CROSS APPLY sys.dm_db_stats_properties(st.object_id, st.stats_id) sp
+            JOIN sys.objects o ON o.object_id = st.object_id
+            JOIN sys.schemas s ON s.schema_id = o.schema_id
+            WHERE o.type = 'U' AND o.is_ms_shipped = 0
+            ORDER BY staleness_percent DESC, modification_counter DESC;
+            """
+            cursor.execute(query)
+            rows = rows_to_dicts(cursor)
+
+            results: List[TableStatistic] = []
+            for r in rows:
+                stale_pct = float(r.get("staleness_percent", 0.0) or 0.0)
+                if stale_pct >= 20.0:
+                    status_val = "STALE"
+                elif stale_pct >= 10.0:
+                    status_val = "WARNING"
+                else:
+                    status_val = "FRESH"
+
+                schema = r.get("schema_name", "dbo")
+                table = r.get("table_name", "")
+                stat = r.get("stats_name", "")
+                update_sql = f"UPDATE STATISTICS [{schema}].[{table}] [{stat}] WITH RESAMPLE;"
+
+                results.append(
+                    TableStatistic(
+                        database_name=r.get("database_name", target_db),
+                        schema_name=schema,
+                        table_name=table,
+                        stats_name=stat,
+                        last_updated=str(r.get("last_updated", "")),
+                        rows_total=int(r.get("rows_total", 0) or 0),
+                        rows_sampled=int(r.get("rows_sampled", 0) or 0),
+                        modification_counter=int(r.get("modification_counter", 0) or 0),
+                        staleness_percent=stale_pct,
+                        status=status_val,
+                        update_statement=update_sql,
+                    )
+                )
+            return results
+    except Exception as exc:
+        logger.warning("Could not fetch live table statistics, falling back to demo data: %s", exc)
+        return DEMO_TABLE_STATISTICS
+
+
 def get_index_summary(
     params: ConnectionParams, database: Optional[str] = None
 ) -> IndexSummary:
@@ -254,6 +326,7 @@ def get_index_summary(
     missing = get_missing_indexes(params, database)
     unused = get_unused_indexes(params, database)
     fragmentation = get_index_fragmentation(params, database)
+    stats = get_table_statistics(params, database)
 
     # Determine if fallback demo data was used
     is_demo = missing == DEMO_MISSING_INDEXES
@@ -261,6 +334,7 @@ def get_index_summary(
     max_impact = max([m.impact_score for m in missing], default=0.0)
     wasted_mb = sum([u.size_mb for u in unused])
     fragmented_count = len([f for f in fragmentation if f.recommended_action in ("REBUILD", "REORGANIZE")])
+    stale_count = len([s for s in stats if s.status in ("STALE", "WARNING")])
 
     return IndexSummary(
         total_missing_indexes=len(missing),
@@ -268,5 +342,6 @@ def get_index_summary(
         total_unused_indexes=len(unused),
         total_wasted_mb=round(wasted_mb, 2),
         fragmented_indexes_count=fragmented_count,
+        stale_statistics_count=stale_count,
         is_demo=is_demo,
     )

@@ -1,4 +1,4 @@
-"""schemas/indexes.py — Data models for Index Intelligence, Missing Indexes, and Fragmentation."""
+"""schemas/indexes.py — Data models for Index Intelligence, Missing Indexes, Fragmentation, and Statistics Staleness."""
 from __future__ import annotations
 
 from typing import List, Optional
@@ -49,10 +49,25 @@ class IndexFragmentation(BaseModel):
     maintenance_statement: str
 
 
+class TableStatistic(BaseModel):
+    database_name: str
+    schema_name: str
+    table_name: str
+    stats_name: str
+    last_updated: Optional[str] = None
+    rows_total: int
+    rows_sampled: int
+    modification_counter: int
+    staleness_percent: float
+    status: str  # "FRESH", "WARNING", "STALE"
+    update_statement: str
+
+
 class IndexSummary(BaseModel):
     total_missing_indexes: int
     max_impact_score: float
     total_unused_indexes: int
     total_wasted_mb: float
     fragmented_indexes_count: int
+    stale_statistics_count: int = 0
     is_demo: bool = False

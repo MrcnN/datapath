@@ -55,3 +55,21 @@ def test_index_fragmentation_endpoint():
         assert "recommended_action" in first
         assert first["recommended_action"] in ("REBUILD", "REORGANIZE", "HEALTHY")
         assert "maintenance_statement" in first
+
+
+def test_table_statistics_endpoint():
+    response = client.get("/api/indexes/statistics")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    if data:
+        first = data[0]
+        assert "table_name" in first
+        assert "stats_name" in first
+        assert "modification_counter" in first
+        assert "staleness_percent" in first
+        assert "status" in first
+        assert "update_statement" in first
+        assert "UPDATE STATISTICS" in first["update_statement"]
+
+
