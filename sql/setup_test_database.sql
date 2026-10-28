@@ -104,13 +104,28 @@ CREATE TABLE dbo.AuditLogs (
     NewValue NVARCHAR(MAX) NULL
 );
 
+-- Depo ve Stok Hareketleri (Parçalanma - Fragmentation Analiz Testi için)
+-- GUID Clustered Index rastgele sayfa bölünmelerine (Page Split) ve yüksek parçalanmaya yol açar
+CREATE TABLE dbo.InventoryLogs (
+    MovementID UNIQUEIDENTIFIER NOT NULL DEFAULT NEWID() PRIMARY KEY CLUSTERED,
+    ProductID INT NOT NULL FOREIGN KEY REFERENCES dbo.Products(ProductID),
+    DeltaStock INT NOT NULL,
+    BatchNumber VARCHAR(50) NOT NULL,
+    Notes NVARCHAR(200) NULL,
+    LoggedAt DATETIME2 NOT NULL DEFAULT SYSDATETIME()
+);
+
 -- ============================================================================
--- 6. İNDEKSLER (Performans Analizi için)
+-- 6. İNDEKSLER (Performans ve Kullanım Analizi için)
 -- ============================================================================
 CREATE NONCLUSTERED INDEX IX_Orders_CustomerID ON dbo.Orders(CustomerID) INCLUDE (OrderDate, TotalAmount);
 CREATE NONCLUSTERED INDEX IX_Orders_OrderDate ON dbo.Orders(OrderDate);
 CREATE NONCLUSTERED INDEX IX_OrderDetails_OrderID ON dbo.OrderDetails(OrderID);
 CREATE NONCLUSTERED INDEX IX_Products_CategoryID ON dbo.Products(CategoryID) INCLUDE (ProductName, UnitPrice);
+
+-- Kullanılmayan İndeks Simülasyonu (Unused Index Testi için bilerek eklendi)
+-- Sorgular bu sütunu WHERE içinde aramayacak ancak UPDATE/INSERT işlemleri bu indekse yazma maliyeti getirecek
+CREATE NONCLUSTERED INDEX IX_Customers_Unused_Country ON dbo.Customers(Country);
 GO
 
 -- ============================================================================
@@ -222,15 +237,51 @@ SELECT
     CAST(((n % 100) * 15.0) + 25.0 AS DECIMAL(18,2))
 FROM Nums;
 
+-- 5.000 Depo / Stok Hareketi Ekle (Rastgele GUID clustered index ile parçalanma simülasyonu)
+;WITH Nums AS (
+    SELECT TOP (5000) ROW_NUMBER() OVER (ORDER BY (SELECT NULL)) AS n
+    FROM sys.all_columns a CROSS JOIN sys.all_columns b
+)
+INSERT INTO dbo.InventoryLogs (MovementID, ProductID, DeltaStock, BatchNumber, Notes)
+SELECT 
+    NEWID(),
+    ((n * 7) % 100) + 1,
+    (n % 20) - 10,
+    'BATCH-' + CAST(n AS VARCHAR(10)),
+    N'Rastgele Giriş/Çıkış Hareketi #' + CAST(n AS NVARCHAR(10))
+FROM Nums;
+
 PRINT 'Tablolar ve veriler başarıyla oluşturuldu.';
 GO
 
 -- ============================================================================
--- 9. QUERY STORE'U ISITMA (Performans Analizinde Grafikler Dolu Gözüksün)
+-- 9. SORGULARI ÇALIŞTIRMA & İNDEKS TESTLERİNİ TETİKLEME
 -- ============================================================================
-PRINT 'Query Store istatistikleri üretiliyor...';
+PRINT 'Query Store ve İndeks İstatistikleri üretiliyor...';
+
+-- A. Unused Index Simülasyonu: Customers üzerinde update yaparak IX_Customers_Unused_Country indeksine yazma maliyeti üret
+UPDATE dbo.Customers 
+SET CreatedAt = SYSDATETIME() 
+WHERE CustomerID % 2 = 0;
+
+-- B. Missing Index Simülasyonu 1: Orders.ShippingAddress üzerinde indeks olmadığı için eksik indeks DMV'sine düşer
 EXEC (N'
-    -- Maliyetli CPU ve IO sorgusu simülasyonu
+    SELECT OrderID, OrderDate, TotalAmount, ShippingAddress 
+    FROM dbo.Orders 
+    WHERE ShippingAddress LIKE ''%Organize%'' AND OrderStatus = ''Pending'';
+');
+GO 8
+
+-- C. Missing Index Simülasyonu 2: Customers.Email araması
+EXEC (N'
+    SELECT CustomerID, FullName, Email, City 
+    FROM dbo.Customers 
+    WHERE Email = ''musteri500@sirket.com'';
+');
+GO 6
+
+-- D. Maliyetli CPU ve IO sorgusu (Query Store analitiği için)
+EXEC (N'
     SELECT TOP 50 c.City, COUNT(o.OrderID) as SiparisSayisi, SUM(od.LineTotal) as Ciro
     FROM dbo.Customers c
     JOIN dbo.Orders o ON o.CustomerID = c.CustomerID
@@ -270,7 +321,8 @@ GO
 
 PRINT '===========================================================================';
 PRINT 'Traceforge_TestDB başarıyla kuruldu ve test verileriyle dolduruldu!';
-PRINT '1. Tablolar, 10.000+ satır veri ve indeksler eklendi.';
-PRINT '2. Query Store açıldı ve test sorgularıyla ısıtıldı.';
-PRINT '3. Tam (Full) ve Log yedekleri alındı (Backup & Recovery ekranı için).';
+PRINT '1. Tablolar, 15.000+ satır veri, ilişkiler ve indeksler eklendi.';
+PRINT '2. Parçalanmış GUID indeks (dbo.InventoryLogs) ve Unused İndeks oluşturuldu.';
+PRINT '3. Query Store ve Eksik İndeks (Missing Index) DMV verileri simüle edildi.';
+PRINT '4. Tam (Full) ve Log yedekleri alındı (Backup & Recovery ekranı için).';
 PRINT '===========================================================================';
