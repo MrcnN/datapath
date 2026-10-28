@@ -13,18 +13,21 @@ from app.schemas.instances import (
     DatabaseInfo,
     ServerMetadata,
     SessionInfo,
+    ServerConfigurationSummary,
 )
 from app.services.instance_service import (
     get_blocking,
     get_databases,
     get_server_metadata,
     get_sessions,
+    get_server_configurations,
 )
 from app.services.demo_data import (
     DEMO_BLOCKING,
     DEMO_DATABASES,
     DEMO_METADATA,
     DEMO_SESSIONS,
+    DEMO_SERVER_CONFIGURATIONS,
 )
 
 logger = logging.getLogger(__name__)
@@ -117,3 +120,17 @@ def read_blocking_chains(response: Response):
         logger.debug("Live blocking unavailable (%s), returning demo data.", exc)
         response.headers["X-Traceforge-Demo"] = "true"
         return DEMO_BLOCKING
+
+
+@router.get("/instance/configurations", response_model=ServerConfigurationSummary)
+@router.get("/instances/configurations", response_model=ServerConfigurationSummary)
+def read_server_configurations(response: Response):
+    """Retrieve SQL Server sp_configure settings and audit them against DBA best practice guidelines."""
+    params = _get_connection_params()
+    try:
+        return get_server_configurations(params)
+    except Exception as exc:
+        logger.debug("Live configurations unavailable (%s), returning demo data.", exc)
+        response.headers["X-Traceforge-Demo"] = "true"
+        return DEMO_SERVER_CONFIGURATIONS
+

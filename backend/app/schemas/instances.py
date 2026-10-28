@@ -73,3 +73,29 @@ class BlockingChain(BaseModel):
 class BlockingResponse(BaseModel):
     has_blocking: bool
     chains: List[BlockingChain] = []
+
+
+class ConfigurationItem(BaseModel):
+    configuration_id: int
+    name: str
+    description: str
+    value: int
+    value_in_use: int
+    recommended_value: Optional[str] = None
+    is_dynamic: bool
+    is_advanced: bool
+    status: str  # 'OPTIMAL', 'WARNING', 'CRITICAL', 'INFO'
+    impact_description: str
+    remediation_sql: Optional[str] = None
+
+
+class ServerConfigurationSummary(BaseModel):
+    compliance_score: int
+    total_configurations: int
+    optimal_count: int
+    warning_count: int
+    critical_count: int
+    items: List[ConfigurationItem] = []
+    remediation_script: str
+    is_demo: bool = False
+

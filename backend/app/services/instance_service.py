@@ -15,6 +15,8 @@ from app.schemas.instances import (
     DatabaseInfo,
     ServerMetadata,
     SessionInfo,
+    ConfigurationItem,
+    ServerConfigurationSummary,
 )
 
 logger = logging.getLogger(__name__)
@@ -326,4 +328,205 @@ def get_databases(params: ConnectionParams) -> List[DatabaseInfo]:
             )
             for r in db_rows
         ]
+
+
+def get_server_configurations(params: ConnectionParams) -> ServerConfigurationSummary:
+    """Retrieve SQL Server sp_configure settings and audit them against DBA best practices."""
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT 
+                    (SELECT CAST(physical_memory_kb AS FLOAT) / 1048576.0 FROM sys.dm_os_sys_info) AS ram_gb, 
+                    (SELECT cpu_count FROM sys.dm_os_sys_info) AS cpu_cnt
+                """
+            )
+            sys_info = cursor.fetchone()
+            total_ram_gb = round(sys_info[0], 1) if sys_info and sys_info[0] else 16.0
+            cpu_cores = int(sys_info[1]) if sys_info and sys_info[1] else 4
+            recommended_max_mem_mb = max(2048, int((total_ram_gb - max(4.0, total_ram_gb * 0.12)) * 1024))
+            recommended_maxdop = min(8, cpu_cores)
+
+            cursor.execute(
+                """
+                SELECT
+                    configuration_id,
+                    name,
+                    description,
+                    CAST(value AS INT) AS value,
+                    CAST(value_in_use AS INT) AS value_in_use,
+                    is_dynamic,
+                    is_advanced
+                FROM sys.configurations
+                WHERE name IN (
+                    'max server memory (MB)',
+                    'cost threshold for parallelism',
+                    'max degree of parallelism',
+                    'optimize for ad hoc workloads',
+                    'backup compression default',
+                    'remote admin connections',
+                    'xp_cmdshell',
+                    'clr enabled'
+                )
+                ORDER BY name
+                """
+            )
+            rows = cursor.fetchall()
+
+            items: List[ConfigurationItem] = []
+            optimal_count = 0
+            warning_count = 0
+            critical_count = 0
+            remediation_lines: List[str] = [
+                "-- ================================================================",
+                "-- Traceforge - SQL Server Instance Best Practice Remediation Script",
+                "-- NOT: Lütfen production ortamına uygulamadan önce gözden geçiriniz.",
+                "-- ================================================================",
+                "",
+                "USE master;",
+                "GO",
+                "EXEC sp_configure 'show advanced options', 1;",
+                "RECONFIGURE WITH OVERRIDE;",
+                "GO",
+                "",
+            ]
+
+            for r in rows:
+                cfg_id = r[0]
+                name = r[1]
+                desc = r[2] or ""
+                val = r[3]
+                val_use = r[4]
+                is_dyn = bool(r[5])
+                is_adv = bool(r[6])
+
+                status = "OPTIMAL"
+                rec_val = None
+                impact = "Mevcut ayar önerilen en iyi uygulamalarla uyumludur."
+                rem_sql = None
+
+                if name == "max server memory (MB)":
+                    if val_use >= 2147483640:
+                        status = "CRITICAL"
+                        rec_val = f"{recommended_max_mem_mb} MB (Mevcut RAM: {total_ram_gb} GB)"
+                        impact = "Varsayılan 2.1 TB değeri bırakılmıştır. SQL Server işletim sistemi için bellek ayırmayarak OS paging ve sunucu kilitlenmelerine sebep olabilir."
+                        rem_sql = f"EXEC sp_configure 'max server memory (MB)', {recommended_max_mem_mb};\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 1. Max Server Memory: {recommended_max_mem_mb} MB tahsis\n{rem_sql}\nGO\n")
+                        critical_count += 1
+                    else:
+                        rec_val = f"{recommended_max_mem_mb} MB"
+                        optimal_count += 1
+
+                elif name == "cost threshold for parallelism":
+                    if val_use <= 5:
+                        status = "WARNING"
+                        rec_val = "50"
+                        impact = "Varsayılan 5 değeri 1990'lı yıllardan kalmadır. Küçük OLTP sorguları dahi paralel yürütülerek CPU ve CXPACKET beklemesi üretir."
+                        rem_sql = "EXEC sp_configure 'cost threshold for parallelism', 50;\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 2. Cost Threshold for Parallelism: 50\n{rem_sql}\nGO\n")
+                        warning_count += 1
+                    else:
+                        rec_val = "30 - 50"
+                        optimal_count += 1
+
+                elif name == "max degree of parallelism":
+                    if val_use == 0:
+                        status = "WARNING"
+                        rec_val = f"{recommended_maxdop} ({cpu_cores} Çekirdek için)"
+                        impact = "MAXDOP 0 (sınırsız) olarak ayarlanmış. Tek bir sorgu tüm CPU çekirdeklerini rezerve ederek CXPACKET beklemesi üretebilir."
+                        rem_sql = f"EXEC sp_configure 'max degree of parallelism', {recommended_maxdop};\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 3. MAXDOP: {recommended_maxdop}\n{rem_sql}\nGO\n")
+                        warning_count += 1
+                    else:
+                        rec_val = str(recommended_maxdop)
+                        optimal_count += 1
+
+                elif name == "optimize for ad hoc workloads":
+                    if val_use == 0:
+                        status = "WARNING"
+                        rec_val = "1"
+                        impact = "Kapalı (0). Tek seferlik sorgular yürütme planı önbelleğini şişirerek (Plan Cache Bloat) değerli RAM alanını tüketmektedir."
+                        rem_sql = "EXEC sp_configure 'optimize for ad hoc workloads', 1;\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 4. Optimize for Ad hoc Workloads: 1\n{rem_sql}\nGO\n")
+                        warning_count += 1
+                    else:
+                        rec_val = "1"
+                        optimal_count += 1
+
+                elif name == "backup compression default":
+                    if val_use == 0:
+                        status = "INFO"
+                        rec_val = "1"
+                        impact = "Varsayılan yedekleme sıkıştırması kapalı. Yedekler diskte 3-4 kat daha fazla yer kaplar ve I/O süresini uzatır."
+                        rem_sql = "EXEC sp_configure 'backup compression default', 1;\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 5. Backup Compression: 1\n{rem_sql}\nGO\n")
+                        warning_count += 1
+                    else:
+                        rec_val = "1"
+                        optimal_count += 1
+
+                elif name == "remote admin connections":
+                    if val_use == 0:
+                        status = "WARNING"
+                        rec_val = "1"
+                        impact = "Dedicated Administrator Connection (DAC) kapalı. Sunucu %100 CPU veya bellek kilitlenmesi yaşadığında uzaktan DBA bağlantısı kurulamaz."
+                        rem_sql = "EXEC sp_configure 'remote admin connections', 1;\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 6. Remote Admin Connections: 1\n{rem_sql}\nGO\n")
+                        warning_count += 1
+                    else:
+                        rec_val = "1"
+                        optimal_count += 1
+
+                elif name == "xp_cmdshell":
+                    if val_use == 1:
+                        status = "WARNING"
+                        rec_val = "0"
+                        impact = "İşletim sistemi komut satırı yetkisi açık. Güvenlik yüzeyi genişletilmiştir."
+                        rem_sql = "EXEC sp_configure 'xp_cmdshell', 0;\nRECONFIGURE WITH OVERRIDE;"
+                        remediation_lines.append(f"-- 7. xp_cmdshell: 0 (Kapat)\n{rem_sql}\nGO\n")
+                        warning_count += 1
+                    else:
+                        rec_val = "0"
+                        optimal_count += 1
+
+                elif name == "clr enabled":
+                    rec_val = "0"
+                    optimal_count += 1
+
+                items.append(
+                    ConfigurationItem(
+                        configuration_id=cfg_id,
+                        name=name,
+                        description=desc,
+                        value=val,
+                        value_in_use=val_use,
+                        recommended_value=rec_val,
+                        is_dynamic=is_dyn,
+                        is_advanced=is_adv,
+                        status=status,
+                        impact_description=impact,
+                        remediation_sql=rem_sql,
+                    )
+                )
+
+            total = len(items)
+            score = int((optimal_count / total * 100)) if total > 0 else 100
+            remediation_lines.append("PRINT 'Tüm yapılandırmalar başarıyla uygulandı.';\nGO\n")
+
+            return ServerConfigurationSummary(
+                compliance_score=score,
+                total_configurations=total,
+                optimal_count=optimal_count,
+                warning_count=warning_count,
+                critical_count=critical_count,
+                items=items,
+                remediation_script="\n".join(remediation_lines),
+                is_demo=False,
+            )
+    except Exception as exc:
+        logger.warning("Live server configurations unavailable (%s), returning demo data.", exc)
+        from app.services.demo_data import DEMO_SERVER_CONFIGURATIONS
+        return DEMO_SERVER_CONFIGURATIONS
+
 

@@ -2,6 +2,7 @@ import type {
   ConnectionConfig,
   ConnectionTestResult,
   InstanceMetadata,
+  ServerConfigurationSummary,
   Session,
   BlockingResult,
   DeadlockResult,
@@ -106,6 +107,10 @@ export async function getInstanceMetadata(): Promise<InstanceMetadata> {
 
 export async function getDatabases(): Promise<Database[]> {
   return apiFetch<Database[]>('/api/instance/databases');
+}
+
+export async function getServerConfigurations(): Promise<ServerConfigurationSummary> {
+  return apiFetch<ServerConfigurationSummary>('/api/instance/configurations');
 }
 
 // ── Sessions ──────────────────────────────────────────────────

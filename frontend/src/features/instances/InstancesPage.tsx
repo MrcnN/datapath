@@ -1,9 +1,10 @@
 import React from 'react';
-import { Server, Database, ShieldCheck } from 'lucide-react';
+import { Server, Database, ShieldCheck, Sliders } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import ConnectionForm from './components/ConnectionForm';
 import InstanceMetadata from './components/InstanceMetadata';
 import DatabaseTable from './components/DatabaseTable';
+import ServerConfigurationAudit from './components/ServerConfigurationAudit';
 import styles from './InstancesPage.module.css';
 
 export default function InstancesPage() {
@@ -11,7 +12,7 @@ export default function InstancesPage() {
     <div className={styles.page}>
       <PageHeader
         title="Sunucular & Bağlantı Yönetimi"
-        subtitle="SQL Server bağlantı profilini yapılandırın, kaynak kullanımını ve veritabanı durumunu inceleyin"
+        subtitle="SQL Server bağlantı profilini yapılandırın, kaynak kullanımını, sp_configure denetimini ve veritabanı durumunu inceleyin"
       />
 
       <div className={styles.grid}>
@@ -32,6 +33,15 @@ export default function InstancesPage() {
           </div>
           <InstanceMetadata />
         </div>
+      </div>
+
+      {/* Sunucu sp_configure & En İyi Uygulama Denetimi */}
+      <div className={styles.card}>
+        <div className={styles.cardTitle}>
+          <Sliders size={16} color="var(--accent)" />
+          Sunucu Yapılandırması & En İyi Uygulama Denetimi (sp_configure Audit)
+        </div>
+        <ServerConfigurationAudit />
       </div>
 
       {/* Veritabanı Tablosu */}

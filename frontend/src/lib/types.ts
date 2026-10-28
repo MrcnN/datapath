@@ -61,6 +61,33 @@ export interface InstanceMetadata {
   [key: string]: any;
 }
 
+export interface ConfigurationItem {
+  configuration_id: number;
+  name: string;
+  description: string;
+  value: number;
+  value_in_use: number;
+  recommended_value?: string | null;
+  is_dynamic: boolean;
+  is_advanced: boolean;
+  status: 'OPTIMAL' | 'WARNING' | 'CRITICAL' | 'INFO';
+  impact_description: string;
+  remediation_sql?: string | null;
+  [key: string]: any;
+}
+
+export interface ServerConfigurationSummary {
+  compliance_score: number;
+  total_configurations: number;
+  optimal_count: number;
+  warning_count: number;
+  critical_count: number;
+  items: ConfigurationItem[];
+  remediation_script: string;
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
 // ── Sessions ──────────────────────────────────────────────────
 export interface Session {
   session_id: number;

@@ -84,3 +84,17 @@ def test_blocking_empty():
         data = res.json()
         assert data["has_blocking"] is False
         assert len(data["chains"]) == 0
+
+
+def test_server_configurations_endpoint():
+    res = client.get("/api/instance/configurations")
+    assert res.status_code == 200
+    data = res.json()
+    assert "compliance_score" in data
+    assert "items" in data
+    assert len(data["items"]) > 0
+    item = data["items"][0]
+    assert "name" in item
+    assert "status" in item
+    assert "remediation_script" in data
+
