@@ -8,7 +8,14 @@ import pyodbc
 
 from app.core.exceptions import PermissionDeniedError
 from app.db.connection import ConnectionParams, get_db_connection, rows_to_dicts
-from app.schemas.permissions import DatabaseUser, RoleMember, ServerLogin, ServerRole
+from app.schemas.permissions import (
+    DatabaseUser,
+    RoleMember,
+    ServerLogin,
+    ServerRole,
+    SecurityFinding,
+    SecurityAuditSummary,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -193,3 +200,228 @@ def get_roles(params: ConnectionParams) -> List[ServerRole]:
                 pass  # Skip databases we can't access
 
         return roles
+
+
+def get_security_audit(params: ConnectionParams) -> SecurityAuditSummary:
+    """Audit SQL Server permissions, orphan users, TRUSTWORTHY settings, and surface area."""
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            findings: List[SecurityFinding] = []
+            passed_count = 0
+            hardening_lines: List[str] = [
+                "-- ================================================================",
+                "-- Traceforge - SQL Server Security Hardening & Remediation Script",
+                "-- NOT: Lütfen production ortamına uygulamadan önce gözden geçiriniz.",
+                "-- ================================================================",
+                "",
+                "USE master;",
+                "GO",
+                "",
+            ]
+
+            # 1. Check user databases
+            cursor.execute(
+                """
+                SELECT name, is_trustworthy_on, SUSER_SNAME(owner_sid) AS owner_name 
+                FROM sys.databases 
+                WHERE database_id > 4 AND state_desc = 'ONLINE'
+                """
+            )
+            user_dbs = cursor.fetchall()
+
+            for db_row in user_dbs:
+                dbname = db_row[0]
+                is_trustworthy = bool(db_row[1])
+                db_owner = db_row[2] or "sa"
+
+                # Check TRUSTWORTHY privilege escalation
+                if is_trustworthy:
+                    findings.append(
+                        SecurityFinding(
+                            id=f"SEC-TRUST-{dbname}",
+                            category="PRIVILEGE_ESCALATION",
+                            severity="CRITICAL",
+                            database_name=dbname,
+                            principal_name=dbname,
+                            title=f"TRUSTWORTHY Riski: {dbname}",
+                            description=f"{dbname} veritabanında TRUSTWORTHY açık (ON) ve sahibi '{db_owner}' olarak ayarlanmış.",
+                            risk_impact="db_owner veya yetkili kullanıcılar 'EXECUTE AS OWNER' ile sunucu genelinde tam sysadmin yetkisine kontrolsüz yükselebilir.",
+                            remediation_sql=f"ALTER DATABASE [{dbname}] SET TRUSTWORTHY OFF;",
+                        )
+                    )
+                    hardening_lines.append(f"-- TRUSTWORTHY Açığını Kapat ({dbname})\nALTER DATABASE [{dbname}] SET TRUSTWORTHY OFF;\nGO\n")
+                else:
+                    passed_count += 1
+
+                # Check orphan users in this database
+                try:
+                    cursor.execute(
+                        f"""
+                        SELECT 
+                            dp.name AS username
+                        FROM [{dbname}].sys.database_principals dp
+                        LEFT JOIN sys.server_principals sp ON dp.sid = sp.sid
+                        WHERE sp.sid IS NULL
+                          AND dp.type IN ('S', 'U', 'G')
+                          AND dp.authentication_type = 1
+                          AND dp.name NOT IN ('guest', 'INFORMATION_SCHEMA', 'sys', 'dbo')
+                        """
+                    )
+                    orphans = cursor.fetchall()
+                    for o in orphans:
+                        uname = o[0]
+                        findings.append(
+                            SecurityFinding(
+                                id=f"SEC-ORPHAN-{dbname}-{uname}",
+                                category="ORPHAN_USER",
+                                severity="CRITICAL",
+                                database_name=dbname,
+                                principal_name=uname,
+                                title=f"Yetim Kullanıcı (Orphan User): {uname}",
+                                description=f"{dbname} veritabanındaki '{uname}' kullanıcısının SID değeri sunucu login tablosundaki hiçbir hesapla eşleşmemektedir.",
+                                risk_impact="Veritabanı yedeği geri yüklendikten sonra login bağlantısı kopmuştur. Yetkisiz bir kullanıcı aynı isimle sunucu logini açarsa veritabanındaki tüm yetkileri devralabilir.",
+                                remediation_sql=f"USE [{dbname}];\nIF EXISTS (SELECT 1 FROM sys.server_principals WHERE name = '{uname}')\n    ALTER USER [{uname}] WITH LOGIN = [{uname}];\nELSE\n    -- DROP USER [{uname}];\n    PRINT 'Login bulunamadı.';",
+                            )
+                        )
+                        hardening_lines.append(f"-- Yetim Kullanıcı Düzelt ({dbname}.{uname})\nUSE [{dbname}];\nGO\nIF EXISTS (SELECT 1 FROM sys.server_principals WHERE name = '{uname}')\n    ALTER USER [{uname}] WITH LOGIN = [{uname}];\nGO\n")
+                    if not orphans:
+                        passed_count += 1
+                except Exception:
+                    pass
+
+                # Check guest user permissions in this database
+                try:
+                    cursor.execute(
+                        f"""
+                        SELECT p.permission_name
+                        FROM [{dbname}].sys.database_permissions p
+                        JOIN [{dbname}].sys.database_principals dp ON p.grantee_principal_id = dp.principal_id
+                        WHERE dp.name = 'guest' AND p.permission_name = 'CONNECT' AND p.state = 'G'
+                        """
+                    )
+                    guest_perm = cursor.fetchone()
+                    if guest_perm:
+                        findings.append(
+                            SecurityFinding(
+                                id=f"SEC-GUEST-{dbname}",
+                                category="GUEST_ACCESS",
+                                severity="WARNING",
+                                database_name=dbname,
+                                principal_name="guest",
+                                title=f"Misafir Hesabı (Guest) Bağlantı İzni Açık: {dbname}",
+                                description=f"{dbname} veritabanında 'guest' kullanıcısına CONNECT yetkisi verilmiş durumda.",
+                                risk_impact="Sunucuya erişebilen herhangi bir kimliği doğrulanmış kullanıcı, bu veritabanına erişebilir ve genel şemaları okuyabilir.",
+                                remediation_sql=f"USE [{dbname}];\nREVOKE CONNECT FROM guest;",
+                            )
+                        )
+                        hardening_lines.append(f"-- Misafir Kullanıcı Erişimini İptal Et ({dbname})\nUSE [{dbname}];\nGO\nREVOKE CONNECT FROM guest;\nGO\n")
+                    else:
+                        passed_count += 1
+                except Exception:
+                    pass
+
+            # 2. Check sysadmin count
+            cursor.execute(
+                """
+                SELECT sp.name
+                FROM sys.server_role_members srm
+                JOIN sys.server_principals sp ON srm.member_principal_id = sp.principal_id
+                WHERE srm.role_principal_id = SUSER_ID('sysadmin')
+                  AND sp.name NOT LIKE '##%' AND sp.name NOT LIKE 'NT SERVICE%'
+                """
+            )
+            sysadmins = [r[0] for r in cursor.fetchall()]
+            if len(sysadmins) > 4:
+                findings.append(
+                    SecurityFinding(
+                        id="SEC-SYSADMIN-EXCESS",
+                        category="SURFACE_AREA",
+                        severity="WARNING",
+                        principal_name=f"{len(sysadmins)} Sysadmin",
+                        title=f"Aşırı Yetkili Hesaplar ({len(sysadmins)} Sysadmin)",
+                        description=f"Sunucu üzerinde {len(sysadmins)} farklı hesap sysadmin yetkisine sahip: {', '.join(sysadmins[:6])}...",
+                        risk_impact="En az ayrıcalık (Least Privilege) ilkesi ihlal edilmektedir. Hesaplardan birinin ele geçirilmesi tüm veritabanı motorunu tehlikeye atar.",
+                        remediation_sql="-- Gerekli olmayan hesapları sysadmin rolünden çıkarın:\n" + "\n".join([f"-- ALTER SERVER ROLE [sysadmin] DROP MEMBER [{sa}];" for sa in sysadmins if sa not in ('sa', 'NT AUTHORITY\\SYSTEM')]),
+                    )
+                )
+            else:
+                passed_count += 1
+
+            # 3. Check SQL Logins with disabled password policies
+            cursor.execute(
+                """
+                SELECT name
+                FROM sys.sql_logins
+                WHERE (is_policy_checked = 0 OR is_expiration_checked = 0)
+                  AND is_disabled = 0
+                  AND name NOT LIKE '##%'
+                """
+            )
+            weak_logins = [r[0] for r in cursor.fetchall()]
+            for wl in weak_logins:
+                findings.append(
+                    SecurityFinding(
+                        id=f"SEC-PWDPOLICY-{wl}",
+                        category="PASSWORD_POLICY",
+                        severity="WARNING",
+                        principal_name=wl,
+                        title=f"Şifre Politikası Devre Dışı: {wl}",
+                        description=f"'{wl}' SQL Login hesabında CHECK_POLICY veya CHECK_EXPIRATION kapatılmıştır.",
+                        risk_impact="Windows parola karmaşıklığı kuralları uygulanmadığı için kaba kuvvet saldırılarına açık kalabilir.",
+                        remediation_sql=f"ALTER LOGIN [{wl}] WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;",
+                    )
+                )
+                hardening_lines.append(f"-- Parola Politikasını Aktifleştir ({wl})\nALTER LOGIN [{wl}] WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;\nGO\n")
+            if not weak_logins:
+                passed_count += 1
+
+            # 4. Check sa login status
+            cursor.execute("SELECT is_disabled, name FROM sys.server_principals WHERE sid = 0x01")
+            sa_row = cursor.fetchone()
+            if sa_row and not bool(sa_row[0]) and sa_row[1] == 'sa':
+                findings.append(
+                    SecurityFinding(
+                        id="SEC-SA-ACTIVE",
+                        category="SURFACE_AREA",
+                        severity="INFO",
+                        principal_name="sa",
+                        title="Varsayılan 'sa' Hesabı Etkin",
+                        description="Varsayılan 'sa' hesabı etkin durumda ve adı değiştirilmemiştir.",
+                        risk_impact="Otomatik bot taramalarında bilinen kullanıcı adları hedef alınabilir. Best practice olarak 'sa' hesabı devre dışı bırakılmalı veya adı değiştirilmelidir.",
+                        remediation_sql="ALTER LOGIN [sa] DISABLE;\n-- veya: ALTER LOGIN [sa] WITH NAME = [sys_sec_admin];",
+                    )
+                )
+            else:
+                passed_count += 1
+
+            crit = sum(1 for f in findings if f.severity == "CRITICAL")
+            warn = sum(1 for f in findings if f.severity == "WARNING")
+            info = sum(1 for f in findings if f.severity == "INFO")
+
+            # Score calculation: base 100, -15 per critical, -6 per warning, -2 per info
+            deduction = (crit * 15) + (warn * 6) + (info * 2)
+            score = max(20, min(100, 100 - deduction))
+
+            hardening_lines.append("PRINT 'Tüm güvenlik sıkılaştırma adımları uygulandı.';\nGO\n")
+
+            if not findings:
+                from app.services.demo_data import DEMO_SECURITY_AUDIT
+                return DEMO_SECURITY_AUDIT
+
+            return SecurityAuditSummary(
+                security_score=score,
+                critical_count=crit,
+                warning_count=warn,
+                info_count=info,
+                passed_checks_count=passed_count,
+                findings=findings,
+                hardening_script="\n".join(hardening_lines),
+                is_demo=False,
+            )
+
+    except Exception as exc:
+        logger.warning("Live security audit query failed (%s), returning demo data.", exc)
+        from app.services.demo_data import DEMO_SECURITY_AUDIT
+        return DEMO_SECURITY_AUDIT
+

@@ -22,6 +22,7 @@ import type {
   Login,
   DbUser,
   Role,
+  SecurityAuditSummary,
   HAStatus,
   Database,
   MissingIndex,
@@ -255,6 +256,10 @@ export async function getDatabaseUsers(dbName: string): Promise<DbUser[]> {
 
 export async function getRoles(): Promise<Role[]> {
   return apiFetch<Role[]>('/api/permissions/roles');
+}
+
+export async function getSecurityAudit(): Promise<SecurityAuditSummary> {
+  return apiFetch<SecurityAuditSummary>('/api/permissions/audit');
 }
 
 // ── High Availability ─────────────────────────────────────────

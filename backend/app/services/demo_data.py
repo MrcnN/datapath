@@ -13,7 +13,14 @@ from app.schemas.instances import (
     ServerConfigurationSummary,
 )
 from app.schemas.backups import BackupRecord, RecoveryReadiness, DatabaseIntegrityCheck
-from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole, RoleMember
+from app.schemas.permissions import (
+    DatabaseUser,
+    ServerLogin,
+    ServerRole,
+    RoleMember,
+    SecurityFinding,
+    SecurityAuditSummary,
+)
 from app.schemas.high_availability import HAStatusResponse, AvailabilityGroup, AGReplica, AGDatabase
 from app.schemas.indexes import MissingIndex, UnusedIndex, IndexFragmentation, IndexSummary, TableStatistic
 from app.schemas.wait_stats import CategoryWaitSummary, WaitStatEntry, WaitStatsSummary
@@ -1183,6 +1190,86 @@ DEMO_SERVER_CONFIGURATIONS = ServerConfigurationSummary(
     ],
     remediation_script="-- ================================================================\n-- Traceforge - SQL Server Instance Best Practice Remediation Script\n-- NOT: Lütfen production ortamına uygulamadan önce değerleri gözden geçiriniz.\n-- ================================================================\n\nUSE master;\nGO\n\nEXEC sp_configure 'show advanced options', 1;\nRECONFIGURE WITH OVERRIDE;\nGO\n\n-- 1. Max Server Memory Ayarı (64 GB RAM için 58 GB tahsis)\nEXEC sp_configure 'max server memory (MB)', 58000;\nRECONFIGURE WITH OVERRIDE;\nGO\n\n-- 2. Paralellik Maliyet Eşiği (Cost Threshold for Parallelism: 5 -> 50)\nEXEC sp_configure 'cost threshold for parallelism', 50;\nRECONFIGURE WITH OVERRIDE;\nGO\n\n-- 3. Maksimum Paralellik Derecesi (MAXDOP: 0 -> 8)\nEXEC sp_configure 'max degree of parallelism', 8;\nRECONFIGURE WITH OVERRIDE;\nGO\n\n-- 4. Ad-hoc Sorgu Önbellek Optimizasyonu (Plan Cache Bloat Önleme)\nEXEC sp_configure 'optimize for ad hoc workloads', 1;\nRECONFIGURE WITH OVERRIDE;\nGO\n\nPRINT 'Tüm önerilen yapılandırma ayarları başarıyla uygulandı.';\nGO\n",
 )
+
+
+DEMO_SECURITY_AUDIT = SecurityAuditSummary(
+    security_score=68,
+    critical_count=2,
+    warning_count=3,
+    info_count=1,
+    passed_checks_count=7,
+    is_demo=True,
+    findings=[
+        SecurityFinding(
+            id="SEC-001",
+            category="ORPHAN_USER",
+            severity="CRITICAL",
+            database_name="AppDb_Production",
+            principal_name="report_reader",
+            title="Yetim Kullanıcı (Orphan User): report_reader",
+            description="AppDb_Production veritabanındaki 'report_reader' kullanıcısının SID değeri sunucu login tablosundaki hiçbir hesapla eşleşmemektedir (Kopuk yetki bağı).",
+            risk_impact="Veritabanı yedeği geri yüklendikten sonra login bağlantısı kopmuştur. Yetkisiz bir kullanıcı aynı isimle sunucu logini açarsa veritabanındaki tüm yetkileri devralabilir.",
+            remediation_sql="USE [AppDb_Production];\n-- Mevcut login ile yeniden bağlamak için:\nALTER USER [report_reader] WITH LOGIN = [report_reader];\n-- Veya kullanıcı artık kullanılmıyorsa silmek için:\n-- DROP USER [report_reader];",
+        ),
+        SecurityFinding(
+            id="SEC-002",
+            category="PRIVILEGE_ESCALATION",
+            severity="CRITICAL",
+            database_name="AppDb_Staging",
+            principal_name="AppDb_Staging",
+            title="TRUSTWORTHY Veritabanı Açığı (Yetki Yükseltme Riski)",
+            description="AppDb_Staging veritabanında TRUSTWORTHY özelliği açık (ON) ve veritabanı sahibi 'sa' (sysadmin) olarak ayarlanmış.",
+            risk_impact="AppDb_Staging veritabanında db_owner veya yetkili olan herhangi bir kullanıcı 'EXECUTE AS OWNER' kullanarak sunucu genelinde tam sysadmin yetkisine kontrolsüz yükselebilir.",
+            remediation_sql="ALTER DATABASE [AppDb_Staging] SET TRUSTWORTHY OFF;\n-- Veritabanı sahibini sa yerine düşük yetkili bir hesaba devredin:\nALTER AUTHORIZATION ON DATABASE::[AppDb_Staging] TO [dbo];",
+        ),
+        SecurityFinding(
+            id="SEC-003",
+            category="GUEST_ACCESS",
+            severity="WARNING",
+            database_name="Reporting_Warehouse",
+            principal_name="guest",
+            title="Misafir Hesabı (Guest User) Bağlantı İzni Açık",
+            description="Reporting_Warehouse kullanıcı veritabanında 'guest' kullanıcısına CONNECT yetkisi verilmiş durumda.",
+            risk_impact="Sunucuya bağlanabilen herhangi bir kimliği doğrulanmış kullanıcı, açıkça izin verilmemiş olsa bile bu veritabanına erişebilir ve genel şemaları okuyabilir.",
+            remediation_sql="USE [Reporting_Warehouse];\nREVOKE CONNECT FROM guest;",
+        ),
+        SecurityFinding(
+            id="SEC-004",
+            category="SURFACE_AREA",
+            severity="WARNING",
+            database_name=None,
+            principal_name="8 Sysadmin Hesabı",
+            title="Aşırı Yetkili Hesaplar (Fazla Sayıda Sysadmin)",
+            description="Sunucu genelinde 8 farklı hesap (dev_admin, backup_svc, temp_dba, sa vb.) sysadmin rolüne atanmış.",
+            risk_impact="En az ayrıcalık (Least Privilege) ilkesi ihlal edilmektedir. Hesaplardan birinin ele geçirilmesi tüm veritabanı motorunu tehlikeye atar.",
+            remediation_sql="ALTER SERVER ROLE [sysadmin] DROP MEMBER [dev_admin];\nALTER SERVER ROLE [sysadmin] DROP MEMBER [temp_dba];",
+        ),
+        SecurityFinding(
+            id="SEC-005",
+            category="PASSWORD_POLICY",
+            severity="WARNING",
+            database_name=None,
+            principal_name="app_service_user",
+            title="Şifre Karmaşıklığı / Süre Politikası Devre Dışı",
+            description="'app_service_user' SQL Login hesabında CHECK_POLICY veya CHECK_EXPIRATION kapatılmıştır.",
+            risk_impact="Windows parola karmaşıklığı ve kilitlenme kuralları uygulanmadığı için kaba kuvvet saldırılarına açık kalabilir.",
+            remediation_sql="ALTER LOGIN [app_service_user] WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;",
+        ),
+        SecurityFinding(
+            id="SEC-006",
+            category="SURFACE_AREA",
+            severity="INFO",
+            database_name=None,
+            principal_name="sa",
+            title="Varsayılan 'sa' Hesabı Etkin",
+            description="Varsayılan 'sa' hesabı etkin durumda ve adı değiştirilmemiştir.",
+            risk_impact="Otomatik bot taramalarında hedef alınabilir. Best practice olarak 'sa' hesabı devre dışı bırakılmalı veya adı değiştirilmelidir.",
+            remediation_sql="ALTER LOGIN [sa] DISABLE;\n-- veya: ALTER LOGIN [sa] WITH NAME = [sys_sec_admin];",
+        ),
+    ],
+    hardening_script="-- ================================================================\n-- Traceforge - SQL Server Security Hardening & Remediation Script\n-- NOT: Lütfen production ortamına uygulamadan önce gözden geçiriniz.\n-- ================================================================\n\nUSE master;\nGO\n\n-- 1. TRUSTWORTHY Açığını Kapat (Yetki Yükseltme Önleme)\nALTER DATABASE [AppDb_Staging] SET TRUSTWORTHY OFF;\nGO\n\n-- 2. Misafir Kullanıcı Erişimini İptal Et\nUSE [Reporting_Warehouse];\nGO\nREVOKE CONNECT FROM guest;\nGO\n\n-- 3. SQL Login Parola Politikasını Aktifleştir\nUSE master;\nGO\nALTER LOGIN [app_service_user] WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;\nGO\n\n-- 4. Yetim Kullanıcıyı Mevcut Login ile Eşleştir\nUSE [AppDb_Production];\nGO\nIF EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'report_reader')\n    ALTER USER [report_reader] WITH LOGIN = [report_reader];\nGO\n\nPRINT 'Güvenlik sıkılaştırma adımları tamamlandı.';\nGO\n",
+)
+
 
 
 

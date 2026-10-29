@@ -427,6 +427,31 @@ export interface Role {
   [key: string]: any;
 }
 
+export interface SecurityFinding {
+  id: string;
+  category: string;
+  severity: 'CRITICAL' | 'WARNING' | 'INFO';
+  database_name?: string | null;
+  principal_name?: string | null;
+  title: string;
+  description: string;
+  risk_impact: string;
+  remediation_sql: string;
+  [key: string]: any;
+}
+
+export interface SecurityAuditSummary {
+  security_score: number;
+  critical_count: number;
+  warning_count: number;
+  info_count: number;
+  passed_checks_count: number;
+  findings: SecurityFinding[];
+  hardening_script: string;
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
 // ── High Availability ─────────────────────────────────────────
 export interface AGReplica {
   name: string;

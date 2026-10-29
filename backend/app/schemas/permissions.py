@@ -38,3 +38,27 @@ class ServerRole(BaseModel):
     role_type: str  # server | database
     db_name: Optional[str] = None
     members: List[RoleMember] = []
+
+
+class SecurityFinding(BaseModel):
+    id: str
+    category: str
+    severity: str  # 'CRITICAL', 'WARNING', 'INFO'
+    database_name: Optional[str] = None
+    principal_name: Optional[str] = None
+    title: str
+    description: str
+    risk_impact: str
+    remediation_sql: str
+
+
+class SecurityAuditSummary(BaseModel):
+    security_score: int
+    critical_count: int
+    warning_count: int
+    info_count: int
+    passed_checks_count: int
+    findings: List[SecurityFinding] = []
+    hardening_script: str
+    is_demo: bool = False
+

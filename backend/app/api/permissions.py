@@ -8,11 +8,12 @@ from fastapi import APIRouter, Query, HTTPException
 from app.core.config import settings
 from app.core.exceptions import PermissionDeniedError
 from app.db.connection import ConnectionParams
-from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole
+from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole, SecurityAuditSummary
 from app.services.permissions_service import (
     get_database_users,
     get_roles,
     get_server_logins,
+    get_security_audit,
 )
 
 logger = logging.getLogger(__name__)
@@ -69,3 +70,16 @@ def read_roles():
     except Exception as exc:
         logger.error("Roles error: %s", exc)
         return []
+
+
+@router.get("/permissions/audit", response_model=SecurityAuditSummary)
+def read_security_audit():
+    """Perform security and vulnerability audit for orphan users, TRUSTWORTHY settings, and surface area risks."""
+    params = _get_connection_params()
+    try:
+        return get_security_audit(params)
+    except Exception as exc:
+        logger.error("Security audit error: %s", exc)
+        from app.services.demo_data import DEMO_SECURITY_AUDIT
+        return DEMO_SECURITY_AUDIT
+
