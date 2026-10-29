@@ -30,6 +30,7 @@ import type {
   IndexFragmentation,
   IndexSummary,
   TableStatistic,
+  RedundantIndex,
   WaitStatsSummary,
   StorageSummary,
   TempDBMemorySummary,
@@ -301,6 +302,14 @@ export async function getTableStatistics(
 ): Promise<TableStatistic[]> {
   return apiFetch<TableStatistic[]>(
     `/api/indexes/statistics${buildQuery({ database: database ?? '' })}`
+  );
+}
+
+export async function getRedundantIndexes(
+  database?: string
+): Promise<RedundantIndex[]> {
+  return apiFetch<RedundantIndex[]>(
+    `/api/indexes/redundant${buildQuery({ database: database ?? '' })}`
   );
 }
 

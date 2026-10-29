@@ -63,6 +63,22 @@ class TableStatistic(BaseModel):
     update_statement: str
 
 
+class RedundantIndex(BaseModel):
+    database_name: str
+    schema_name: str
+    table_name: str
+    redundant_index_name: str
+    redundant_columns: str
+    redundant_included_columns: Optional[str] = None
+    covering_index_name: str
+    covering_columns: str
+    covering_included_columns: Optional[str] = None
+    size_mb: float
+    redundancy_type: str  # 'EXACT_DUPLICATE' | 'PREFIX_OVERLAP'
+    explanation: str
+    drop_statement: str
+
+
 class IndexSummary(BaseModel):
     total_missing_indexes: int
     max_impact_score: float
@@ -70,4 +86,7 @@ class IndexSummary(BaseModel):
     total_wasted_mb: float
     fragmented_indexes_count: int
     stale_statistics_count: int = 0
+    redundant_indexes_count: int = 0
+    redundant_wasted_mb: float = 0.0
     is_demo: bool = False
+

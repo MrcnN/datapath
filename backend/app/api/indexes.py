@@ -11,6 +11,7 @@ from app.schemas.indexes import (
     IndexFragmentation,
     IndexSummary,
     MissingIndex,
+    RedundantIndex,
     TableStatistic,
     UnusedIndex,
 )
@@ -18,6 +19,7 @@ from app.services.index_service import (
     get_index_fragmentation,
     get_index_summary,
     get_missing_indexes,
+    get_redundant_indexes,
     get_table_statistics,
     get_unused_indexes,
 )
@@ -82,3 +84,13 @@ def read_table_statistics(
     """Retrieve table statistics staleness, row modification counts, and cardinality status."""
     params = _get_connection_params()
     return get_table_statistics(params, database)
+
+
+@router.get("/indexes/redundant", response_model=List[RedundantIndex])
+def read_redundant_indexes(
+    database: Optional[str] = Query(None, description="Database name filter")
+):
+    """Retrieve duplicate and prefix-overlapping redundant indexes that waste storage and write I/O."""
+    params = _get_connection_params()
+    return get_redundant_indexes(params, database)
+

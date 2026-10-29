@@ -22,7 +22,14 @@ from app.schemas.permissions import (
     SecurityAuditSummary,
 )
 from app.schemas.high_availability import HAStatusResponse, AvailabilityGroup, AGReplica, AGDatabase
-from app.schemas.indexes import MissingIndex, UnusedIndex, IndexFragmentation, IndexSummary, TableStatistic
+from app.schemas.indexes import (
+    MissingIndex,
+    UnusedIndex,
+    IndexFragmentation,
+    IndexSummary,
+    TableStatistic,
+    RedundantIndex,
+)
 from app.schemas.wait_stats import CategoryWaitSummary, WaitStatEntry, WaitStatsSummary
 from app.schemas.storage import (
     DatabaseFile,
@@ -348,6 +355,54 @@ DEMO_TABLE_STATISTICS = [
     ),
 ]
 
+DEMO_REDUNDANT_INDEXES = [
+    RedundantIndex(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="Orders",
+        redundant_index_name="IX_Orders_CustomerId",
+        redundant_columns="CustomerId",
+        redundant_included_columns=None,
+        covering_index_name="IX_Orders_CustomerId_OrderDate",
+        covering_columns="CustomerId, OrderDate",
+        covering_included_columns="TotalAmount, Status",
+        size_mb=420.0,
+        redundancy_type="PREFIX_OVERLAP",
+        explanation="'IX_Orders_CustomerId' (CustomerId) indeksi, 'IX_Orders_CustomerId_OrderDate' (CustomerId, OrderDate) indeksinin sol ön eki (left-prefix) durumundadır. B-Tree indeks arama kurallarına göre CustomerId sorguları kapsayan indeksi tam verimle kullanabilir. Bu indeks 420 MB gereksiz depolama ve her sipariş işleminde çift indeks güncelleme maliyeti oluşturmaktadır.",
+        drop_statement="DROP INDEX [IX_Orders_CustomerId] ON [dbo].[Orders];",
+    ),
+    RedundantIndex(
+        database_name="AppDb_Production",
+        schema_name="dbo",
+        table_name="Customers",
+        redundant_index_name="IX_Customers_Email_Dup",
+        redundant_columns="Email",
+        redundant_included_columns=None,
+        covering_index_name="UQ_Customers_Email",
+        covering_columns="Email",
+        covering_included_columns=None,
+        size_mb=180.0,
+        redundancy_type="EXACT_DUPLICATE",
+        explanation="'IX_Customers_Email_Dup' indeksi, tablodaki 'UQ_Customers_Email' benzersiz indeksi ile birebir aynı kolonları indekslemektedir. Tam kopya (duplicate) indekstir.",
+        drop_statement="DROP INDEX [IX_Customers_Email_Dup] ON [dbo].[Customers];",
+    ),
+    RedundantIndex(
+        database_name="Reporting_Warehouse",
+        schema_name="dbo",
+        table_name="FactSales",
+        redundant_index_name="IX_FactSales_StoreKey",
+        redundant_columns="StoreKey",
+        redundant_included_columns=None,
+        covering_index_name="IX_FactSales_StoreKey_DateKey",
+        covering_columns="StoreKey, DateKey",
+        covering_included_columns="SalesAmount, Quantity",
+        size_mb=1850.0,
+        redundancy_type="PREFIX_OVERLAP",
+        explanation="'IX_FactSales_StoreKey' (StoreKey) indeksi 1.85 GB boyutunda olup 'IX_FactSales_StoreKey_DateKey' bileşik indeksinin sol ön ekidir. Droplanması durumunda 1.85 GB alan tasarrufu ve ETL aktarımlarında yüksek yazma hızı kazanılacaktır.",
+        drop_statement="DROP INDEX [IX_FactSales_StoreKey] ON [dbo].[FactSales];",
+    ),
+]
+
 DEMO_INDEX_SUMMARY = IndexSummary(
     total_missing_indexes=len(DEMO_MISSING_INDEXES),
     max_impact_score=89.4,
@@ -355,6 +410,8 @@ DEMO_INDEX_SUMMARY = IndexSummary(
     total_wasted_mb=61.2,
     fragmented_indexes_count=2,
     stale_statistics_count=2,
+    redundant_indexes_count=len(DEMO_REDUNDANT_INDEXES),
+    redundant_wasted_mb=2450.0,
     is_demo=True,
 )
 

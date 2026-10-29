@@ -73,3 +73,19 @@ def test_table_statistics_endpoint():
         assert "UPDATE STATISTICS" in first["update_statement"]
 
 
+def test_redundant_indexes_endpoint():
+    response = client.get("/api/indexes/redundant")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    if data:
+        first = data[0]
+        assert "redundant_index_name" in first
+        assert "covering_index_name" in first
+        assert "redundancy_type" in first
+        assert first["redundancy_type"] in ("EXACT_DUPLICATE", "PREFIX_OVERLAP")
+        assert "drop_statement" in first
+        assert "DROP INDEX" in first["drop_statement"]
+
+
+

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon } from 'lucide-react';
+import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -15,6 +15,7 @@ import {
   getUnusedIndexes,
   getIndexFragmentation,
   getTableStatistics,
+  getRedundantIndexes,
   getDatabases,
 } from '../../lib/api';
 import type {
@@ -23,11 +24,12 @@ import type {
   UnusedIndex,
   IndexFragmentation,
   TableStatistic,
+  RedundantIndex,
   Database,
 } from '../../lib/types';
 import styles from './IndexesPage.module.css';
 
-type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics';
+type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant';
 
 export default function IndexesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('missing');
@@ -36,6 +38,7 @@ export default function IndexesPage() {
   const [unusedIndexes, setUnusedIndexes] = useState<UnusedIndex[]>([]);
   const [fragmentationList, setFragmentationList] = useState<IndexFragmentation[]>([]);
   const [statisticsList, setStatisticsList] = useState<TableStatistic[]>([]);
+  const [redundantList, setRedundantList] = useState<RedundantIndex[]>([]);
   const [databases, setDatabases] = useState<Database[]>([]);
   const [selectedDb, setSelectedDb] = useState<string>('');
 
@@ -75,6 +78,9 @@ export default function IndexesPage() {
         } else if (activeTab === 'statistics') {
           const stats = await getTableStatistics(selectedDb || undefined);
           setStatisticsList(stats);
+        } else if (activeTab === 'redundant') {
+          const red = await getRedundantIndexes(selectedDb || undefined);
+          setRedundantList(red);
         }
       } catch (err: any) {
         setError(err.message || 'İndeks verileri alınırken hata oluştu.');
@@ -380,6 +386,101 @@ export default function IndexesPage() {
     },
   ];
 
+  const redundantColumns: Column<RedundantIndex>[] = [
+    {
+      key: 'table_name',
+      label: 'Tablo',
+      sortable: true,
+      render: (r) => (
+        <div>
+          <strong style={{ color: '#ffffff' }}>{r.table_name}</strong>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            {r.schema_name}.{r.table_name} ({r.database_name})
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'redundancy_type',
+      label: 'Fazlalık / Çakışma Türü',
+      sortable: true,
+      render: (r) => {
+        const isDuplicate = r.redundancy_type === 'EXACT_DUPLICATE';
+        return (
+          <StatusBadge
+            variant={isDuplicate ? 'error' : 'warning'}
+            label={isDuplicate ? 'Birebir Kopya (Duplicate)' : 'Ön Ek Çakışması (Prefix Overlap)'}
+          />
+        );
+      },
+    },
+    {
+      key: 'redundant_index_name',
+      label: 'Fazlalık İndeks (Silinebilir)',
+      render: (r) => (
+        <div>
+          <strong style={{ color: '#ef4444' }}>{r.redundant_index_name}</strong>
+          <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+            Kolonlar: <span style={{ color: '#ffffff' }}>{r.redundant_columns}</span>
+            {r.redundant_included_columns && <span> (INC: {r.redundant_included_columns})</span>}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'covering_index_name',
+      label: 'Kapsayan Üst İndeks (Tutulacak)',
+      render: (r) => (
+        <div>
+          <strong style={{ color: '#10b981' }}>{r.covering_index_name}</strong>
+          <div style={{ fontSize: '11px', fontFamily: 'monospace', color: 'var(--text-secondary)' }}>
+            Kolonlar: <span style={{ color: '#ffffff' }}>{r.covering_columns}</span>
+            {r.covering_included_columns && <span> (INC: {r.covering_included_columns})</span>}
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'size_mb',
+      label: 'Kazanılacak Boyut',
+      sortable: true,
+      render: (r) => (
+        <span style={{ fontWeight: 600, color: '#f59e0b' }}>
+          {r.size_mb >= 1024 ? `${(r.size_mb / 1024).toFixed(2)} GB` : `${r.size_mb.toFixed(1)} MB`}
+        </span>
+      ),
+    },
+    {
+      key: 'explanation',
+      label: 'Açıklama & Gerekçe',
+      render: (r) => (
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          {r.explanation}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'İşlem',
+      render: (r) => (
+        <button
+          type="button"
+          className={styles.tabBtn}
+          style={{ padding: '4px 10px', fontSize: '11px', color: '#ef4444' }}
+          onClick={() =>
+            setActiveScript({
+              title: `DROP REDUNDANT INDEX — ${r.redundant_index_name}`,
+              sql: r.drop_statement,
+            })
+          }
+        >
+          <Trash2 size={13} />
+          Silme Betiği
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className={styles.container}>
       <PageHeader
@@ -427,6 +528,16 @@ export default function IndexesPage() {
             </div>
             <div className={styles.kpiSub}>Optimizer için %10+ değişen tablolar</div>
           </div>
+
+          <div className={styles.kpiCard}>
+            <div className={styles.kpiTitle}>Örtüşen & Fazlalık İndeksler</div>
+            <div className={styles.kpiValue} style={{ color: (summary.redundant_indexes_count || 0) > 0 ? '#ef4444' : 'var(--status-success)' }}>
+              {summary.redundant_indexes_count ?? 0}
+            </div>
+            <div className={styles.kpiSub}>
+              Tasarruf: <strong>{(summary.redundant_wasted_mb ?? 0).toFixed(1)} MB</strong>
+            </div>
+          </div>
         </div>
       )}
 
@@ -464,6 +575,14 @@ export default function IndexesPage() {
           >
             <RefreshCw size={15} />
             İstatistik Güncelliği ({statisticsList.length})
+          </button>
+          <button
+            type="button"
+            className={`${styles.tabBtn} ${activeTab === 'redundant' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('redundant')}
+          >
+            <CopyCheck size={15} />
+            Örtüşen & Fazlalık ({summary?.redundant_indexes_count ?? 0})
           </button>
         </div>
 
@@ -548,6 +667,25 @@ export default function IndexesPage() {
               <EmptyState title="İstatistik Verisi Yok" message="İncelenen veritabanında tablo istatistiği bulunamadı." />
             ) : (
               <DataTable data={statisticsList} columns={statisticsColumns} />
+            )
+          )}
+
+          {activeTab === 'redundant' && (
+            redundantList.length === 0 ? (
+              <EmptyState
+                title="Örtüşen veya Kopya İndeks Bulunamadı"
+                message="Tablolarınızda aynı anahtara sahip veya daha geniş bir indeks tarafından kapsanan gereksiz indeks tespit edilmedi."
+              />
+            ) : (
+              <>
+                <div className={styles.infoCallout}>
+                  <AlertCircle size={18} style={{ color: 'var(--accent)', flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <strong>Gereksiz (Redundant) İndeks Analizi:</strong> Bir indeksin anahtar kolonları başka bir bileşik indeksin sol tarafındaki kolonlarla birebir örtüşüyorsa (Prefix Overlap) veya tüm kolonları aynıysa (Duplicate), sorgular geniş indeksten yararlanabilir. Fazlalık indeksi silmek sorgu okuma hızını düşürmeden disk alanını ve her satır yazımındaki (INSERT/UPDATE/DELETE) disk I/O yükünü belirgin şekilde azaltır.
+                  </div>
+                </div>
+                <DataTable data={redundantList} columns={redundantColumns} />
+              </>
             )
           )}
         </>

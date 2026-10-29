@@ -564,6 +564,23 @@ export interface TableStatistic {
   [key: string]: any;
 }
 
+export interface RedundantIndex {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  redundant_index_name: string;
+  redundant_columns: string;
+  redundant_included_columns?: string | null;
+  covering_index_name: string;
+  covering_columns: string;
+  covering_included_columns?: string | null;
+  size_mb: number;
+  redundancy_type: 'EXACT_DUPLICATE' | 'PREFIX_OVERLAP' | string;
+  explanation: string;
+  drop_statement: string;
+  [key: string]: any;
+}
+
 export interface IndexSummary {
   total_missing_indexes: number;
   max_impact_score: number;
@@ -571,6 +588,8 @@ export interface IndexSummary {
   total_wasted_mb: number;
   fragmented_indexes_count: number;
   stale_statistics_count?: number;
+  redundant_indexes_count?: number;
+  redundant_wasted_mb?: number;
   is_demo?: boolean;
   [key: string]: any;
 }

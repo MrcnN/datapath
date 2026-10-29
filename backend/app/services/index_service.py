@@ -11,6 +11,7 @@ from app.schemas.indexes import (
     MissingIndex,
     TableStatistic,
     UnusedIndex,
+    RedundantIndex,
 )
 from app.services.demo_data import (
     DEMO_INDEX_FRAGMENTATION,
@@ -18,6 +19,7 @@ from app.services.demo_data import (
     DEMO_MISSING_INDEXES,
     DEMO_TABLE_STATISTICS,
     DEMO_UNUSED_INDEXES,
+    DEMO_REDUNDANT_INDEXES,
 )
 
 logger = logging.getLogger(__name__)
@@ -319,6 +321,107 @@ def get_table_statistics(
         return DEMO_TABLE_STATISTICS
 
 
+def get_redundant_indexes(
+    params: ConnectionParams, database: Optional[str] = None
+) -> List[RedundantIndex]:
+    """Identify duplicate and prefix-overlapping redundant indexes that waste disk and write I/O."""
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            target_db = database or params.database or "master"
+            if target_db:
+                cursor.execute(f"USE [{target_db}];")
+
+            query = """
+            SELECT
+                DB_NAME() AS database_name,
+                s.name AS schema_name,
+                t.name AS table_name,
+                i.name AS index_name,
+                i.type_desc,
+                CAST(ROUND(SUM(ps.used_page_count) * 8.0 / 1024.0, 2) AS FLOAT) AS size_mb,
+                STRING_AGG(CASE WHEN ic.is_included_column = 0 THEN c.name END, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS key_columns,
+                STRING_AGG(CASE WHEN ic.is_included_column = 1 THEN c.name END, ', ') WITHIN GROUP (ORDER BY c.name) AS included_columns
+            FROM sys.indexes i
+            JOIN sys.tables t ON i.object_id = t.object_id
+            JOIN sys.schemas s ON t.schema_id = s.schema_id
+            JOIN sys.index_columns ic ON i.object_id = ic.object_id AND i.index_id = ic.index_id
+            JOIN sys.columns c ON ic.object_id = c.object_id AND ic.column_id = c.column_id
+            JOIN sys.dm_db_partition_stats ps ON i.object_id = ps.object_id AND i.index_id = ps.index_id
+            WHERE i.type_desc = 'NONCLUSTERED'
+              AND t.is_ms_shipped = 0
+            GROUP BY s.name, t.name, i.name, i.type_desc;
+            """
+            cursor.execute(query)
+            rows = rows_to_dicts(cursor)
+
+            table_indexes = {}
+            for r in rows:
+                key = (r["schema_name"], r["table_name"])
+                table_indexes.setdefault(key, []).append(r)
+
+            redundant: List[RedundantIndex] = []
+
+            for (schema, table), idx_list in table_indexes.items():
+                for i in range(len(idx_list)):
+                    for j in range(len(idx_list)):
+                        if i == j:
+                            continue
+                        idx_a = idx_list[i]
+                        idx_b = idx_list[j]
+
+                        keys_a = (idx_a.get("key_columns") or "").strip()
+                        keys_b = (idx_b.get("key_columns") or "").strip()
+
+                        if not keys_a or not keys_b:
+                            continue
+
+                        if keys_a == keys_b and idx_a["index_name"] < idx_b["index_name"]:
+                            redundant.append(
+                                RedundantIndex(
+                                    database_name=idx_a.get("database_name", target_db),
+                                    schema_name=schema,
+                                    table_name=table,
+                                    redundant_index_name=idx_a["index_name"],
+                                    redundant_columns=keys_a,
+                                    redundant_included_columns=idx_a.get("included_columns"),
+                                    covering_index_name=idx_b["index_name"],
+                                    covering_columns=keys_b,
+                                    covering_included_columns=idx_b.get("included_columns"),
+                                    size_mb=float(idx_a.get("size_mb", 0.0) or 0.0),
+                                    redundancy_type="EXACT_DUPLICATE",
+                                    explanation=f"'{idx_a['index_name']}' indeksi, '{idx_b['index_name']}' indeksi ile birebir aynı anahtar kolonlarına ({keys_a}) sahiptir. Tam kopya (duplicate) indekstir.",
+                                    drop_statement=f"DROP INDEX [{idx_a['index_name']}] ON [{schema}].[{table}];",
+                                )
+                            )
+                        elif keys_b.startswith(keys_a + ", "):
+                            redundant.append(
+                                RedundantIndex(
+                                    database_name=idx_a.get("database_name", target_db),
+                                    schema_name=schema,
+                                    table_name=table,
+                                    redundant_index_name=idx_a["index_name"],
+                                    redundant_columns=keys_a,
+                                    redundant_included_columns=idx_a.get("included_columns"),
+                                    covering_index_name=idx_b["index_name"],
+                                    covering_columns=keys_b,
+                                    covering_included_columns=idx_b.get("included_columns"),
+                                    size_mb=float(idx_a.get("size_mb", 0.0) or 0.0),
+                                    redundancy_type="PREFIX_OVERLAP",
+                                    explanation=f"'{idx_a['index_name']}' ({keys_a}) indeksi, '{idx_b['index_name']}' ({keys_b}) indeksinin sol ön eki (left-prefix) durumundadır. Sorgular daha kapsamlı olan indeksi kullanabilir.",
+                                    drop_statement=f"DROP INDEX [{idx_a['index_name']}] ON [{schema}].[{table}];",
+                                )
+                            )
+
+            if not redundant and (not database or database in ("master", "tempdb")):
+                return DEMO_REDUNDANT_INDEXES
+
+            return redundant
+    except Exception as exc:
+        logger.warning("Could not fetch live redundant indexes, falling back to demo data: %s", exc)
+        return DEMO_REDUNDANT_INDEXES
+
+
 def get_index_summary(
     params: ConnectionParams, database: Optional[str] = None
 ) -> IndexSummary:
@@ -327,14 +430,16 @@ def get_index_summary(
     unused = get_unused_indexes(params, database)
     fragmentation = get_index_fragmentation(params, database)
     stats = get_table_statistics(params, database)
+    redundant = get_redundant_indexes(params, database)
 
-    # Determine if fallback demo data was used
     is_demo = missing == DEMO_MISSING_INDEXES
 
     max_impact = max([m.impact_score for m in missing], default=0.0)
     wasted_mb = sum([u.size_mb for u in unused])
     fragmented_count = len([f for f in fragmentation if f.recommended_action in ("REBUILD", "REORGANIZE")])
     stale_count = len([s for s in stats if s.status in ("STALE", "WARNING")])
+    redundant_count = len(redundant)
+    redundant_mb = sum([r.size_mb for r in redundant])
 
     return IndexSummary(
         total_missing_indexes=len(missing),
@@ -343,5 +448,7 @@ def get_index_summary(
         total_wasted_mb=round(wasted_mb, 2),
         fragmented_indexes_count=fragmented_count,
         stale_statistics_count=stale_count,
+        redundant_indexes_count=redundant_count,
+        redundant_wasted_mb=round(redundant_mb, 2),
         is_demo=is_demo,
     )
