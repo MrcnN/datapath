@@ -12,6 +12,7 @@ import {
   Zap,
   Globe,
   Radio,
+  XCircle,
 } from 'lucide-react';
 import {
   getServerProfiles,
@@ -54,7 +55,7 @@ export default function ServerProfilesManager() {
     password: '',
     use_windows_auth: false,
     environment: 'PRODUCTION',
-    role: 'Primary Node',
+    role: 'Sunucu',
     driver: 'ODBC Driver 17 for SQL Server',
     timeout: 15,
     description: '',
@@ -117,7 +118,7 @@ export default function ServerProfilesManager() {
       }));
       // Update latency in local servers state
       setServers((prev) =>
-        prev.map((s) => (s.id === serverId ? { ...s, latency_ms: res.latency_ms } : s))
+        prev.map((s) => (s.id === serverId ? { ...s, latency_ms: res.is_online ? res.latency_ms : null, is_online: res.is_online } : s))
       );
     } catch (err) {
       setPingStates((prev) => ({
@@ -145,7 +146,7 @@ export default function ServerProfilesManager() {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim() || !formData.host.trim()) {
-      alert('Lütfen sunucu adı ve ana makine (host) alanlarını doldurun.');
+      alert('Lütfen sunucu adı ve host alanlarını doldurun.');
       return;
     }
 
@@ -161,7 +162,7 @@ export default function ServerProfilesManager() {
         password: '',
         use_windows_auth: false,
         environment: 'PRODUCTION',
-        role: 'Primary Node',
+        role: 'Sunucu',
         driver: 'ODBC Driver 17 for SQL Server',
         timeout: 15,
         description: '',
@@ -217,16 +218,16 @@ export default function ServerProfilesManager() {
         <form onSubmit={handleCreateSubmit} className={styles.createFormCard}>
           <div className={styles.formTitle}>
             <Server size={15} color="var(--accent)" />
-            Yeni SQL Server Bağlantı Profili Kaydı
+            Yeni SQL Server Bağlantı Profili
           </div>
 
           <div className={styles.formGrid}>
             <div className={styles.formGroup}>
-              <label>Sunucu / Küme Tanımı (Adı) *</label>
+              <label>Sunucu Adı *</label>
               <input
                 type="text"
                 className={styles.input}
-                placeholder="Örn: SQL-ANALYTICS-01 (DWH)"
+                placeholder="Sunucu Adı"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
@@ -234,11 +235,11 @@ export default function ServerProfilesManager() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Sunucu Ana Makinesi (Host / IP) *</label>
+              <label>Ana Makine (Host / IP) *</label>
               <input
                 type="text"
                 className={styles.input}
-                placeholder="sql-prod.corp.internal veya 192.168.1.100"
+                placeholder="Host veya IP adresi"
                 value={formData.host}
                 onChange={(e) => setFormData({ ...formData, host: e.target.value })}
                 required
@@ -246,7 +247,7 @@ export default function ServerProfilesManager() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>TCP Port</label>
+              <label>Port</label>
               <input
                 type="number"
                 className={styles.input}
@@ -256,7 +257,7 @@ export default function ServerProfilesManager() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Başlangıç Veritabanı</label>
+              <label>Veritabanı</label>
               <input
                 type="text"
                 className={styles.input}
@@ -266,7 +267,7 @@ export default function ServerProfilesManager() {
             </div>
 
             <div className={styles.formGroup}>
-              <label>Ortam (Environment)</label>
+              <label>Ortam</label>
               <select
                 className={styles.select}
                 value={formData.environment}
@@ -274,11 +275,11 @@ export default function ServerProfilesManager() {
                   setFormData({ ...formData, environment: e.target.value as EnvironmentType })
                 }
               >
-                <option value="PRODUCTION">PRODUCTION (Kritik Canlı Ortam)</option>
-                <option value="READ_ONLY_REPLICA">READ_ONLY_REPLICA (AlwaysOn Okuma)</option>
-                <option value="STAGING">STAGING (Test / UAT Kabul)</option>
-                <option value="DEVELOPMENT">DEVELOPMENT (Lokal / Sandbox)</option>
-                <option value="DISASTER_RECOVERY">DISASTER_RECOVERY (DR Standby)</option>
+                <option value="PRODUCTION">PRODUCTION</option>
+                <option value="READ_ONLY_REPLICA">READ_ONLY_REPLICA</option>
+                <option value="STAGING">STAGING</option>
+                <option value="DEVELOPMENT">DEVELOPMENT</option>
+                <option value="DISASTER_RECOVERY">DISASTER_RECOVERY</option>
               </select>
             </div>
 
@@ -287,18 +288,18 @@ export default function ServerProfilesManager() {
               <input
                 type="text"
                 className={styles.input}
-                placeholder="Örn: Secondary Read-Only Replica"
+                placeholder="Sunucu Rolü"
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value })}
               />
             </div>
 
             <div className={styles.formGroup}>
-              <label>Kullanıcı Adı (SQL Auth)</label>
+              <label>Kullanıcı Adı</label>
               <input
                 type="text"
                 className={styles.input}
-                placeholder="sa veya traceforge_user"
+                placeholder="Kullanıcı Adı"
                 disabled={formData.use_windows_auth}
                 value={formData.username || ''}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
@@ -324,7 +325,7 @@ export default function ServerProfilesManager() {
                 checked={formData.use_windows_auth}
                 onChange={(e) => setFormData({ ...formData, use_windows_auth: e.target.checked })}
               />
-              <label htmlFor="useWindowsAuth">Windows Kimlik Doğrulaması (Integrated Security)</label>
+              <label htmlFor="useWindowsAuth">Windows Kimlik Doğrulaması (Trusted Connection)</label>
             </div>
           </div>
 
@@ -397,36 +398,37 @@ export default function ServerProfilesManager() {
                 </span>
               </div>
 
-              <div className={styles.roleText}>{server.role}</div>
+              {server.role && <div className={styles.roleText}>{server.role}</div>}
 
-              {/* Hardware Specs & Version */}
+              {/* Hardware Specs & Latency (only rendered if actually available) */}
               <div className={styles.specsRow}>
-                {server.cpu_count && (
-                  <span className={styles.specBadge} title="Mantıksal CPU">
+                {server.cpu_count ? (
+                  <span className={styles.specBadge} title="CPU Çekirdek">
                     <Cpu size={10} style={{ display: 'inline', marginRight: 3 }} />
                     {server.cpu_count} vCPU
                   </span>
-                )}
-                {server.total_memory_gb && (
-                  <span className={styles.specBadge} title="Atanmış RAM">
+                ) : null}
+                {server.total_memory_gb ? (
+                  <span className={styles.specBadge} title="RAM">
                     {server.total_memory_gb} GB RAM
                   </span>
-                )}
-                {server.latency_ms !== null && server.latency_ms !== undefined && (
+                ) : null}
+                {server.latency_ms !== null && server.latency_ms !== undefined ? (
                   <span className={styles.specBadge} title="Ağ Gecikmesi">
                     <Radio size={10} style={{ display: 'inline', marginRight: 3 }} />
                     {server.latency_ms} ms
                   </span>
-                )}
+                ) : null}
               </div>
 
               {/* Ping Result if available */}
               {pingState?.result && (
-                <div className={styles.pingResult}>
-                  <Activity size={12} />
-                  <span>
-                    Gecikme: <strong>{pingState.result.latency_ms} ms</strong> — TDS El Sıkışması Başarılı
-                  </span>
+                <div
+                  className={styles.pingResult}
+                  style={!pingState.result.is_online ? { color: 'var(--status-danger)', background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.2)' } : undefined}
+                >
+                  {pingState.result.is_online ? <Activity size={12} /> : <XCircle size={12} />}
+                  <span>{pingState.result.message}</span>
                 </div>
               )}
 
@@ -438,7 +440,7 @@ export default function ServerProfilesManager() {
                     className={styles.pingBtn}
                     onClick={() => handlePing(server.id)}
                     disabled={pingState?.loading}
-                    title="TCP ve TDS Bağlantı Gecikmesini Ölç"
+                    title="TCP Bağlantı ve Gecikme Testi"
                   >
                     <Activity
                       size={12}

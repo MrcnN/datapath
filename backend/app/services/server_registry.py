@@ -1,13 +1,15 @@
-"""services/server_registry.py — Enterprise multi-server registry and environment manager."""
+"""services/server_registry.py — Multi-server registry and active server connection manager."""
 from __future__ import annotations
 
 import logging
+import socket
 import threading
 import time
 from datetime import datetime, timezone
 from typing import Dict, List, Optional
 import uuid
 
+from app.core.config import settings
 from app.db.connection import ConnectionParams
 from app.schemas.servers import (
     EnvironmentType,
@@ -22,132 +24,64 @@ logger = logging.getLogger(__name__)
 
 
 class ServerRegistry:
-    """Thread-safe multi-server registry for SQL Server instances."""
+    """Thread-safe multi-server registry using only configured server data."""
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._passwords: Dict[str, Optional[str]] = {}
         self._servers: Dict[str, ServerProfile] = {}
-        self._active_server_id: str = "srv-prod-primary"
-        self._initialize_default_profiles()
+        self._active_server_id: str = "srv-default"
+        self._initialize_default_profile()
 
-    def _initialize_default_profiles(self) -> None:
-        defaults = [
-            ServerProfile(
-                id="srv-prod-primary",
-                name="SQL-PROD-PRIMARY (AlwaysOn AG-01)",
-                host="sql-prod-node1.corp.internal",
-                port=1433,
-                default_database="master",
-                username="sa_traceforge",
-                use_windows_auth=False,
-                environment=EnvironmentType.PRODUCTION,
-                role="Primary Replicant (Read/Write)",
-                driver="ODBC Driver 17 for SQL Server",
-                timeout=2,
-                description="Kurumsal ana üretim veritabanı kümesi birincil düğümü. Kritik OLTP iş yükleri.",
-                is_active=True,
-                is_online=True,
-                latency_ms=8.4,
-                version="Microsoft SQL Server 2022 (RTM-CU12) (KB5033663)",
-                edition="Enterprise Edition (64-bit)",
-                cpu_count=64,
-                total_memory_gb=256.0,
-            ),
-            ServerProfile(
-                id="srv-prod-replica",
-                name="SQL-PROD-REPLICA (Read-Only AG-02)",
-                host="sql-prod-node2.corp.internal",
-                port=1433,
-                default_database="master",
-                username="sa_traceforge",
-                use_windows_auth=False,
-                environment=EnvironmentType.READ_ONLY_REPLICA,
-                role="Secondary Replicant (Read-Only)",
-                driver="ODBC Driver 17 for SQL Server",
-                timeout=15,
-                description="AlwaysOn Availability Group asenkron okuma replikası. Ağır raporlama ve BI sorguları.",
-                is_active=False,
-                is_online=True,
-                latency_ms=11.2,
-                version="Microsoft SQL Server 2022 (RTM-CU12) (KB5033663)",
-                edition="Enterprise Edition (64-bit)",
-                cpu_count=64,
-                total_memory_gb=256.0,
-            ),
-            ServerProfile(
-                id="srv-staging",
-                name="SQL-STAGING-01 (Pre-Prod UAT)",
-                host="sql-staging.corp.internal",
-                port=1433,
-                default_database="ECommerce_UAT",
-                username="deploy_agent",
-                use_windows_auth=False,
-                environment=EnvironmentType.STAGING,
-                role="Staging & QA Environment",
-                driver="ODBC Driver 17 for SQL Server",
-                timeout=20,
-                description="Canlıya çıkış öncesi kullanıcı kabul (UAT) ve entegrasyon test ortamı.",
-                is_active=False,
-                is_online=True,
-                latency_ms=23.6,
-                version="Microsoft SQL Server 2019 (RTM-CU24) (KB5030561)",
-                edition="Standard Edition (64-bit)",
-                cpu_count=16,
-                total_memory_gb=64.0,
-            ),
-            ServerProfile(
-                id="srv-dev-local",
-                name="SQL-DEV-LOCAL (Sandbox)",
-                host="localhost\\SQLEXPRESS",
-                port=1433,
-                default_database="master",
-                username=None,
-                use_windows_auth=True,
-                environment=EnvironmentType.DEVELOPMENT,
-                role="Local Developer Sandbox",
-                driver="ODBC Driver 17 for SQL Server",
-                timeout=10,
-                description="Lokal geliştirici ortamı, mikro testler ve deneysel şema çalışmaları.",
-                is_active=False,
-                is_online=True,
-                latency_ms=1.8,
-                version="Microsoft SQL Server 2022 (RTM) - 16.0.1000.6",
-                edition="Developer Edition (64-bit)",
-                cpu_count=8,
-                total_memory_gb=32.0,
-            ),
-            ServerProfile(
-                id="srv-dr-site",
-                name="SQL-DR-SITE (Disaster Recovery)",
-                host="sql-dr-node01.dr.corp.internal",
-                port=1433,
-                default_database="master",
-                username="dr_monitor",
-                use_windows_auth=False,
-                environment=EnvironmentType.DISASTER_RECOVERY,
-                role="Disaster Recovery Standby",
-                driver="ODBC Driver 17 for SQL Server",
-                timeout=30,
-                description="Farklı veri merkezindeki felaket kurtarma (DR) AlwaysOn kopyası.",
-                is_active=False,
-                is_online=True,
-                latency_ms=42.1,
-                version="Microsoft SQL Server 2022 (RTM-CU12) (KB5033663)",
-                edition="Enterprise Edition (64-bit)",
-                cpu_count=32,
-                total_memory_gb=128.0,
-            ),
-        ]
-        for s in defaults:
-            self._servers[s.id] = s
-            self._passwords[s.id] = None
+    def _initialize_default_profile(self) -> None:
+        """Initialize registry exclusively with the actual configured server from settings."""
+        host = settings.DB_SERVER or "localhost"
+        port = 1433
+        if "," in host:
+            parts = host.split(",", 1)
+            host = parts[0].strip()
+            try:
+                port = int(parts[1].strip())
+            except ValueError:
+                port = 1433
+        elif ":" in host:
+            parts = host.split(":", 1)
+            host = parts[0].strip()
+            try:
+                port = int(parts[1].strip())
+            except ValueError:
+                port = 1433
+
+        server_id = "srv-default"
+        default_profile = ServerProfile(
+            id=server_id,
+            name=settings.DB_SERVER or "localhost",
+            host=host,
+            port=port,
+            default_database=settings.DB_DATABASE or "master",
+            username=settings.DB_USERNAME or None,
+            use_windows_auth=settings.DB_TRUSTED_CONNECTION,
+            environment=EnvironmentType.PRODUCTION,
+            role="Varsayılan Sunucu",
+            driver=settings.DB_DRIVER,
+            timeout=settings.DB_TIMEOUT,
+            description=None,
+            is_active=True,
+            is_online=True,
+            latency_ms=None,
+            version=None,
+            edition=None,
+            cpu_count=None,
+            total_memory_gb=None,
+        )
+        self._servers[server_id] = default_profile
+        self._passwords[server_id] = settings.DB_PASSWORD or None
+        self._active_server_id = server_id
 
     def list_servers(self) -> ServerProfileListResponse:
         """Return all registered servers with the active server indicator."""
         with self._lock:
             server_list = list(self._servers.values())
-            # Ensure correct is_active state
             for s in server_list:
                 s.is_active = (s.id == self._active_server_id)
             return ServerProfileListResponse(
@@ -169,10 +103,12 @@ class ServerRegistry:
         with self._lock:
             s = self._servers.get(self._active_server_id)
             if not s:
-                # Fallback to first available
-                first_key = next(iter(self._servers.keys()))
-                self._active_server_id = first_key
-                s = self._servers[first_key]
+                if self._servers:
+                    self._active_server_id = next(iter(self._servers.keys()))
+                    s = self._servers[self._active_server_id]
+                else:
+                    self._initialize_default_profile()
+                    s = self._servers[self._active_server_id]
             s_copy = s.model_copy()
             s_copy.is_active = True
             return s_copy
@@ -189,7 +125,7 @@ class ServerRegistry:
             return self._servers[server_id].model_copy()
 
     def add_server(self, data: ServerProfileCreate) -> ServerProfile:
-        """Register a new server profile."""
+        """Register a new user-provided server profile."""
         with self._lock:
             server_id = f"srv-{uuid.uuid4().hex[:8]}"
             profile = ServerProfile(
@@ -207,11 +143,11 @@ class ServerRegistry:
                 description=data.description,
                 is_active=False,
                 is_online=True,
-                latency_ms=14.5,
-                version="Microsoft SQL Server (Remote Instance)",
-                edition="Standard / Enterprise Edition",
-                cpu_count=16,
-                total_memory_gb=64.0,
+                latency_ms=None,
+                version=None,
+                edition=None,
+                cpu_count=None,
+                total_memory_gb=None,
             )
             self._servers[server_id] = profile
             if data.password:
@@ -247,44 +183,57 @@ class ServerRegistry:
                 if self._servers:
                     self._active_server_id = next(iter(self._servers.keys()))
                 else:
-                    self._initialize_default_profiles()
+                    self._initialize_default_profile()
             return True
 
     def ping_server(self, server_id: str) -> ServerPingResponse:
-        """Simulate or execute a connectivity check with latency measurement."""
+        """Real TCP connectivity check to the target host and port."""
         with self._lock:
             server = self._servers.get(server_id)
             if not server:
                 raise KeyError(f"Sunucu profili bulunamadı: {server_id}")
-            
-            # Simulated ping latency based on environment
-            base_latency = {
-                EnvironmentType.PRODUCTION: 7.5,
-                EnvironmentType.READ_ONLY_REPLICA: 10.8,
-                EnvironmentType.STAGING: 22.4,
-                EnvironmentType.DEVELOPMENT: 1.5,
-                EnvironmentType.DISASTER_RECOVERY: 39.7,
-            }.get(server.environment, 15.0)
-            
-            import random
-            measured_latency = round(base_latency + random.uniform(-1.2, 2.5), 1)
-            server.latency_ms = measured_latency
-            server.is_online = True
+
+            host = server.host
+            port = server.port
+            start = time.perf_counter()
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            timeout = min(max(server.timeout, 1), 3)
+            sock.settimeout(timeout)
+            is_online = False
+            latency = 0.0
+            try:
+                sock.connect((host, port))
+                latency = round((time.perf_counter() - start) * 1000, 1)
+                server.latency_ms = latency
+                server.is_online = True
+                is_online = True
+                msg = f"{host}:{port} bağlantısı başarılı."
+            except Exception as exc:
+                latency = round((time.perf_counter() - start) * 1000, 1)
+                server.latency_ms = None
+                server.is_online = False
+                is_online = False
+                msg = f"{host}:{port} bağlantı kurulamadı: {exc}"
+            finally:
+                try:
+                    sock.close()
+                except Exception:
+                    pass
 
             now_str = datetime.now(timezone.utc).isoformat()
             return ServerPingResponse(
                 server_id=server.id,
                 server_name=server.name,
-                is_online=True,
-                latency_ms=measured_latency,
-                message=f"{server.host}:{server.port} TCP bağlantısı ve TDS el sıkışması başarılı.",
+                is_online=is_online,
+                latency_ms=latency,
+                message=msg,
                 checked_at=now_str,
             )
 
     def get_connection_params_for_active_server(self) -> ConnectionParams:
         """Build ConnectionParams for the currently active server profile."""
         active = self.get_active_server()
-        pwd = self._passwords.get(active.id)
+        pwd = self._passwords.get(active.id) or settings.DB_PASSWORD or None
         return ConnectionParams(
             server=f"{active.host},{active.port}" if active.port != 1433 else active.host,
             database=active.default_database,

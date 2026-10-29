@@ -325,7 +325,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                             <span className={styles.serverItemHost}>
                               {s.host}:{s.port}
                             </span>
-                            <span className={styles.serverItemRole}>{s.role}</span>
+                            {s.role ? <span className={styles.serverItemRole}>{s.role}</span> : null}
                           </div>
 
                           <div className={styles.serverItemRight}>
