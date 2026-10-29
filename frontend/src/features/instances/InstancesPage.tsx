@@ -1,10 +1,11 @@
 import React from 'react';
-import { Server, Database, ShieldCheck, Sliders } from 'lucide-react';
+import { Server, Database, ShieldCheck, Sliders, Network } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import ConnectionForm from './components/ConnectionForm';
 import InstanceMetadata from './components/InstanceMetadata';
 import DatabaseTable from './components/DatabaseTable';
 import ServerConfigurationAudit from './components/ServerConfigurationAudit';
+import ServerProfilesManager from './components/ServerProfilesManager';
 import styles from './InstancesPage.module.css';
 
 export default function InstancesPage() {
@@ -12,8 +13,17 @@ export default function InstancesPage() {
     <div className={styles.page}>
       <PageHeader
         title="Sunucular & Bağlantı Yönetimi"
-        subtitle="SQL Server bağlantı profilini yapılandırın, kaynak kullanımını, sp_configure denetimini ve veritabanı durumunu inceleyin"
+        subtitle="Birden fazla SQL Server ortamı (Prod, AlwaysOn Replica, Staging, Dev) arasında geçiş yapın, bağlantı profillerini yönetin ve sunucu kaynaklarını denetleyin"
       />
+
+      {/* Kayıtlı Sunucu Profilleri & Ortamlar */}
+      <div className={styles.card}>
+        <div className={styles.cardTitle}>
+          <Network size={16} color="var(--accent)" />
+          Kayıtlı Sunucu Profilleri & Çoklu Ortam Yönetimi (Multi-Server Registry)
+        </div>
+        <ServerProfilesManager />
+      </div>
 
       <div className={styles.grid}>
         {/* Sol: Bağlantı Yapılandırma Formu */}

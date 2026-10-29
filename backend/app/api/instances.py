@@ -8,6 +8,7 @@ from fastapi import APIRouter, Query, Response
 from app.core.config import settings
 from app.core.exceptions import DatabaseConnectionError, PermissionDeniedError
 from app.db.connection import ConnectionParams
+from app.services.server_registry import server_registry
 from app.schemas.instances import (
     BlockingResponse,
     DatabaseInfo,
@@ -38,15 +39,10 @@ router = APIRouter(tags=["Instances"])
 
 
 def _get_connection_params(database: Optional[str] = None) -> ConnectionParams:
-    return ConnectionParams(
-        server=settings.DB_SERVER,
-        database=database or settings.DB_DATABASE,
-        username=settings.DB_USERNAME or None,
-        password=settings.DB_PASSWORD or None,
-        trusted_connection=settings.DB_TRUSTED_CONNECTION,
-        driver=settings.DB_DRIVER,
-        timeout=settings.DB_TIMEOUT,
-    )
+    params = server_registry.get_connection_params_for_active_server()
+    if database:
+        params.database = database
+    return params
 
 
 @router.get("/instance/metadata", response_model=ServerMetadata)

@@ -931,6 +931,67 @@ export interface ExtendedEventsSummary {
   [key: string]: any;
 }
 
+// ── Multi-Server Profiles & Environment ──────────────────────
+export type EnvironmentType =
+  | 'PRODUCTION'
+  | 'READ_ONLY_REPLICA'
+  | 'STAGING'
+  | 'DEVELOPMENT'
+  | 'DISASTER_RECOVERY';
+
+export interface ServerProfile {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  default_database: string;
+  username?: string | null;
+  use_windows_auth: boolean;
+  environment: EnvironmentType;
+  role: string;
+  driver: string;
+  timeout: number;
+  description?: string | null;
+  is_active: boolean;
+  is_online: boolean;
+  latency_ms?: number | null;
+  version?: string | null;
+  edition?: string | null;
+  cpu_count?: number | null;
+  total_memory_gb?: number | null;
+}
+
+export interface ServerProfileCreate {
+  name: string;
+  host: string;
+  port: number;
+  default_database: string;
+  username?: string | null;
+  password?: string | null;
+  use_windows_auth: boolean;
+  environment: EnvironmentType;
+  role: string;
+  driver?: string;
+  timeout?: number;
+  description?: string | null;
+}
+
+export interface ServerProfileListResponse {
+  active_server_id: string;
+  total_count: number;
+  servers: ServerProfile[];
+}
+
+export interface ServerPingResponse {
+  server_id: string;
+  server_name: string;
+  is_online: boolean;
+  latency_ms: number;
+  message: string;
+  checked_at: string;
+}
+
+
 
 
 

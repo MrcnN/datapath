@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Server,
@@ -19,10 +19,14 @@ import {
   CalendarClock,
   Sun,
   Moon,
+  ChevronDown,
+  Check,
+  Search,
+  ExternalLink,
   type LucideIcon,
 } from 'lucide-react';
-import { getInstanceMetadata } from '../../lib/api';
-import type { InstanceMetadata } from '../../lib/types';
+import { getInstanceMetadata, getServerProfiles, activateServer } from '../../lib/api';
+import type { InstanceMetadata, ServerProfile, EnvironmentType } from '../../lib/types';
 import styles from './TopBar.module.css';
 
 interface RouteInfo {
@@ -48,6 +52,22 @@ const routeMap: Record<string, RouteInfo> = {
   '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim & Araçlar', icon: Shield },
 };
 
+const envBadgeClasses: Record<EnvironmentType, string> = {
+  PRODUCTION: styles.envProd,
+  READ_ONLY_REPLICA: styles.envReplica,
+  STAGING: styles.envStaging,
+  DEVELOPMENT: styles.envDev,
+  DISASTER_RECOVERY: styles.envDR,
+};
+
+const envShortLabels: Record<EnvironmentType, string> = {
+  PRODUCTION: 'PROD',
+  READ_ONLY_REPLICA: 'REPLICA',
+  STAGING: 'STAGE',
+  DEVELOPMENT: 'DEV',
+  DISASTER_RECOVERY: 'DR',
+};
+
 interface TopBarProps {
   collapsed: boolean;
   onToggle: () => void;
@@ -55,17 +75,27 @@ interface TopBarProps {
 
 export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const currentRoute = routeMap[pathname] || {
     label: 'Sayfa',
     category: 'Traceforge',
     icon: Sparkles,
   };
+
   const [metadata, setMetadata] = useState<InstanceMetadata | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<string>('');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
   });
+
+  // Multi-Server Profile State
+  const [servers, setServers] = useState<ServerProfile[]>([]);
+  const [activeServerId, setActiveServerId] = useState<string>('');
+  const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [searchFilter, setSearchFilter] = useState<string>('');
+  const [isSwitching, setIsSwitching] = useState<boolean>(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
@@ -75,6 +105,46 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const toggleTheme = () => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   };
+
+  const loadServerProfiles = () => {
+    getServerProfiles()
+      .then((data) => {
+        if (data && data.servers) {
+          setServers(data.servers);
+          setActiveServerId(data.active_server_id);
+        }
+      })
+      .catch((err) => {
+        console.warn('Multi-server profiles fetch failed, using fallback:', err);
+      });
+  };
+
+  useEffect(() => {
+    loadServerProfiles();
+
+    const handleServerChange = () => {
+      loadServerProfiles();
+    };
+    window.addEventListener('datapath-server-changed', handleServerChange);
+    return () => {
+      window.removeEventListener('datapath-server-changed', handleServerChange);
+    };
+  }, []);
+
+  // Click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   useEffect(() => {
     let mounted = true;
@@ -93,7 +163,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     return () => {
       mounted = false;
     };
-  }, [pathname]);
+  }, [pathname, activeServerId]);
 
   useEffect(() => {
     const updateTime = () => {
@@ -111,6 +181,40 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     return () => clearInterval(interval);
   }, []);
 
+  const handleSelectServer = async (server: ServerProfile) => {
+    if (server.id === activeServerId) {
+      setDropdownOpen(false);
+      return;
+    }
+    try {
+      setIsSwitching(true);
+      await activateServer(server.id);
+      setActiveServerId(server.id);
+      setDropdownOpen(false);
+      // Dispatch global event to reload all views
+      window.dispatchEvent(
+        new CustomEvent('datapath-server-changed', { detail: { serverId: server.id } })
+      );
+    } catch (err) {
+      console.error('Failed to switch server:', err);
+      alert('Sunucu değiştirilemedi: ' + String(err));
+    } finally {
+      setIsSwitching(false);
+    }
+  };
+
+  const activeServer =
+    servers.find((s) => s.id === activeServerId) ||
+    servers[0] ||
+    null;
+
+  const filteredServers = servers.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      s.host.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      s.environment.toLowerCase().includes(searchFilter.toLowerCase())
+  );
+
   const RouteIcon = currentRoute.icon;
 
   return (
@@ -127,7 +231,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
         </div>
       </div>
 
-      {/* Right: Theme Toggle, Clock & Connection Status Badge */}
+      {/* Right: Theme Toggle, Clock & Global Server Switcher Dropdown */}
       <div className={styles.rightSection}>
         <button
           type="button"
@@ -144,28 +248,135 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
           <span>{currentTime}</span>
         </div>
 
-        <div
-          className={`${styles.connectionBadge} ${
-            isConnected ? styles.connected : styles.demoMode
-          }`}
-          title={
-            metadata?.server_name
-              ? `Sunucu: ${metadata.server_name} | Sürüm: ${metadata.product_version ?? 'SQL Server'}`
-              : 'SQL Server Durumu'
-          }
-        >
-          <span className={styles.statusDot} />
-          <span className={styles.statusLabel}>
-            {isConnected && metadata?.server_name
-              ? `Canlı: ${metadata.server_name}`
-              : 'Demo Modu'}
-          </span>
-          {isConnected && metadata?.edition && (
-            <span className={styles.editionTag}>
-              {metadata.edition.replace(' Edition', '').replace('SQL Server ', '')}
+        {/* Global Multi-Server Switcher Dropdown */}
+        {activeServer ? (
+          <div className={styles.serverSwitcherWrapper} ref={dropdownRef}>
+            <button
+              type="button"
+              className={`${styles.serverSwitchBtn} ${dropdownOpen ? styles.serverSwitchBtnOpen : ''}`}
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              title={`Aktif Sunucu: ${activeServer.name} (${activeServer.host}) — Tıklayarak Değiştirin`}
+            >
+              <span className={styles.pulsingDot} />
+              <span
+                className={`${styles.envPillSmall} ${
+                  envBadgeClasses[activeServer.environment] || styles.envProd
+                }`}
+              >
+                {envShortLabels[activeServer.environment] || activeServer.environment}
+              </span>
+              <span className={styles.serverNameLabel}>{activeServer.name}</span>
+              {activeServer.latency_ms && (
+                <span className={styles.latencyTag}>{activeServer.latency_ms}ms</span>
+              )}
+              <ChevronDown
+                size={13}
+                className={`${styles.chevronIcon} ${dropdownOpen ? styles.chevronOpen : ''}`}
+              />
+            </button>
+
+            {dropdownOpen && (
+              <div className={styles.dropdownPopover}>
+                {/* Dropdown Header */}
+                <div className={styles.dropdownHeader}>
+                  <div className={styles.dropdownHeaderTop}>
+                    <span className={styles.dropdownTitle}>SQL Server Ortamları</span>
+                    <span className={styles.serverTotalCount}>{servers.length} Kayıtlı Sunucu</span>
+                  </div>
+                  <div className={styles.searchInputBox}>
+                    <Search size={12} color="var(--text-muted)" />
+                    <input
+                      type="text"
+                      className={styles.searchInput}
+                      placeholder="Sunucu veya host ara..."
+                      value={searchFilter}
+                      onChange={(e) => setSearchFilter(e.target.value)}
+                      autoFocus
+                    />
+                  </div>
+                </div>
+
+                {/* Server List */}
+                <div className={styles.serverList}>
+                  {filteredServers.length === 0 ? (
+                    <div style={{ padding: '12px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
+                      Eşleşen sunucu bulunamadı.
+                    </div>
+                  ) : (
+                    filteredServers.map((s) => {
+                      const isSelected = s.id === activeServerId;
+                      return (
+                        <div
+                          key={s.id}
+                          className={`${styles.serverItem} ${isSelected ? styles.activeServerItem : ''}`}
+                          onClick={() => handleSelectServer(s)}
+                        >
+                          <div className={styles.serverItemMain}>
+                            <div className={styles.serverItemHeader}>
+                              <span
+                                className={`${styles.envPillSmall} ${
+                                  envBadgeClasses[s.environment] || styles.envProd
+                                }`}
+                              >
+                                {envShortLabels[s.environment] || s.environment}
+                              </span>
+                              <span className={styles.serverItemName}>{s.name}</span>
+                            </div>
+                            <span className={styles.serverItemHost}>
+                              {s.host}:{s.port}
+                            </span>
+                            <span className={styles.serverItemRole}>{s.role}</span>
+                          </div>
+
+                          <div className={styles.serverItemRight}>
+                            {isSelected ? (
+                              <Check size={14} className={styles.activeCheckIcon} />
+                            ) : null}
+                            {s.latency_ms && (
+                              <span className={styles.latencyTag}>{s.latency_ms}ms</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Dropdown Footer */}
+                <div className={styles.dropdownFooter}>
+                  <button
+                    type="button"
+                    className={styles.manageServersLink}
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      navigate('/instances');
+                    }}
+                  >
+                    <span>Tüm Profilleri Yönet</span>
+                    <ExternalLink size={11} />
+                  </button>
+                  <span className={styles.serverTotalCount}>
+                    {isSwitching ? 'Geçiş yapılıyor...' : '1-Tıkla Değiştir'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* Fallback static badge if no server profiles */
+          <div
+            className={`${styles.connectionBadge} ${
+              isConnected ? styles.connected : styles.demoMode
+            }`}
+          >
+            <span className={styles.statusDot} />
+            <span className={styles.statusLabel}>
+              {isConnected && metadata?.server_name
+                ? `Canlı: ${metadata.server_name}`
+                : 'Demo Modu'}
             </span>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </header>
   );

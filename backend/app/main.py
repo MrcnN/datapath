@@ -19,6 +19,7 @@ from app.api import (
     permissions,
     query_performance,
     schema_diff,
+    servers,
     storage,
     tempdb_memory,
     toolkit,
@@ -58,6 +59,7 @@ app.add_middleware(
 
 # Include all API Routers under /api
 app.include_router(health.router, prefix="/api")
+app.include_router(servers.router, prefix="/api")
 app.include_router(connections.router, prefix="/api")
 app.include_router(instances.router, prefix="/api")
 app.include_router(incidents.router, prefix="/api")

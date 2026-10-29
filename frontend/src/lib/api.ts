@@ -40,6 +40,10 @@ import type {
   ExtendedEventsSummary,
   XETemplate,
   XESession,
+  ServerProfile,
+  ServerProfileCreate,
+  ServerProfileListResponse,
+  ServerPingResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -363,6 +367,42 @@ export async function getExtendedEventsSummary(): Promise<ExtendedEventsSummary>
 export async function getXETemplates(): Promise<XETemplate[]> {
   return apiFetch<XETemplate[]>('/api/extended-events/templates');
 }
+
+// ── Multi-Server Profiles ─────────────────────────────────────
+
+export async function getServerProfiles(): Promise<ServerProfileListResponse> {
+  return apiFetch<ServerProfileListResponse>('/api/servers');
+}
+
+export async function getActiveServer(): Promise<ServerProfile> {
+  return apiFetch<ServerProfile>('/api/servers/active');
+}
+
+export async function activateServer(serverId: string): Promise<ServerProfile> {
+  return apiFetch<ServerProfile>(`/api/servers/${encodeURIComponent(serverId)}/activate`, {
+    method: 'POST',
+  });
+}
+
+export async function addServerProfile(data: ServerProfileCreate): Promise<ServerProfile> {
+  return apiFetch<ServerProfile>('/api/servers', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function pingServerProfile(serverId: string): Promise<ServerPingResponse> {
+  return apiFetch<ServerPingResponse>(`/api/servers/${encodeURIComponent(serverId)}/ping`, {
+    method: 'POST',
+  });
+}
+
+export async function deleteServerProfile(serverId: string): Promise<{ status: string; message: string }> {
+  return apiFetch<{ status: string; message: string }>(`/api/servers/${encodeURIComponent(serverId)}`, {
+    method: 'DELETE',
+  });
+}
+
 
 
 
