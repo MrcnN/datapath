@@ -14,6 +14,7 @@ import WaitStatsPage from '../features/wait-stats/WaitStatsPage';
 import StoragePage from '../features/storage/StoragePage';
 import TempDBPage from '../features/tempdb/TempDBPage';
 import AgentJobsPage from '../features/agent-jobs/AgentJobsPage';
+import ExtendedEventsPage from '../features/extended-events/ExtendedEventsPage';
 
 export default function Router() {
   return (
@@ -21,6 +22,7 @@ export default function Router() {
       <Route path="/" element={<DashboardPage />} />
       <Route path="/instances" element={<InstancesPage />} />
       <Route path="/incidents" element={<IncidentCenterPage />} />
+      <Route path="/extended-events" element={<ExtendedEventsPage />} />
       <Route path="/query-performance" element={<QueryPerformancePage />} />
       <Route path="/indexes" element={<IndexesPage />} />
       <Route path="/waits" element={<WaitStatsPage />} />

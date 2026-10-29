@@ -10,6 +10,7 @@ from app.api import (
     agent_jobs,
     backups,
     connections,
+    extended_events,
     health,
     high_availability,
     incidents,
@@ -71,6 +72,7 @@ app.include_router(wait_stats.router, prefix="/api")
 app.include_router(storage.router, prefix="/api")
 app.include_router(tempdb_memory.router, prefix="/api")
 app.include_router(agent_jobs.router, prefix="/api")
+app.include_router(extended_events.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

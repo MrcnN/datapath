@@ -46,6 +46,12 @@ from app.schemas.storage import (
 from app.schemas.agent_jobs import AgentJobDetail, AgentJobsSummary, JobStepHistory
 from app.schemas.tempdb_memory import TempDBSpaceBreakdown, TempDBFile, MemoryClerk, TempDBMemorySummary
 from app.schemas.query_performance import PlanWarningQuery, PlanAntiPatternsSummary
+from app.schemas.extended_events import (
+    XESession,
+    RingBufferEvent,
+    XETemplate,
+    ExtendedEventsSummary,
+)
 
 DEMO_DATABASES = [
     DatabaseInfo(name="master", state="ONLINE", recovery_model="SIMPLE", size_mb=12.5, log_size_mb=4.0, compatibility_level=160, is_read_only=False, create_date="2023-01-10T10:00:00"),
@@ -1432,6 +1438,270 @@ DEMO_SECURITY_AUDIT = SecurityAuditSummary(
     ],
     hardening_script="-- ================================================================\n-- Traceforge - SQL Server Security Hardening & Remediation Script\n-- NOT: Lütfen production ortamına uygulamadan önce gözden geçiriniz.\n-- ================================================================\n\nUSE master;\nGO\n\n-- 1. TRUSTWORTHY Açığını Kapat (Yetki Yükseltme Önleme)\nALTER DATABASE [AppDb_Staging] SET TRUSTWORTHY OFF;\nGO\n\n-- 2. Misafir Kullanıcı Erişimini İptal Et\nUSE [Reporting_Warehouse];\nGO\nREVOKE CONNECT FROM guest;\nGO\n\n-- 3. SQL Login Parola Politikasını Aktifleştir\nUSE master;\nGO\nALTER LOGIN [app_service_user] WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;\nGO\n\n-- 4. Yetim Kullanıcıyı Mevcut Login ile Eşleştir\nUSE [AppDb_Production];\nGO\nIF EXISTS (SELECT 1 FROM sys.server_principals WHERE name = 'report_reader')\n    ALTER USER [report_reader] WITH LOGIN = [report_reader];\nGO\n\nPRINT 'Güvenlik sıkılaştırma adımları tamamlandı.';\nGO\n",
 )
+
+# ── Extended Events (XE) Demo Data ───────────────────────────────────────
+DEMO_XE_SESSIONS = [
+    XESession(
+        name="system_health",
+        status="RUNNING",
+        auto_start=True,
+        total_buffer_size_kb=4096.0,
+        max_memory_kb=4096.0,
+        event_retention_mode="ALLOW_SINGLE_EVENT_LOSS",
+        dropped_buffer_count=0,
+        dropped_event_count=0,
+        largest_event_dropped_size=0,
+        targets=["ring_buffer", "event_file"],
+        target_types="ring_buffer, event_file",
+        event_count=14850,
+        start_time="2026-10-25 08:30:00",
+        alter_state_script="ALTER EVENT SESSION [system_health] ON SERVER STATE = STOP;\n-- ALTER EVENT SESSION [system_health] ON SERVER STATE = START;",
+        drop_script="-- UYARI: Varsayılan system_health oturumunun silinmesi önerilmez.\n-- DROP EVENT SESSION [system_health] ON SERVER;",
+    ),
+    XESession(
+        name="AlwaysOn_health",
+        status="RUNNING",
+        auto_start=True,
+        total_buffer_size_kb=4096.0,
+        max_memory_kb=4096.0,
+        event_retention_mode="ALLOW_SINGLE_EVENT_LOSS",
+        dropped_buffer_count=0,
+        dropped_event_count=0,
+        largest_event_dropped_size=0,
+        targets=["event_file"],
+        target_types="event_file",
+        event_count=3200,
+        start_time="2026-10-25 08:30:00",
+        alter_state_script="ALTER EVENT SESSION [AlwaysOn_health] ON SERVER STATE = STOP;\n-- ALTER EVENT SESSION [AlwaysOn_health] ON SERVER STATE = START;",
+        drop_script="DROP EVENT SESSION [AlwaysOn_health] ON SERVER;",
+    ),
+    XESession(
+        name="telemetry_xevents",
+        status="RUNNING",
+        auto_start=True,
+        total_buffer_size_kb=1024.0,
+        max_memory_kb=1024.0,
+        event_retention_mode="ALLOW_SINGLE_EVENT_LOSS",
+        dropped_buffer_count=0,
+        dropped_event_count=0,
+        largest_event_dropped_size=0,
+        targets=["ring_buffer"],
+        target_types="ring_buffer",
+        event_count=850,
+        start_time="2026-10-25 08:30:00",
+        alter_state_script="ALTER EVENT SESSION [telemetry_xevents] ON SERVER STATE = STOP;\n-- ALTER EVENT SESSION [telemetry_xevents] ON SERVER STATE = START;",
+        drop_script="DROP EVENT SESSION [telemetry_xevents] ON SERVER;",
+    ),
+    XESession(
+        name="SlowQueries_Diagnostics",
+        status="STOPPED",
+        auto_start=False,
+        total_buffer_size_kb=8192.0,
+        max_memory_kb=8192.0,
+        event_retention_mode="ALLOW_SINGLE_EVENT_LOSS",
+        dropped_buffer_count=0,
+        dropped_event_count=0,
+        largest_event_dropped_size=0,
+        targets=["event_file"],
+        target_types="event_file",
+        event_count=0,
+        start_time=None,
+        alter_state_script="ALTER EVENT SESSION [SlowQueries_Diagnostics] ON SERVER STATE = START;\n-- ALTER EVENT SESSION [SlowQueries_Diagnostics] ON SERVER STATE = STOP;",
+        drop_script="DROP EVENT SESSION [SlowQueries_Diagnostics] ON SERVER;",
+    ),
+    XESession(
+        name="Security_Audit_Logins",
+        status="STOPPED",
+        auto_start=False,
+        total_buffer_size_kb=2048.0,
+        max_memory_kb=2048.0,
+        event_retention_mode="NO_EVENT_LOSS",
+        dropped_buffer_count=0,
+        dropped_event_count=0,
+        largest_event_dropped_size=0,
+        targets=["ring_buffer"],
+        target_types="ring_buffer",
+        event_count=0,
+        start_time=None,
+        alter_state_script="ALTER EVENT SESSION [Security_Audit_Logins] ON SERVER STATE = START;\n-- ALTER EVENT SESSION [Security_Audit_Logins] ON SERVER STATE = STOP;",
+        drop_script="DROP EVENT SESSION [Security_Audit_Logins] ON SERVER;",
+    ),
+]
+
+DEMO_XE_EVENTS = [
+    RingBufferEvent(
+        event_type="deadlock",
+        timestamp="2026-10-29 16:42:18",
+        severity=None,
+        error_number=None,
+        message="Kilitlenme (Deadlock) Algılandı: SPID 74 kurban seçildi (Victim-list).",
+        database_name="AppDb_Production",
+        session_id=74,
+        details="Kaynak: KEY: 5:72057594047430656 (InventoryLevels). Kilit türü: LCK_M_X vs LCK_M_S. Blocker SPID: 88.",
+        xml_payload="<deadlock><victim-list><victimProcess id='process20f8c88'/></victim-list><process-list><process id='process20f8c88' taskpriority='0' logused='0' waitresource='KEY: 5:72057594047430656' waittime='1850' status='suspended' spid='74' srvid='0'><executionStack><frame procname='adhoc' sqlhandle='0x02000000...'>SELECT * FROM InventoryLevels WITH (HOLDLOCK) WHERE WarehouseID = 4</frame></executionStack></process><process id='process20f8448' spid='88'><executionStack><frame procname='adhoc'>UPDATE InventoryLevels SET QuantityOnHand = QuantityOnHand - 5 WHERE ItemID = 1042</frame></executionStack></process></process-list></deadlock>",
+    ),
+    RingBufferEvent(
+        event_type="error_reported",
+        timestamp="2026-10-29 14:15:02",
+        severity=20,
+        error_number=823,
+        message="I/O Hatası Bildirildi: İşletim sistemi okuma talebine 823 kodlu yanıt verdi.",
+        database_name="Reporting_Warehouse",
+        session_id=68,
+        details="Dosya: E:\\SQLData\\Reporting_Warehouse_Data2.ndf, Ofset: 0x000001a40000. Disk sürücüsü geçici gecikme yaşadı.",
+        xml_payload=None,
+    ),
+    RingBufferEvent(
+        event_type="connectivity",
+        timestamp="2026-10-29 12:08:45",
+        severity=14,
+        error_number=18456,
+        message="Bağlantı Zaman Aşımı / Başarısız Oturum Açma (Login Failed).",
+        database_name="master",
+        session_id=114,
+        details="Kullanıcı: dev_api_worker. İstemci IP: 192.168.1.184. Neden: Parola doğrulanamadı (State 8).",
+        xml_payload=None,
+    ),
+    RingBufferEvent(
+        event_type="memory_broker",
+        timestamp="2026-10-29 10:30:12",
+        severity=10,
+        error_number=None,
+        message="Bellek Broker Bildirimi: Buffer Pool önbelleği daraltıldı (Shrink Notification).",
+        database_name=None,
+        session_id=None,
+        details="Hedef: MEMORYBROKER_FOR_CACHE. Harici bellek baskısı nedeniyle %12 önbellek serbest bırakıldı.",
+        xml_payload=None,
+    ),
+]
+
+DEMO_XE_TEMPLATES = [
+    XETemplate(
+        id="tmpl_slow_queries",
+        name="Uzun Süren Sorgular İzleyicisi (Duration > 5 sn)",
+        category="PERFORMANCE",
+        description="CPU ve I/O kaynaklarını tüketen, 5 saniyenin üzerinde süren tüm T-SQL ifadeleri ve RPC çağrılarını yakalar.",
+        overhead_impact="VERY_LOW",
+        target_type="event_file",
+        create_script="""CREATE EVENT SESSION [Track_Slow_Queries] ON SERVER 
+ADD EVENT sqlserver.rpc_completed(
+    ACTION(sqlserver.client_app_name, sqlserver.database_name, sqlserver.sql_text, sqlserver.username)
+    WHERE ([duration] >= 5000000)
+),
+ADD EVENT sqlserver.sql_statement_completed(
+    ACTION(sqlserver.client_app_name, sqlserver.database_name, sqlserver.sql_text, sqlserver.username)
+    WHERE ([duration] >= 5000000)
+)
+ADD TARGET package0.event_file(
+    SET filename = N'Track_Slow_Queries.xel',
+    max_file_size = 50,
+    max_rollover_files = 4
+)
+WITH (
+    MAX_MEMORY = 4096 KB,
+    EVENT_RETENTION_MODE = ALLOW_SINGLE_EVENT_LOSS,
+    MAX_DISPATCH_LATENCY = 5 SECONDS,
+    STARTUP_STATE = OFF
+);
+GO
+
+-- Oturumu Başlatmak için:
+-- ALTER EVENT SESSION [Track_Slow_Queries] ON SERVER STATE = START;
+""",
+    ),
+    XETemplate(
+        id="tmpl_page_splits",
+        name="Sayfa Bölünmesi (Page Split) İzleyicisi",
+        category="STORAGE",
+        description="Tablolarda clustered indeks parçalanmasına ve işlem günlüğü şişmesine neden olan hot split olaylarını yakalar.",
+        overhead_impact="LOW",
+        target_type="ring_buffer",
+        create_script="""CREATE EVENT SESSION [Track_Page_Splits] ON SERVER 
+ADD EVENT sqlserver.page_split(
+    ACTION(sqlserver.database_name, sqlserver.sql_text)
+    WHERE ([database_id] > 4)
+)
+ADD TARGET package0.ring_buffer(
+    SET max_memory = 4096
+)
+WITH (
+    MAX_MEMORY = 2048 KB,
+    EVENT_RETENTION_MODE = ALLOW_SINGLE_EVENT_LOSS,
+    MAX_DISPATCH_LATENCY = 5 SECONDS,
+    STARTUP_STATE = OFF
+);
+GO
+""",
+    ),
+    XETemplate(
+        id="tmpl_security_logins",
+        name="Başarısız Giriş & Brute-Force Güvenlik Denetimi",
+        category="SECURITY",
+        description="Hatalı parola, geçersiz kullanıcı adı veya yetkisiz erişim denemelerini (Hata 18456) anında kaydeder.",
+        overhead_impact="VERY_LOW",
+        target_type="ring_buffer",
+        create_script="""CREATE EVENT SESSION [Audit_Failed_Logins] ON SERVER 
+ADD EVENT sqlserver.error_reported(
+    ACTION(sqlserver.client_app_name, sqlserver.client_hostname, sqlserver.username)
+    WHERE ([error_number] = 18456)
+)
+ADD TARGET package0.ring_buffer(
+    SET max_memory = 2048
+)
+WITH (
+    MAX_MEMORY = 1024 KB,
+    EVENT_RETENTION_MODE = ALLOW_SINGLE_EVENT_LOSS,
+    MAX_DISPATCH_LATENCY = 3 SECONDS,
+    STARTUP_STATE = ON
+);
+GO
+""",
+    ),
+    XETemplate(
+        id="tmpl_blocking_report",
+        name="Blokaj & Kilit Zaman Aşımı İzleyicisi",
+        category="LOCKING",
+        description="Engellenen süreç eşiğini (Blocked Process Threshold) aşan kilit beklemelerini detaylı raporlar.",
+        overhead_impact="VERY_LOW",
+        target_type="event_file",
+        create_script="""-- Önce Blocked Process Threshold'u 15 saniyeye ayarlayınız:
+-- EXEC sp_configure 'show advanced options', 1; RECONFIGURE;
+-- EXEC sp_configure 'blocked process threshold', 15; RECONFIGURE;
+
+CREATE EVENT SESSION [Track_Blocked_Processes] ON SERVER 
+ADD EVENT sqlserver.blocked_process_report(
+    ACTION(sqlserver.database_name, sqlserver.sql_text)
+)
+ADD TARGET package0.event_file(
+    SET filename = N'Track_Blocked_Processes.xel',
+    max_file_size = 50,
+    max_rollover_files = 4
+)
+WITH (
+    MAX_MEMORY = 4096 KB,
+    EVENT_RETENTION_MODE = ALLOW_SINGLE_EVENT_LOSS,
+    MAX_DISPATCH_LATENCY = 5 SECONDS,
+    STARTUP_STATE = OFF
+);
+GO
+""",
+    ),
+]
+
+DEMO_EXTENDED_EVENTS_SUMMARY = ExtendedEventsSummary(
+    total_sessions=len(DEMO_XE_SESSIONS),
+    running_sessions=len([s for s in DEMO_XE_SESSIONS if s.status == "RUNNING"]),
+    stopped_sessions=len([s for s in DEMO_XE_SESSIONS if s.status == "STOPPED"]),
+    system_health_running=True,
+    total_dropped_events=sum(s.dropped_event_count for s in DEMO_XE_SESSIONS),
+    severe_errors_count=len([e for e in DEMO_XE_EVENTS if e.severity and e.severity >= 20]),
+    deadlocks_in_ring_count=len([e for e in DEMO_XE_EVENTS if e.event_type == "deadlock"]),
+    sessions=DEMO_XE_SESSIONS,
+    recent_events=DEMO_XE_EVENTS,
+    templates=DEMO_XE_TEMPLATES,
+    is_demo=True,
+)
+
 
 
 

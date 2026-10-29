@@ -872,6 +872,65 @@ export interface AgentJobsSummary {
   [key: string]: any;
 }
 
+// ── Extended Events (XE) ───────────────────────────────────────
+export interface XESession {
+  name: string;
+  status: 'RUNNING' | 'STOPPED' | string;
+  auto_start: boolean;
+  total_buffer_size_kb: number;
+  max_memory_kb: number;
+  event_retention_mode: string;
+  dropped_buffer_count: number;
+  dropped_event_count: number;
+  largest_event_dropped_size: number;
+  targets: string[];
+  target_types: string;
+  event_count: number;
+  start_time?: string | null;
+  alter_state_script: string;
+  drop_script: string;
+  [key: string]: any;
+}
+
+export interface RingBufferEvent {
+  event_type: 'deadlock' | 'error_reported' | 'connectivity' | 'memory_broker' | string;
+  timestamp: string;
+  severity?: number | null;
+  error_number?: number | null;
+  message: string;
+  database_name?: string | null;
+  session_id?: number | null;
+  details?: string | null;
+  xml_payload?: string | null;
+  [key: string]: any;
+}
+
+export interface XETemplate {
+  id: string;
+  name: string;
+  category: string;
+  description: string;
+  overhead_impact: 'VERY_LOW' | 'LOW' | 'MODERATE' | string;
+  target_type: 'ring_buffer' | 'event_file' | string;
+  create_script: string;
+  [key: string]: any;
+}
+
+export interface ExtendedEventsSummary {
+  total_sessions: number;
+  running_sessions: number;
+  stopped_sessions: number;
+  system_health_running: boolean;
+  total_dropped_events: number;
+  severe_errors_count: number;
+  deadlocks_in_ring_count: number;
+  sessions: XESession[];
+  recent_events: RingBufferEvent[];
+  templates: XETemplate[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
 
 
 

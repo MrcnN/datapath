@@ -37,6 +37,9 @@ import type {
   TempDBMemorySummary,
   AgentJobsSummary,
   JobStepHistory,
+  ExtendedEventsSummary,
+  XETemplate,
+  XESession,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -350,6 +353,17 @@ export async function getAgentJobsSummary(): Promise<AgentJobsSummary> {
 export async function getJobStepHistory(jobId: string): Promise<JobStepHistory[]> {
   return apiFetch<JobStepHistory[]>(`/api/agent-jobs/${jobId}/history`);
 }
+
+// ── Extended Events (XE) ──────────────────────────────────────
+
+export async function getExtendedEventsSummary(): Promise<ExtendedEventsSummary> {
+  return apiFetch<ExtendedEventsSummary>('/api/extended-events');
+}
+
+export async function getXETemplates(): Promise<XETemplate[]> {
+  return apiFetch<XETemplate[]>('/api/extended-events/templates');
+}
+
 
 
 

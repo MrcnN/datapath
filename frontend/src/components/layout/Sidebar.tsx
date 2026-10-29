@@ -15,6 +15,7 @@ import {
   HardDrive,
   Cpu,
   CalendarClock,
+  Radio,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -44,6 +45,7 @@ const navSections: NavSection[] = [
     title: 'Tanı & İzleme',
     items: [
       { path: '/incidents', label: 'Olay Merkezi', icon: AlertTriangle },
+      { path: '/extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Radio },
       { path: '/query-performance', label: 'Sorgu Performansı', icon: TrendingUp },
       { path: '/indexes', label: 'İndeks Zekası', icon: Layers },
       { path: '/waits', label: 'Bekleme İstatistikleri', icon: Hourglass },
