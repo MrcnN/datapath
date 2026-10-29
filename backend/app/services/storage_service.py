@@ -14,8 +14,13 @@ from app.schemas.storage import (
     DriveIOSummary,
     DatabaseGrowthForecast,
     GrowthHistoryPoint,
+    DatabaseVLFInfo,
 )
-from app.services.demo_data import DEMO_STORAGE_SUMMARY, DEMO_GROWTH_FORECASTS
+from app.services.demo_data import (
+    DEMO_STORAGE_SUMMARY,
+    DEMO_GROWTH_FORECASTS,
+    DEMO_VLF_INFOS,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -385,6 +390,73 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
         if not growth_forecasts:
             growth_forecasts = DEMO_GROWTH_FORECASTS
 
+        # 6. VLF (Virtual Log File) Health via sys.dm_db_log_info
+        vlf_infos: List[DatabaseVLFInfo] = []
+        try:
+            vlf_query = """
+            SELECT 
+                d.name AS database_name,
+                d.recovery_model_desc AS recovery_model,
+                d.log_reuse_wait_desc,
+                COUNT(li.vlf_sequence_number) AS vlf_count,
+                ISNULL(SUM(CASE WHEN li.vlf_status = 2 THEN 1 ELSE 0 END), 0) AS active_vlf_count,
+                ISNULL(SUM(CASE WHEN li.vlf_status != 2 THEN 1 ELSE 0 END), 0) AS inactive_vlf_count,
+                CAST(ROUND(SUM(li.vlf_size_mb), 2) AS FLOAT) AS log_size_mb,
+                CAST(ROUND(AVG(li.vlf_size_mb), 2) AS FLOAT) AS avg_vlf_size_mb
+            FROM sys.databases d
+            CROSS APPLY sys.dm_db_log_info(d.database_id) li
+            WHERE d.state_desc = 'ONLINE'
+            GROUP BY d.name, d.recovery_model_desc, d.log_reuse_wait_desc
+            ORDER BY vlf_count DESC;
+            """
+            cursor.execute(vlf_query)
+            vlf_rows = rows_to_dicts(cursor)
+
+            for r in vlf_rows:
+                db_name = r.get("database_name", "")
+                cnt = int(r.get("vlf_count", 0) or 0)
+                act_cnt = int(r.get("active_vlf_count", 0) or 0)
+                inact_cnt = int(r.get("inactive_vlf_count", 0) or 0)
+                rec_model = r.get("recovery_model", "FULL")
+                wait_desc = r.get("log_reuse_wait_desc", "NOTHING")
+                l_size = float(r.get("log_size_mb", 0.0) or 0.0)
+                avg_vlf = float(r.get("avg_vlf_size_mb", 0.0) or 0.0)
+
+                if cnt > 1000:
+                    status = "CRITICAL"
+                    recom = f"Kritik VLF parçalanması ({cnt} VLF). Sık autogrowth nedeniyle aşırı VLF oluşmuş. Crash recovery ve failover gecikir. Log yedeği alıp SHRINKFILE ve büyük bloklarla MODIFY FILE uygulayınız."
+                    remed_sql = f"-- 1. Log yedeği alarak inaktif VLF'leri serbest bırakınız\nBACKUP LOG [{db_name}] TO DISK = 'NUL';\nGO\n\n-- 2. Log dosyasını küçültünüz\nUSE [{db_name}];\nDBCC SHRINKFILE (2, 64);\nGO\n\n-- 3. Log dosyasını tek seferde uygun boyutta büyütünüz (Örn: 4GB = 64 VLF)\nALTER DATABASE [{db_name}] MODIFY FILE (NAME = 2, SIZE = 4096MB);\nGO\n\n-- 4. Büyüme artışını 512MB olarak sabitleyiniz\nALTER DATABASE [{db_name}] MODIFY FILE (NAME = 2, FILEGROWTH = 512MB);\nGO"
+                elif cnt >= 250:
+                    status = "WARNING"
+                    recom = f"Orta seviye VLF parçalanması ({cnt} VLF). Gelecekteki autogrowth artışını 256MB veya 512MB seviyesine çıkarınız."
+                    remed_sql = f"-- Log büyüme ayarını 256MB olarak yapılandırınız\nALTER DATABASE [{db_name}] MODIFY FILE (NAME = 2, FILEGROWTH = 256MB);\nGO"
+                else:
+                    status = "HEALTHY"
+                    recom = f"VLF sayısı optimal seviyededir ({cnt} VLF). Bakım gerekmez."
+                    remed_sql = f"-- VLF sayısı sağlıklı ({cnt} VLF). Müdahale gerekmiyor."
+
+                vlf_infos.append(
+                    DatabaseVLFInfo(
+                        database_name=db_name,
+                        vlf_count=cnt,
+                        active_vlf_count=act_cnt,
+                        inactive_vlf_count=inact_cnt,
+                        log_size_mb=l_size,
+                        avg_vlf_size_mb=avg_vlf,
+                        recovery_model=rec_model,
+                        log_reuse_wait_desc=wait_desc,
+                        status=status,
+                        recommendation=recom,
+                        remediation_script=remed_sql,
+                    )
+                )
+        except Exception as vlf_err:
+            logger.warning("Could not query sys.dm_db_log_info (%s), falling back to demo VLF data.", vlf_err)
+            vlf_infos = DEMO_VLF_INFOS
+
+        if not vlf_infos:
+            vlf_infos = DEMO_VLF_INFOS
+
         cursor.close()
         conn.close()
 
@@ -393,6 +465,7 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
         total_free = sum(f.free_mb for f in files)
         pct_files = sum(1 for f in files if f.is_percent_growth)
         high_log_dbs = sum(1 for l in log_spaces if l.log_space_used_percent > 80.0)
+        critical_vlf_count = sum(1 for v in vlf_infos if v.status == "CRITICAL")
 
         # Fastest growing db and total 30-day growth
         fastest_db = None
@@ -414,12 +487,14 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
             files_with_percent_growth_count=pct_files,
             high_log_usage_dbs_count=high_log_dbs,
             critical_io_files_count=critical_io_count,
+            critical_vlf_dbs_count=critical_vlf_count,
             files=files,
             log_spaces=log_spaces,
             autogrowth_events=autogrowth_events,
             file_io_latencies=file_io_latencies,
             drive_io_summaries=drive_io_summaries,
             growth_forecasts=growth_forecasts,
+            vlf_infos=vlf_infos,
             fastest_growing_db=fastest_db,
             total_30_day_growth_mb=round(tot_growth_30, 2),
             min_disk_runway_days=min_runway,

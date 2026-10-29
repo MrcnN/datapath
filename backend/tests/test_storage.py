@@ -51,3 +51,15 @@ def test_storage_summary_endpoint():
     assert "overall_latency_ms" in first_io
     assert "status" in first_io
     assert "drive_letter" in first_io
+
+    assert "vlf_infos" in data
+    assert "critical_vlf_dbs_count" in data
+    assert len(data["vlf_infos"]) > 0
+    first_vlf = data["vlf_infos"][0]
+    assert "database_name" in first_vlf
+    assert "vlf_count" in first_vlf
+    assert "active_vlf_count" in first_vlf
+    assert "status" in first_vlf
+    assert first_vlf["status"] in ("HEALTHY", "WARNING", "CRITICAL")
+    assert "remediation_script" in first_vlf
+

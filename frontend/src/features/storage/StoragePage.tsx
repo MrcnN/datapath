@@ -11,6 +11,8 @@ import {
   Activity,
   Calendar,
   TrendingUp,
+  Layers,
+  Code2,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -27,6 +29,7 @@ import type {
   FileIOLatency,
   DriveIOSummary,
   DatabaseGrowthForecast,
+  DatabaseVLFInfo,
 } from '../../lib/types';
 import styles from './StoragePage.module.css';
 
@@ -46,9 +49,10 @@ export default function StoragePage() {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'logs' | 'trace' | 'growth'>('files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'logs' | 'trace' | 'growth' | 'vlfs'>('files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
+  const [selectedVlfForSql, setSelectedVlfForSql] = useState<DatabaseVLFInfo | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
@@ -560,6 +564,105 @@ export default function StoragePage() {
     },
   ];
 
+  const vlfColumns: Column<DatabaseVLFInfo>[] = [
+    {
+      key: 'database_name',
+      label: 'Veritabanı',
+      sortable: true,
+      render: (v) => (
+        <div>
+          <strong style={{ color: '#ffffff' }}>{v.database_name}</strong>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            Model: <span style={{ color: 'var(--accent)' }}>{v.recovery_model}</span> • Bekleme: <span style={{ color: '#f59e0b' }}>{v.log_reuse_wait_desc}</span>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'vlf_count',
+      label: 'Toplam VLF Sayısı',
+      sortable: true,
+      render: (v) => {
+        const isCrit = v.status === 'CRITICAL';
+        const isWarn = v.status === 'WARNING';
+        const color = isCrit ? '#ef4444' : isWarn ? '#f59e0b' : 'var(--status-success)';
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '15px', fontWeight: 700, color }}>
+              {v.vlf_count.toLocaleString()}
+            </span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>VLF</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'active_vlf_count',
+      label: 'Aktif / İnaktif VLF',
+      render: (v) => (
+        <div style={{ fontSize: '12px' }}>
+          <span style={{ color: 'var(--accent)', fontWeight: 600 }}>{v.active_vlf_count} Aktif</span>
+          <span style={{ color: 'var(--text-muted)', margin: '0 4px' }}>/</span>
+          <span style={{ color: 'var(--text-secondary)' }}>{v.inactive_vlf_count} İnaktif</span>
+        </div>
+      ),
+    },
+    {
+      key: 'log_size_mb',
+      label: 'Log / Ort. VLF Boyutu',
+      sortable: true,
+      render: (v) => (
+        <div style={{ fontSize: '12px' }}>
+          <strong style={{ color: '#ffffff' }}>
+            {v.log_size_mb >= 1024 ? `${(v.log_size_mb / 1024).toFixed(1)} GB` : `${v.log_size_mb.toFixed(0)} MB`}
+          </strong>
+          <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+            Ort: {v.avg_vlf_size_mb.toFixed(1)} MB / VLF
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'status',
+      label: 'Parçalanma Durumu',
+      sortable: true,
+      render: (v) => {
+        const isCrit = v.status === 'CRITICAL';
+        const isWarn = v.status === 'WARNING';
+        return (
+          <StatusBadge
+            variant={isCrit ? 'error' : isWarn ? 'warning' : 'success'}
+            label={isCrit ? 'Aşırı Parçalanma (>1.000 VLF)' : isWarn ? 'Orta Parçalanma (250-1.000 VLF)' : 'Sağlıklı (<250 VLF)'}
+          />
+        );
+      },
+    },
+    {
+      key: 'recommendation',
+      label: 'Teşhis & Öneri',
+      render: (v) => (
+        <div style={{ fontSize: '12px', color: 'var(--text-secondary)', maxWidth: '380px' }}>
+          {v.recommendation}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      label: 'İşlem',
+      render: (v) => (
+        <button
+          type="button"
+          className={styles.copyBtn}
+          style={{ padding: '4px 10px', fontSize: '11px', height: 'auto' }}
+          onClick={() => setSelectedVlfForSql(v)}
+        >
+          <Code2 size={13} />
+          Düzeltme Kodu
+        </button>
+      ),
+    },
+  ];
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
 
@@ -627,6 +730,24 @@ export default function StoragePage() {
             </div>
           </div>
         </div>
+
+        <div className={styles.metricCard}>
+          <div
+            className={styles.metricIconWrap}
+            style={{
+              background: (summary?.critical_vlf_dbs_count || 0) > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)',
+              color: (summary?.critical_vlf_dbs_count || 0) > 0 ? 'var(--status-danger)' : 'var(--status-success)',
+            }}
+          >
+            <Layers size={22} />
+          </div>
+          <div>
+            <div className={styles.metricLabel}>Kritik VLF Parçalanması</div>
+            <div className={styles.metricValue} style={{ color: (summary?.critical_vlf_dbs_count || 0) > 0 ? 'var(--status-danger)' : 'inherit' }}>
+              {summary?.critical_vlf_dbs_count || 0} Veritabanı
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Warning Alert if Percent Growth Exists */}
@@ -672,6 +793,12 @@ export default function StoragePage() {
           onClick={() => setActiveTab('trace')}
         >
           <Calendar size={16} /> Default Trace Büyüme Geçmişi ({summary?.autogrowth_events?.length || 0})
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'vlfs' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('vlfs')}
+        >
+          <Layers size={16} /> Sanal Log (VLF) Sağlığı ({summary?.vlf_infos?.length || 0})
         </button>
       </div>
 
@@ -862,6 +989,39 @@ export default function StoragePage() {
         </div>
       )}
 
+      {/* Tab 6: VLFs */}
+      {activeTab === 'vlfs' && (
+        <div>
+          <div className={styles.alertBanner} style={{ marginBottom: '16px', background: 'rgba(0, 210, 255, 0.05)', borderColor: 'rgba(0, 210, 255, 0.2)' }}>
+            <Layers size={20} className={styles.alertIcon} style={{ color: 'var(--accent)' }} />
+            <div>
+              <strong>Sanal Log Dosyaları (VLF) ve Transaction Log Mimarisi:</strong> SQL Server'da Transaction Log dosyası (LDF) dahili olarak VLF birimlerine ayrılır. Log dosyası sık ve küçük artışlarla otomatik büyüdüğünde binlerce küçük VLF oluşur. Yüksek VLF sayısı (&gt;1.000 VLF) sunucu yeniden başlatmalarında (Crash Recovery), Always On failover senkronizasyonunda ve log yedeklerinde ciddi gecikmelere sebep olur.
+            </div>
+          </div>
+
+          <div className={styles.tableCard}>
+            <div className={styles.filterBar}>
+              <div className={styles.searchWrap}>
+                <Search size={16} className={styles.searchIcon} />
+                <input
+                  type="text"
+                  placeholder="Veritabanı adına göre ara..."
+                  className={styles.searchInput}
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <DataTable
+              data={(summary?.vlf_infos || []).filter((v) => !search || v.database_name.toLowerCase().includes(search.toLowerCase()))}
+              columns={vlfColumns}
+              emptyMessage="VLF bilgisi bulunamadı."
+            />
+          </div>
+        </div>
+      )}
+
       {/* T-SQL Review Modal */}
       {selectedFileForSql && (
         <div className={styles.modalOverlay} onClick={() => setSelectedFileForSql(null)}>
@@ -888,6 +1048,40 @@ export default function StoragePage() {
               <button
                 className={styles.copyBtn}
                 onClick={() => handleCopySql(selectedFileForSql.growth_recommendation_sql || '')}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Kopyalandı!' : 'Kodu Kopyala'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VLF Remediation Modal */}
+      {selectedVlfForSql && (
+        <div className={styles.modalOverlay} onClick={() => setSelectedVlfForSql(null)}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <div>
+                <h3>VLF Parçalanmasını Düzeltme & Yeniden Boyutlandırma</h3>
+                <p>
+                  <strong>{selectedVlfForSql.database_name}</strong> veritabanı ({selectedVlfForSql.vlf_count} VLF) için önerilen güvenli T-SQL:
+                </p>
+              </div>
+              <button className={styles.closeBtn} onClick={() => setSelectedVlfForSql(null)}>✕</button>
+            </div>
+
+            <div className={styles.sqlCodeBox}>
+              <pre>{selectedVlfForSql.remediation_script}</pre>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <span className={styles.reviewNotice}>
+                * Güvenlik ilkesi: Datapath otomatik küçültme yapmaz. Betiği DBA gözetiminde SSMS üzerinde uygulayınız.
+              </span>
+              <button
+                className={styles.copyBtn}
+                onClick={() => handleCopySql(selectedVlfForSql.remediation_script || '')}
               >
                 {copied ? <Check size={16} /> : <Copy size={16} />}
                 {copied ? 'Kopyalandı!' : 'Kodu Kopyala'}

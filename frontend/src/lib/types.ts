@@ -740,6 +740,21 @@ export interface DatabaseGrowthForecast {
   [key: string]: any;
 }
 
+export interface DatabaseVLFInfo {
+  database_name: string;
+  vlf_count: number;
+  active_vlf_count: number;
+  inactive_vlf_count: number;
+  log_size_mb: number;
+  avg_vlf_size_mb: number;
+  recovery_model: string;
+  log_reuse_wait_desc: string;
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | string;
+  recommendation: string;
+  remediation_script: string;
+  [key: string]: any;
+}
+
 export interface StorageSummary {
   total_data_size_mb: number;
   total_log_size_mb: number;
@@ -747,12 +762,14 @@ export interface StorageSummary {
   files_with_percent_growth_count: number;
   high_log_usage_dbs_count: number;
   critical_io_files_count?: number;
+  critical_vlf_dbs_count?: number;
   files: DatabaseFile[];
   log_spaces: LogSpaceUsage[];
   autogrowth_events: AutogrowthEvent[];
   file_io_latencies?: FileIOLatency[];
   drive_io_summaries?: DriveIOSummary[];
   growth_forecasts?: DatabaseGrowthForecast[];
+  vlf_infos?: DatabaseVLFInfo[];
   fastest_growing_db?: string | null;
   total_30_day_growth_mb?: number;
   min_disk_runway_days?: number | null;

@@ -85,6 +85,20 @@ class DatabaseGrowthForecast(BaseModel):
     history_points: List[GrowthHistoryPoint] = []
 
 
+class DatabaseVLFInfo(BaseModel):
+    database_name: str
+    vlf_count: int
+    active_vlf_count: int
+    inactive_vlf_count: int
+    log_size_mb: float
+    avg_vlf_size_mb: float
+    recovery_model: str
+    log_reuse_wait_desc: str
+    status: str  # 'HEALTHY' (<250), 'WARNING' (250-1000), 'CRITICAL' (>1000)
+    recommendation: str
+    remediation_script: str
+
+
 class StorageSummary(BaseModel):
     total_data_size_mb: float
     total_log_size_mb: float
@@ -92,12 +106,14 @@ class StorageSummary(BaseModel):
     files_with_percent_growth_count: int
     high_log_usage_dbs_count: int
     critical_io_files_count: int = 0
+    critical_vlf_dbs_count: int = 0
     files: List[DatabaseFile] = []
     log_spaces: List[LogSpaceUsage] = []
     autogrowth_events: List[AutogrowthEvent] = []
     file_io_latencies: List[FileIOLatency] = []
     drive_io_summaries: List[DriveIOSummary] = []
     growth_forecasts: List[DatabaseGrowthForecast] = []
+    vlf_infos: List[DatabaseVLFInfo] = []
     fastest_growing_db: Optional[str] = None
     total_30_day_growth_mb: float = 0.0
     min_disk_runway_days: Optional[int] = None
