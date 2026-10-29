@@ -19,6 +19,14 @@ def test_storage_summary_endpoint():
     assert "autogrowth_events" in data
     assert "file_io_latencies" in data
     assert "drive_io_summaries" in data
+    assert "growth_forecasts" in data
+
+    assert len(data["growth_forecasts"]) > 0
+    first_forecast = data["growth_forecasts"][0]
+    assert "database_name" in first_forecast
+    assert "current_size_mb" in first_forecast
+    assert "daily_growth_mb" in first_forecast
+    assert "status" in first_forecast
 
     assert len(data["files"]) > 0
     first_file = data["files"][0]

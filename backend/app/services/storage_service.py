@@ -12,8 +12,10 @@ from app.schemas.storage import (
     StorageSummary,
     FileIOLatency,
     DriveIOSummary,
+    DatabaseGrowthForecast,
+    GrowthHistoryPoint,
 )
-from app.services.demo_data import DEMO_STORAGE_SUMMARY
+from app.services.demo_data import DEMO_STORAGE_SUMMARY, DEMO_GROWTH_FORECASTS
 
 logger = logging.getLogger(__name__)
 
@@ -274,6 +276,115 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
         except Exception as e:
             logger.warning("Virtual file stats query failed: %s", e)
 
+        # 5. Database Growth Trends & Capacity Forecasting
+        growth_forecasts: List[DatabaseGrowthForecast] = []
+        try:
+            drive_space_map = {}
+            cursor.execute(
+                """
+                SELECT DISTINCT
+                    d.name AS database_name,
+                    UPPER(LEFT(vs.volume_mount_point, 1)) + ':' AS drive_letter,
+                    CAST(ROUND(vs.available_bytes / 1048576.0, 2) AS FLOAT) AS drive_free_space_mb
+                FROM sys.master_files mf
+                CROSS APPLY sys.dm_os_volume_stats(mf.database_id, mf.file_id) vs
+                JOIN sys.databases d ON mf.database_id = d.database_id
+                WHERE mf.type = 0 AND d.state_desc = 'ONLINE';
+                """
+            )
+            for row in rows_to_dicts(cursor):
+                drive_space_map[row["database_name"]] = (row["drive_letter"], float(row["drive_free_space_mb"]))
+
+            cursor.execute(
+                """
+                WITH DailyBackups AS (
+                    SELECT 
+                        database_name,
+                        backup_start_date,
+                        backup_size / 1048576.0 AS backup_size_mb,
+                        ROW_NUMBER() OVER(
+                            PARTITION BY database_name, CONVERT(VARCHAR(10), backup_start_date, 120) 
+                            ORDER BY backup_start_date DESC
+                        ) AS rn
+                    FROM msdb.dbo.backupset
+                    WHERE type = 'D'
+                      AND backup_start_date >= DATEADD(day, -90, GETDATE())
+                )
+                SELECT 
+                    database_name, 
+                    CONVERT(VARCHAR(10), backup_start_date, 120) AS backup_date, 
+                    CAST(ROUND(backup_size_mb, 2) AS FLOAT) AS backup_size_mb
+                FROM DailyBackups
+                WHERE rn = 1
+                ORDER BY database_name, backup_date;
+                """
+            )
+            growth_rows = rows_to_dicts(cursor)
+            
+            db_points = {}
+            for gr in growth_rows:
+                dbname = gr["database_name"]
+                if dbname not in db_points:
+                    db_points[dbname] = []
+                db_points[dbname].append(GrowthHistoryPoint(date=gr["backup_date"], size_mb=float(gr["backup_size_mb"])))
+
+            db_sizes = {}
+            for f in files:
+                if f.file_type == "ROWS":
+                    db_sizes[f.database_name] = db_sizes.get(f.database_name, 0.0) + f.size_mb
+
+            for dbname, cur_size in db_sizes.items():
+                pts = db_points.get(dbname, [])
+                drive_let, free_mb = drive_space_map.get(dbname, ("C:", 50000.0))
+
+                s30 = None
+                s60 = None
+                s90 = None
+                if pts:
+                    s90 = pts[0].size_mb if len(pts) >= 1 else None
+                    s60 = pts[len(pts) // 3].size_mb if len(pts) >= 3 else None
+                    s30 = pts[-1].size_mb if pts else None
+
+                base_30 = s30 if s30 is not None else cur_size
+                growth_30 = max(0.0, cur_size - base_30) if cur_size > base_30 else 0.0
+                pct_30 = round((growth_30 / base_30 * 100.0), 2) if base_30 > 0 else 0.0
+                daily_mb = round(growth_30 / 30.0, 2)
+                proj_90 = round(cur_size + (daily_mb * 90.0), 2)
+                days_left = int(free_mb / daily_mb) if daily_mb > 0 else None
+
+                status_str = "STABLE"
+                if days_left is not None and days_left < 30:
+                    status_str = "CRITICAL_CAPACITY"
+                elif pct_30 > 15.0:
+                    status_str = "RAPID_GROWTH"
+                elif pct_30 > 5.0:
+                    status_str = "MODERATE"
+
+                growth_forecasts.append(
+                    DatabaseGrowthForecast(
+                        database_name=dbname,
+                        current_size_mb=round(cur_size, 2),
+                        size_30_days_ago_mb=round(s30, 2) if s30 else None,
+                        size_60_days_ago_mb=round(s60, 2) if s60 else None,
+                        size_90_days_ago_mb=round(s90, 2) if s90 else None,
+                        growth_last_30_days_mb=round(growth_30, 2),
+                        growth_percent_30_days=pct_30,
+                        daily_growth_mb=daily_mb,
+                        projected_size_90_days_mb=proj_90,
+                        drive_letter=drive_let,
+                        drive_free_space_mb=round(free_mb, 2),
+                        days_until_disk_full=days_left,
+                        status=status_str,
+                        history_points=pts,
+                    )
+                )
+
+        except Exception as e:
+            logger.warning("Growth forecast query failed: %s", e)
+
+        if not growth_forecasts:
+            growth_forecasts = DEMO_GROWTH_FORECASTS
+
         cursor.close()
         conn.close()
 
@@ -282,6 +393,19 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
         total_free = sum(f.free_mb for f in files)
         pct_files = sum(1 for f in files if f.is_percent_growth)
         high_log_dbs = sum(1 for l in log_spaces if l.log_space_used_percent > 80.0)
+
+        # Fastest growing db and total 30-day growth
+        fastest_db = None
+        tot_growth_30 = sum(g.growth_last_30_days_mb for g in growth_forecasts)
+        min_runway = None
+        runway_candidates = [g.days_until_disk_full for g in growth_forecasts if g.days_until_disk_full is not None]
+        if runway_candidates:
+            min_runway = min(runway_candidates)
+
+        sorted_growth = sorted(growth_forecasts, key=lambda x: x.growth_last_30_days_mb, reverse=True)
+        if sorted_growth and sorted_growth[0].growth_last_30_days_mb > 0:
+            top_g = sorted_growth[0]
+            fastest_db = f"{top_g.database_name} (+{(top_g.growth_last_30_days_mb / 1024):.1f} GB / ay)"
 
         return StorageSummary(
             total_data_size_mb=round(total_data, 2),
@@ -295,6 +419,10 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
             autogrowth_events=autogrowth_events,
             file_io_latencies=file_io_latencies,
             drive_io_summaries=drive_io_summaries,
+            growth_forecasts=growth_forecasts,
+            fastest_growing_db=fastest_db,
+            total_30_day_growth_mb=round(tot_growth_30, 2),
+            min_disk_runway_days=min_runway,
             is_demo=False,
         )
 

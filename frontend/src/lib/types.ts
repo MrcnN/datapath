@@ -652,6 +652,29 @@ export interface DriveIOSummary {
   [key: string]: any;
 }
 
+export interface GrowthHistoryPoint {
+  date: string;
+  size_mb: number;
+}
+
+export interface DatabaseGrowthForecast {
+  database_name: string;
+  current_size_mb: number;
+  size_30_days_ago_mb?: number | null;
+  size_60_days_ago_mb?: number | null;
+  size_90_days_ago_mb?: number | null;
+  growth_last_30_days_mb: number;
+  growth_percent_30_days: number;
+  daily_growth_mb: number;
+  projected_size_90_days_mb: number;
+  drive_letter: string;
+  drive_free_space_mb: number;
+  days_until_disk_full?: number | null;
+  status: 'CRITICAL_CAPACITY' | 'RAPID_GROWTH' | 'MODERATE' | 'STABLE';
+  history_points: GrowthHistoryPoint[];
+  [key: string]: any;
+}
+
 export interface StorageSummary {
   total_data_size_mb: number;
   total_log_size_mb: number;
@@ -664,6 +687,10 @@ export interface StorageSummary {
   autogrowth_events: AutogrowthEvent[];
   file_io_latencies?: FileIOLatency[];
   drive_io_summaries?: DriveIOSummary[];
+  growth_forecasts?: DatabaseGrowthForecast[];
+  fastest_growing_db?: string | null;
+  total_30_day_growth_mb?: number;
+  min_disk_runway_days?: number | null;
   is_demo?: boolean;
   [key: string]: any;
 }

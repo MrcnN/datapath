@@ -63,6 +63,28 @@ class DriveIOSummary(BaseModel):
     file_count: int
 
 
+class GrowthHistoryPoint(BaseModel):
+    date: str
+    size_mb: float
+
+
+class DatabaseGrowthForecast(BaseModel):
+    database_name: str
+    current_size_mb: float
+    size_30_days_ago_mb: Optional[float] = None
+    size_60_days_ago_mb: Optional[float] = None
+    size_90_days_ago_mb: Optional[float] = None
+    growth_last_30_days_mb: float
+    growth_percent_30_days: float
+    daily_growth_mb: float
+    projected_size_90_days_mb: float
+    drive_letter: str
+    drive_free_space_mb: float
+    days_until_disk_full: Optional[int] = None
+    status: str  # 'CRITICAL_CAPACITY', 'RAPID_GROWTH', 'MODERATE', 'STABLE'
+    history_points: List[GrowthHistoryPoint] = []
+
+
 class StorageSummary(BaseModel):
     total_data_size_mb: float
     total_log_size_mb: float
@@ -75,4 +97,9 @@ class StorageSummary(BaseModel):
     autogrowth_events: List[AutogrowthEvent] = []
     file_io_latencies: List[FileIOLatency] = []
     drive_io_summaries: List[DriveIOSummary] = []
+    growth_forecasts: List[DatabaseGrowthForecast] = []
+    fastest_growing_db: Optional[str] = None
+    total_30_day_growth_mb: float = 0.0
+    min_disk_runway_days: Optional[int] = None
     is_demo: bool = False
+

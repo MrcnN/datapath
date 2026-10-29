@@ -10,6 +10,7 @@ import {
   Search,
   Activity,
   Calendar,
+  TrendingUp,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -18,7 +19,15 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import { getStorageSummary } from '../../lib/api';
-import type { StorageSummary, DatabaseFile, LogSpaceUsage, AutogrowthEvent, FileIOLatency, DriveIOSummary } from '../../lib/types';
+import type {
+  StorageSummary,
+  DatabaseFile,
+  LogSpaceUsage,
+  AutogrowthEvent,
+  FileIOLatency,
+  DriveIOSummary,
+  DatabaseGrowthForecast,
+} from '../../lib/types';
 import styles from './StoragePage.module.css';
 
 const LOG_REUSE_EXPLANATIONS: Record<string, string> = {
@@ -37,7 +46,7 @@ export default function StoragePage() {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'logs' | 'trace'>('files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'logs' | 'trace' | 'growth'>('files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -403,6 +412,154 @@ export default function StoragePage() {
     },
   ];
 
+  const growthColumns: Column<DatabaseGrowthForecast>[] = [
+    {
+      key: 'database_name',
+      label: 'Veritabanı & Durum',
+      sortable: true,
+      render: (g) => {
+        const isCritical = g.status === 'CRITICAL_CAPACITY';
+        const isRapid = g.status === 'RAPID_GROWTH';
+        const isMod = g.status === 'MODERATE';
+        const bg = isCritical
+          ? 'rgba(239, 68, 68, 0.15)'
+          : isRapid
+          ? 'rgba(245, 158, 11, 0.15)'
+          : isMod
+          ? 'rgba(59, 130, 246, 0.15)'
+          : 'rgba(34, 197, 94, 0.15)';
+        const color = isCritical
+          ? 'var(--status-danger)'
+          : isRapid
+          ? '#fbbf24'
+          : isMod
+          ? 'var(--accent-blue)'
+          : 'var(--status-success)';
+        const label = isCritical
+          ? 'Kapasite Riski'
+          : isRapid
+          ? 'Hızlı Büyüme'
+          : isMod
+          ? 'Dengeli'
+          : 'Sabit';
+
+        return (
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <strong style={{ color: 'var(--text-primary)', fontSize: '13px' }}>{g.database_name}</strong>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: bg,
+                  color: color,
+                }}
+              >
+                {label}
+              </span>
+            </div>
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+              Sürücü {g.drive_letter} • Boş: {formatSize(g.drive_free_space_mb)}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'current_size_mb',
+      label: 'Mevcut Boyut',
+      sortable: true,
+      render: (g) => <span style={{ fontWeight: 600 }}>{formatSize(g.current_size_mb)}</span>,
+    },
+    {
+      key: 'growth_last_30_days_mb',
+      label: 'Son 30 Gün Büyüme',
+      sortable: true,
+      render: (g) => (
+        <div>
+          <span style={{ fontWeight: 700, color: g.growth_last_30_days_mb > 0 ? 'var(--status-warning, #f59e0b)' : 'var(--text-muted)' }}>
+            +{formatSize(g.growth_last_30_days_mb)}
+          </span>
+          {g.growth_percent_30_days > 0 && (
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '6px' }}>
+              (+{g.growth_percent_30_days.toFixed(1)}%)
+            </span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'daily_growth_mb',
+      label: 'Günlük Büyüme Hızı',
+      sortable: true,
+      render: (g) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>
+          {g.daily_growth_mb >= 1024
+            ? `${(g.daily_growth_mb / 1024).toFixed(2)} GB/gün`
+            : `${g.daily_growth_mb.toFixed(1)} MB/gün`}
+        </span>
+      ),
+    },
+    {
+      key: 'projected_size_90_days_mb',
+      label: '90 Günlük Tahmin',
+      sortable: true,
+      render: (g) => (
+        <span style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>
+          {formatSize(g.projected_size_90_days_mb)}
+        </span>
+      ),
+    },
+    {
+      key: 'days_until_disk_full',
+      label: 'Disk Dolum Süresi (Runway)',
+      sortable: true,
+      render: (g) => {
+        if (g.days_until_disk_full === null || g.days_until_disk_full === undefined) {
+          return <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>— (Sabit)</span>;
+        }
+        if (g.days_until_disk_full < 60) {
+          return (
+            <span className={styles.runwayBadgeCritical}>
+              <AlertTriangle size={12} /> {g.days_until_disk_full} Gün Kaldı!
+            </span>
+          );
+        }
+        if (g.days_until_disk_full < 180) {
+          return <span className={styles.runwayBadgeWarning}>{g.days_until_disk_full} Gün</span>;
+        }
+        return <span className={styles.runwayBadgeOk}>{g.days_until_disk_full} Gün</span>;
+      },
+    },
+    {
+      key: 'history_points',
+      label: '90 Günlük Trend',
+      render: (g) => {
+        if (!g.history_points || g.history_points.length === 0) {
+          return <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>Veri yok</span>;
+        }
+        const maxVal = Math.max(...g.history_points.map((p) => p.size_mb), 1);
+        return (
+          <div className={styles.sparklineWrap} title="Geçmiş 90 günlük yedek boyutu trendi">
+            {g.history_points.map((pt, idx) => {
+              const hPct = Math.max(15, Math.round((pt.size_mb / maxVal) * 100));
+              return (
+                <div
+                  key={idx}
+                  className={styles.sparklineBar}
+                  style={{ height: `${hPct}%` }}
+                  title={`${pt.date}: ${formatSize(pt.size_mb)}`}
+                />
+              );
+            })}
+          </div>
+        );
+      },
+    },
+  ];
+
   if (loading) return <LoadingSpinner />;
   if (error) return <ErrorState message={error} onRetry={() => window.location.reload()} />;
 
@@ -497,6 +654,12 @@ export default function StoragePage() {
           onClick={() => setActiveTab('io')}
         >
           <Activity size={16} /> Disk I/O Gecikmesi ({summary?.file_io_latencies?.length || 0})
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'growth' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('growth')}
+        >
+          <TrendingUp size={16} /> Kapasite & Büyüme Trendi ({summary?.growth_forecasts?.length || 0})
         </button>
         <button
           className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.activeTab : ''}`}
@@ -624,6 +787,78 @@ export default function StoragePage() {
             columns={traceColumns}
             emptyMessage="Default Trace üzerinde kayıtlı büyüme olayı bulunamadı."
           />
+        </div>
+      )}
+
+      {/* Tab 4: Growth Trends & Capacity Forecasting */}
+      {activeTab === 'growth' && (
+        <div>
+          {/* Summary KPIs */}
+          <div className={styles.growthSummaryGrid}>
+            <div className={styles.growthStatCard}>
+              <div className={styles.growthStatVal} style={{ color: 'var(--accent-blue)' }}>
+                {summary?.fastest_growing_db || '—'}
+              </div>
+              <div className={styles.growthStatLbl}>En Hızlı Büyüyen Veritabanı</div>
+            </div>
+
+            <div className={styles.growthStatCard}>
+              <div className={styles.growthStatVal} style={{ color: '#fbbf24' }}>
+                +{formatSize(summary?.total_30_day_growth_mb || 0)}
+              </div>
+              <div className={styles.growthStatLbl}>Son 30 Gün Toplam Büyüme</div>
+            </div>
+
+            <div className={styles.growthStatCard}>
+              <div
+                className={styles.growthStatVal}
+                style={{
+                  color:
+                    summary?.min_disk_runway_days && summary.min_disk_runway_days < 60
+                      ? 'var(--status-danger)'
+                      : 'var(--status-success)',
+                }}
+              >
+                {summary?.min_disk_runway_days ? `${summary.min_disk_runway_days} Gün` : 'Geniş Kapasite'}
+              </div>
+              <div className={styles.growthStatLbl}>Kritik Disk Dolum Süresi (En Düşük Runway)</div>
+            </div>
+
+            <div className={styles.growthStatCard}>
+              <div
+                className={styles.growthStatVal}
+                style={{
+                  color:
+                    (summary?.growth_forecasts?.filter((g) => g.status === 'CRITICAL_CAPACITY').length || 0) > 0
+                      ? 'var(--status-danger)'
+                      : 'var(--status-success)',
+                }}
+              >
+                {summary?.growth_forecasts?.filter((g) => g.status === 'CRITICAL_CAPACITY').length || 0} Veritabanı
+              </div>
+              <div className={styles.growthStatLbl}>Kapasite Riski Taşıyan Diskler</div>
+            </div>
+          </div>
+
+          {/* Critical Capacity Warning if < 60 days */}
+          {summary?.min_disk_runway_days && summary.min_disk_runway_days < 60 && (
+            <div className={styles.alertBanner} style={{ marginBottom: '16px' }}>
+              <AlertTriangle size={20} className={styles.alertIcon} />
+              <div>
+                <strong>Kritik Disk Kapasite Uyarısı:</strong> Mevcut veritabanı büyüme ivmesiyle en kritik disk alanının{' '}
+                <strong>{summary.min_disk_runway_days} gün</strong> içerisinde dolacağı tahmin edilmektedir.
+                Üretim kesintisi yaşamamak için disk alanı tahsisini genişletiniz veya eski verileri arşivleyiniz.
+              </div>
+            </div>
+          )}
+
+          <div className={styles.tableCard}>
+            <DataTable
+              data={summary?.growth_forecasts || []}
+              columns={growthColumns}
+              emptyMessage="Veritabanı büyüme tahmini bulunamadı."
+            />
+          </div>
         </div>
       )}
 

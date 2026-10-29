@@ -300,3 +300,93 @@
   gap: var(--space-2);
 }
 
+.growthSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.growthStatCard {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.growthStatVal {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.growthStatLbl {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+
+.sparklineWrap {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  height: 28px;
+  padding: 2px 0;
+}
+
+.sparklineBar {
+  flex: 1;
+  background: var(--accent-blue);
+  border-radius: 2px;
+  min-height: 4px;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.sparklineBar:hover {
+  opacity: 1;
+}
+
+.runwayBadgeCritical {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--status-danger);
+  font-weight: 700;
+  font-size: 11.5px;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.runwayBadgeWarning {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  font-weight: 700;
+  font-size: 11.5px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+.runwayBadgeOk {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--status-success);
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+
