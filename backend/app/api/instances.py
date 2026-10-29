@@ -14,6 +14,7 @@ from app.schemas.instances import (
     ServerMetadata,
     SessionInfo,
     ServerConfigurationSummary,
+    LiveProcessSummary,
 )
 from app.services.instance_service import (
     get_blocking,
@@ -21,6 +22,7 @@ from app.services.instance_service import (
     get_server_metadata,
     get_sessions,
     get_server_configurations,
+    get_live_process_summary,
 )
 from app.services.demo_data import (
     DEMO_BLOCKING,
@@ -103,6 +105,17 @@ def read_sessions(
         logger.debug("Live sessions unavailable (%s), returning demo data.", exc)
         response.headers["X-Traceforge-Demo"] = "true"
         return DEMO_SESSIONS
+
+
+@router.get("/sessions/live", response_model=LiveProcessSummary)
+def read_live_process_summary(
+    active_only: bool = Query(True, description="Filter out sleeping sessions"),
+    min_duration_ms: int = Query(0, ge=0, description="Minimum wait duration in ms"),
+):
+    """Retrieve active sessions with real-time KPI aggregates and sp_WhoIsActive-grade diagnostics."""
+    params = _get_connection_params()
+    return get_live_process_summary(params, active_only=active_only, min_duration_ms=min_duration_ms)
+
 
 
 @router.get("/blocking", response_model=BlockingResponse)

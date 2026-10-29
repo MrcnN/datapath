@@ -51,6 +51,26 @@ class SessionInfo(BaseModel):
     blocking_session_id: Optional[int] = None
     last_request_start_time: Optional[datetime] = None
     sql_text: Optional[str] = None
+    elapsed_time_ms: Optional[int] = 0
+    current_statement: Optional[str] = None
+    tempdb_allocations_mb: Optional[float] = 0.0
+    memory_grant_mb: Optional[float] = 0.0
+    open_transaction_count: Optional[int] = 0
+    transaction_isolation_level: Optional[str] = "ReadCommitted"
+    is_root_blocker: Optional[bool] = False
+    blocked_session_count: Optional[int] = 0
+    kill_statement: Optional[str] = None
+
+
+class LiveProcessSummary(BaseModel):
+    total_active_sessions: int
+    running_sessions: int
+    blocked_sessions: int
+    root_blockers_count: int
+    total_tempdb_mb: float
+    total_memory_grant_mb: float
+    sessions: List[SessionInfo]
+    is_demo: bool = False
 
 
 class BlockedSession(BaseModel):

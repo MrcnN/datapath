@@ -43,7 +43,7 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { key: 'sessions', label: 'Aktif Oturumlar', icon: Activity },
+  { key: 'sessions', label: 'Canlı Süreç & Oturumlar (WhoIsActive)', icon: Activity },
   { key: 'blocking', label: 'Engelleme Zincirleri', icon: AlertTriangle },
   { key: 'deadlocks', label: 'Kilitlenme Analizi', icon: Flame },
   { key: 'agent-jobs', label: 'Agent İşleri', icon: Briefcase },
@@ -69,8 +69,9 @@ export default function IncidentCenterPage() {
     setError(null);
     try {
       if (tab === 'sessions') {
-        const data = await getSessions({ active_only: true });
-        setSessions(data);
+        // SessionsTable manages its own live data and auto-refresh interval
+        setLoading(false);
+        return;
       } else if (tab === 'blocking') {
         const data = await getBlocking();
         setBlocking(data);
@@ -137,10 +138,7 @@ export default function IncidentCenterPage() {
         {!loading && !error && (
           <>
             {activeTab === 'sessions' && (
-              <SessionsTable
-                sessions={sessions}
-                onRefresh={() => fetchTabData('sessions')}
-              />
+              <SessionsTable />
             )}
             {activeTab === 'blocking' && (
               <BlockingChain

@@ -4,6 +4,7 @@ import type {
   InstanceMetadata,
   ServerConfigurationSummary,
   Session,
+  LiveProcessSummary,
   BlockingResult,
   DeadlockResult,
   AgentJobResult,
@@ -122,6 +123,15 @@ export async function getSessions(params?: {
   include_system?: boolean;
 }): Promise<Session[]> {
   return apiFetch<Session[]>(`/api/sessions${buildQuery(params ?? {})}`);
+}
+
+export async function getLiveSessionsSummary(params?: {
+  active_only?: boolean;
+  min_duration_ms?: number;
+}): Promise<LiveProcessSummary> {
+  return apiFetch<LiveProcessSummary>(
+    `/api/sessions/live${buildQuery(params ?? {})}`
+  );
 }
 
 // ── Blocking ──────────────────────────────────────────────────

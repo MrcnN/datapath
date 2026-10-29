@@ -11,6 +11,7 @@ from app.schemas.instances import (
     SessionInfo,
     ConfigurationItem,
     ServerConfigurationSummary,
+    LiveProcessSummary,
 )
 from app.schemas.backups import BackupRecord, RecoveryReadiness, DatabaseIntegrityCheck
 from app.schemas.permissions import (
@@ -87,6 +88,15 @@ DEMO_SESSIONS = [
         blocking_session_id=0,
         last_request_start_time=datetime.now(timezone.utc).isoformat(),
         sql_text="SELECT o.OrderID, o.OrderDate, c.CustomerName, SUM(oi.UnitPrice * oi.Quantity) as Total FROM Orders o JOIN Customers c ON c.CustomerID = o.CustomerID JOIN OrderItems oi ON oi.OrderID = o.OrderID WHERE o.Status = 'Pending' GROUP BY o.OrderID, o.OrderDate, c.CustomerName ORDER BY o.OrderDate DESC;",
+        elapsed_time_ms=14500,
+        current_statement="SELECT o.OrderID, o.OrderDate, c.CustomerName, SUM(oi.UnitPrice * oi.Quantity) as Total FROM Orders o JOIN Customers c ON c.CustomerID = o.CustomerID JOIN OrderItems oi ON oi.OrderID = o.OrderID WHERE o.Status = 'Pending' GROUP BY o.OrderID, o.OrderDate, c.CustomerName ORDER BY o.OrderDate DESC;",
+        tempdb_allocations_mb=14.5,
+        memory_grant_mb=8.0,
+        open_transaction_count=1,
+        transaction_isolation_level="ReadCommitted",
+        is_root_blocker=False,
+        blocked_session_count=0,
+        kill_statement="KILL 52;",
     ),
     SessionInfo(
         session_id=68,
@@ -106,6 +116,15 @@ DEMO_SESSIONS = [
         blocking_session_id=0,
         last_request_start_time=datetime.now(timezone.utc).isoformat(),
         sql_text="INSERT INTO FactDailySales (DateKey, ProductKey, Quantity, TotalAmount) SELECT CAST(CONVERT(VARCHAR(8), OrderDate, 112) AS INT), ProductKey, Quantity, UnitPrice * Quantity FROM StagingSales WHERE Processed = 0;",
+        elapsed_time_ms=125000,
+        current_statement="INSERT INTO FactDailySales (DateKey, ProductKey, Quantity, TotalAmount) SELECT CAST(CONVERT(VARCHAR(8), OrderDate, 112) AS INT), ProductKey, Quantity, UnitPrice * Quantity FROM StagingSales WHERE Processed = 0;",
+        tempdb_allocations_mb=142.8,
+        memory_grant_mb=64.0,
+        open_transaction_count=1,
+        transaction_isolation_level="ReadCommitted",
+        is_root_blocker=False,
+        blocked_session_count=0,
+        kill_statement="KILL 68;",
     ),
     SessionInfo(
         session_id=74,
@@ -125,6 +144,15 @@ DEMO_SESSIONS = [
         blocking_session_id=88,
         last_request_start_time=datetime.now(timezone.utc).isoformat(),
         sql_text="SELECT * FROM InventoryLevels WITH (HOLDLOCK) WHERE WarehouseID = 4;",
+        elapsed_time_ms=48500,
+        current_statement="SELECT * FROM InventoryLevels WITH (HOLDLOCK) WHERE WarehouseID = 4;",
+        tempdb_allocations_mb=0.0,
+        memory_grant_mb=4.0,
+        open_transaction_count=0,
+        transaction_isolation_level="ReadCommitted",
+        is_root_blocker=False,
+        blocked_session_count=0,
+        kill_statement="KILL 74;",
     ),
     SessionInfo(
         session_id=88,
@@ -144,8 +172,28 @@ DEMO_SESSIONS = [
         blocking_session_id=0,
         last_request_start_time=datetime.now(timezone.utc).isoformat(),
         sql_text="UPDATE InventoryLevels SET QuantityOnHand = QuantityOnHand - 5 WHERE ItemID = 1042 AND WarehouseID = 4;",
+        elapsed_time_ms=95000,
+        current_statement="UPDATE InventoryLevels SET QuantityOnHand = QuantityOnHand - 5 WHERE ItemID = 1042 AND WarehouseID = 4;",
+        tempdb_allocations_mb=1.2,
+        memory_grant_mb=4.0,
+        open_transaction_count=2,
+        transaction_isolation_level="Serializable",
+        is_root_blocker=True,
+        blocked_session_count=1,
+        kill_statement="KILL 88;",
     ),
 ]
+
+DEMO_LIVE_PROCESS_SUMMARY = LiveProcessSummary(
+    total_active_sessions=len(DEMO_SESSIONS),
+    running_sessions=len([s for s in DEMO_SESSIONS if s.status == "running"]),
+    blocked_sessions=len([s for s in DEMO_SESSIONS if s.blocking_session_id and s.blocking_session_id > 0]),
+    root_blockers_count=len([s for s in DEMO_SESSIONS if s.is_root_blocker]),
+    total_tempdb_mb=round(sum([s.tempdb_allocations_mb or 0.0 for s in DEMO_SESSIONS]), 1),
+    total_memory_grant_mb=round(sum([s.memory_grant_mb or 0.0 for s in DEMO_SESSIONS]), 1),
+    sessions=DEMO_SESSIONS,
+    is_demo=True,
+)
 
 DEMO_BLOCKING = BlockingResponse(
     has_blocking=True,

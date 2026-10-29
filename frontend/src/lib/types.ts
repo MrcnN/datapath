@@ -107,6 +107,27 @@ export interface Session {
   blocking_session_id?: number | null;
   last_request_start_time?: string | null;
   sql_text?: string | null;
+  elapsed_time_ms?: number | null;
+  current_statement?: string | null;
+  tempdb_allocations_mb?: number | null;
+  memory_grant_mb?: number | null;
+  open_transaction_count?: number | null;
+  transaction_isolation_level?: string | null;
+  is_root_blocker?: boolean;
+  blocked_session_count?: number;
+  kill_statement?: string | null;
+  [key: string]: any;
+}
+
+export interface LiveProcessSummary {
+  total_active_sessions: number;
+  running_sessions: number;
+  blocked_sessions: number;
+  root_blockers_count: number;
+  total_tempdb_mb: number;
+  total_memory_grant_mb: number;
+  sessions: Session[];
+  is_demo?: boolean;
   [key: string]: any;
 }
 

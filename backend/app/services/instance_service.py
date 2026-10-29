@@ -17,6 +17,7 @@ from app.schemas.instances import (
     SessionInfo,
     ConfigurationItem,
     ServerConfigurationSummary,
+    LiveProcessSummary,
 )
 
 logger = logging.getLogger(__name__)
@@ -126,7 +127,7 @@ def get_sessions(
                 s.login_name,
                 s.host_name,
                 s.program_name,
-                DB_NAME(s.database_id)              AS db_name,
+                DB_NAME(COALESCE(r.database_id, s.database_id)) AS db_name,
                 s.status,
                 s.cpu_time,
                 s.reads,
@@ -136,45 +137,121 @@ def get_sessions(
                 r.command,
                 r.wait_type,
                 r.wait_time                         AS wait_time_ms,
-                r.blocking_session_id,
+                ISNULL(r.blocking_session_id, 0)    AS blocking_session_id,
                 s.last_request_start_time,
+                ISNULL(r.total_elapsed_time, DATEDIFF(millisecond, s.last_request_start_time, GETDATE())) AS elapsed_time_ms,
+                s.open_transaction_count,
+                CASE s.transaction_isolation_level
+                    WHEN 0 THEN 'Unspecified'
+                    WHEN 1 THEN 'ReadUncommitted'
+                    WHEN 2 THEN 'ReadCommitted'
+                    WHEN 3 THEN 'RepeatableRead'
+                    WHEN 4 THEN 'Serializable'
+                    WHEN 5 THEN 'Snapshot'
+                    ELSE 'ReadCommitted'
+                END                                 AS transaction_isolation_level,
+                CAST(ROUND((ISNULL(ssu.user_objects_alloc_page_count, 0) + ISNULL(ssu.internal_objects_alloc_page_count, 0)) * 8.0 / 1024.0, 2) AS FLOAT) AS tempdb_allocations_mb,
+                CAST(ROUND(ISNULL(mg.granted_memory_kb, 0) / 1024.0, 2) AS FLOAT) AS memory_grant_mb,
                 SUBSTRING(
-                    ISNULL(CAST(t.text AS NVARCHAR(MAX)), ''), 1, 500
-                )                                   AS sql_text
+                    ISNULL(CAST(t.text AS NVARCHAR(MAX)), ''), 1, 1000
+                )                                   AS sql_text,
+                SUBSTRING(
+                    ISNULL(CAST(t.text AS NVARCHAR(MAX)), ''),
+                    (ISNULL(r.statement_start_offset, 0)/2) + 1,
+                    ((CASE WHEN r.statement_end_offset = -1 OR r.statement_end_offset IS NULL
+                           THEN DATALENGTH(ISNULL(CAST(t.text AS NVARCHAR(MAX)), ''))
+                           ELSE r.statement_end_offset END - ISNULL(r.statement_start_offset, 0))/2) + 1
+                )                                   AS current_statement
             FROM sys.dm_exec_sessions s
             LEFT JOIN sys.dm_exec_requests r
                    ON r.session_id = s.session_id
             OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) t
+            LEFT JOIN sys.dm_db_session_space_usage ssu ON ssu.session_id = s.session_id
+            LEFT JOIN sys.dm_exec_query_memory_grants mg ON mg.session_id = s.session_id AND mg.request_id = r.request_id
             WHERE s.is_user_process = 1
               AND (? = 1 OR s.status != 'sleeping')
               AND ISNULL(r.wait_time, 0) >= ?
-            ORDER BY ISNULL(r.wait_time, 0) DESC
+            ORDER BY ISNULL(r.total_elapsed_time, 0) DESC, ISNULL(r.wait_time, 0) DESC;
             """,
             (1 if include_sleeping else 0, min_duration_ms),
         )
         rows = rows_to_dicts(cursor)
-        return [
-            SessionInfo(
-                session_id=r["session_id"],
-                login_name=r.get("login_name"),
-                host_name=r.get("host_name"),
-                program_name=r.get("program_name"),
-                db_name=r.get("db_name"),
-                status=r.get("status"),
-                cpu_time=r.get("cpu_time"),
-                reads=r.get("reads"),
-                writes=r.get("writes"),
-                logical_reads=r.get("logical_reads"),
-                memory_usage=r.get("memory_usage"),
-                command=r.get("command"),
-                wait_type=r.get("wait_type"),
-                wait_time_ms=r.get("wait_time_ms"),
-                blocking_session_id=r.get("blocking_session_id"),
-                last_request_start_time=r.get("last_request_start_time"),
-                sql_text=r.get("sql_text"),
+
+        blocked_counts: dict[int, int] = {}
+        for r in rows:
+            bid = r.get("blocking_session_id") or 0
+            if bid > 0:
+                blocked_counts[bid] = blocked_counts.get(bid, 0) + 1
+
+        sessions: List[SessionInfo] = []
+        for r in rows:
+            sid = r["session_id"]
+            bid = r.get("blocking_session_id") or 0
+            blocks_others = blocked_counts.get(sid, 0)
+            is_root = blocks_others > 0 and bid == 0
+            stmt = r.get("current_statement") or r.get("sql_text")
+
+            sessions.append(
+                SessionInfo(
+                    session_id=sid,
+                    login_name=r.get("login_name"),
+                    host_name=r.get("host_name"),
+                    program_name=r.get("program_name"),
+                    db_name=r.get("db_name"),
+                    status=r.get("status"),
+                    cpu_time=r.get("cpu_time"),
+                    reads=r.get("reads"),
+                    writes=r.get("writes"),
+                    logical_reads=r.get("logical_reads"),
+                    memory_usage=r.get("memory_usage"),
+                    command=r.get("command"),
+                    wait_type=r.get("wait_type"),
+                    wait_time_ms=r.get("wait_time_ms"),
+                    blocking_session_id=bid,
+                    last_request_start_time=r.get("last_request_start_time"),
+                    sql_text=r.get("sql_text"),
+                    elapsed_time_ms=int(r.get("elapsed_time_ms") or 0),
+                    current_statement=stmt,
+                    tempdb_allocations_mb=float(r.get("tempdb_allocations_mb") or 0.0),
+                    memory_grant_mb=float(r.get("memory_grant_mb") or 0.0),
+                    open_transaction_count=int(r.get("open_transaction_count") or 0),
+                    transaction_isolation_level=r.get("transaction_isolation_level") or "ReadCommitted",
+                    is_root_blocker=is_root,
+                    blocked_session_count=blocks_others,
+                    kill_statement=f"KILL {sid};",
+                )
             )
-            for r in rows
-        ]
+        return sessions
+
+
+def get_live_process_summary(
+    params: ConnectionParams,
+    active_only: bool = True,
+    min_duration_ms: int = 0,
+) -> LiveProcessSummary:
+    """Retrieve summarized real-time active sessions with KPI aggregates for the Live Process Explorer."""
+    try:
+        sessions = get_sessions(params, include_sleeping=not active_only, min_duration_ms=min_duration_ms)
+        running = len([s for s in sessions if s.status == "running"])
+        blocked = len([s for s in sessions if s.blocking_session_id and s.blocking_session_id > 0])
+        root_blockers = len([s for s in sessions if s.is_root_blocker])
+        total_tempdb = round(sum([s.tempdb_allocations_mb or 0.0 for s in sessions]), 1)
+        total_mem = round(sum([s.memory_grant_mb or 0.0 for s in sessions]), 1)
+
+        return LiveProcessSummary(
+            total_active_sessions=len(sessions),
+            running_sessions=running,
+            blocked_sessions=blocked,
+            root_blockers_count=root_blockers,
+            total_tempdb_mb=total_tempdb,
+            total_memory_grant_mb=total_mem,
+            sessions=sessions,
+            is_demo=False,
+        )
+    except Exception as exc:
+        logger.warning("Could not fetch live process summary, falling back to demo data: %s", exc)
+        from app.services.demo_data import DEMO_LIVE_PROCESS_SUMMARY
+        return DEMO_LIVE_PROCESS_SUMMARY
 
 
 def get_blocking(params: ConnectionParams) -> BlockingResponse:

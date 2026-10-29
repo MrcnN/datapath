@@ -98,3 +98,23 @@ def test_server_configurations_endpoint():
     assert "status" in item
     assert "remediation_script" in data
 
+
+def test_live_sessions_summary_endpoint():
+    res = client.get("/api/sessions/live")
+    assert res.status_code == 200
+    data = res.json()
+    assert "total_active_sessions" in data
+    assert "running_sessions" in data
+    assert "blocked_sessions" in data
+    assert "root_blockers_count" in data
+    assert "total_tempdb_mb" in data
+    assert "total_memory_grant_mb" in data
+    assert "sessions" in data
+    assert isinstance(data["sessions"], list)
+    if data["sessions"]:
+        first = data["sessions"][0]
+        assert "session_id" in first
+        assert "elapsed_time_ms" in first
+        assert "kill_statement" in first
+
+
