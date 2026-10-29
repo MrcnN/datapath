@@ -7,10 +7,22 @@
 
 ## Sıradaki Görevler (To Do)
 - [ ] Gelişmiş T-SQL script şablonlarının genişletilmesi
-- [ ] SQL Server Genişletilmiş Olaylar (Extended Events - XEvents) entegrasyonu (İleri sürüm)
-- [ ] Çoklu sunucu (multi-instance) izleme desteği (İleri sürüm)
+- [ ] Transaction log kesilme bloklayıcıları (log_reuse_wait_desc) ve açık işlem (DBCC OPENTRAN) zekası
+- [ ] Database Mail kuyruk izleme ve SQL Server kritik alarm (Severity 17-25) denetimi
+- [ ] Bellek katmanları (sys.dm_os_memory_clerks) ve Ad-hoc Plan Cache Bloat tespiti
 
 ## Tamamlananlar (Done)
+- [x] **Sürüm 5: Kurumsal SQL Server Zekası & Çoklu Ortam**
+  - [x] Çoklu sunucu (multi-server profile registry) ortam geçişi ve global üst bar seçicisi
+  - [x] Extended Events (XE) oturum yaşam döngüsü yönetimi, system_health ring buffer tanılaması ve DBA şablonları
+  - [x] Virtual Log File (VLF) mimarisi denetimi ve T-SQL küçültme/büyütme öneri motoru
+  - [x] Canlı işlem gezgini, kök bloklayıcı tanılaması ve sp_whoisactive analitiği
+  - [x] İndeks zekası: Tekrarlayan ve önek çakışmalı (redundant) indeks tespiti
+  - [x] Güvenlik zafiyet denetimi: Yetim kullanıcılar (orphaned users) ve ayrıcalık yükseltme kontrolleri
+  - [x] Veritabanı büyüme trendleri ve disk kapasite tükenme tahmini (capacity runway forecasting)
+  - [x] sp_configure sunucu yapılandırması ve DBA en iyi uygulama uyumluluk puanı (compliance scoring)
+  - [x] Yürütme planı anti-desenleri, TempDB spill ve CONVERT_IMPLICIT örtük dönüşüm tanılaması
+  - [x] SQL Server Agent iş zekası, adım adım yürütme geçmişi ve hata triyajı
 - [x] **Sürüm 0: İşlevsel MVP**
   - [x] Uygulama düzeni ve gezinme (`Sidebar`, `TopBar`, `PageHeader`)
   - [x] Gösterge Paneli (`DashboardPage`) açıkça etiketlenmiş demo verileriyle
