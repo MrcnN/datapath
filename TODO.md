@@ -7,12 +7,14 @@
 
 ## Sıradaki Görevler (To Do)
 - [ ] Gelişmiş T-SQL script şablonlarının genişletilmesi
-- [ ] Transaction log kesilme bloklayıcıları (log_reuse_wait_desc) ve açık işlem (DBCC OPENTRAN) zekası
 - [ ] Database Mail kuyruk izleme ve SQL Server kritik alarm (Severity 17-25) denetimi
-- [ ] Bellek katmanları (sys.dm_os_memory_clerks) ve Ad-hoc Plan Cache Bloat tespiti
 
 ## Tamamlananlar (Done)
 - [x] **Sürüm 5: Kurumsal SQL Server Zekası & Çoklu Ortam**
+  - [x] Açık kalan ve askıdaki işlemler (Open Transactions - sys.dm_tran_active_transactions) ve sahipsiz sleeping oturum sızıntı tespiti
+  - [x] Transaction log kesilme bloklayıcıları (log_reuse_wait_desc) kök neden teşhisi ve otomatik iyileştirme motoru
+  - [x] Buffer Pool bellek dağılımı (sys.dm_os_buffer_descriptors): Veritabanı ve RAM'de en çok yer tutan nesneler
+  - [x] Ad-hoc Plan Cache şişmesi (Plan Cache Bloat) ve 'optimize for ad hoc workloads' bellek geri kazanımı
   - [x] Çoklu sunucu (multi-server profile registry) ortam geçişi ve global üst bar seçicisi
   - [x] Extended Events (XE) oturum yaşam döngüsü yönetimi, system_health ring buffer tanılaması ve DBA şablonları
   - [x] Virtual Log File (VLF) mimarisi denetimi ve T-SQL küçültme/büyütme öneri motoru
