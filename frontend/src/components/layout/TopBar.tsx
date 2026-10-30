@@ -23,8 +23,10 @@ import {
   Check,
   Search,
   ExternalLink,
+  FileText,
   type LucideIcon,
 } from 'lucide-react';
+import DossierReportModal from '../report/DossierReportModal';
 import { getInstanceMetadata, getServerProfiles, activateServer } from '../../lib/api';
 import type { InstanceMetadata, ServerProfile, EnvironmentType } from '../../lib/types';
 import styles from './TopBar.module.css';
@@ -88,6 +90,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
   });
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
 
   // Multi-Server Profile State
   const [servers, setServers] = useState<ServerProfile[]>([]);
@@ -236,6 +239,16 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
         <button
           type="button"
           className={styles.themeToggleBtn}
+          onClick={() => setShowReportModal(true)}
+          title="Kapsamlı Mühendislik Teşhis Dosyası (Export Dossier)"
+          aria-label="Kapsamlı Mühendislik Teşhis Dosyası"
+        >
+          <FileText size={14} />
+        </button>
+
+        <button
+          type="button"
+          className={styles.themeToggleBtn}
           onClick={toggleTheme}
           title={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
           aria-label={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
@@ -378,6 +391,8 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
           </div>
         )}
       </div>
+
+      {showReportModal && <DossierReportModal onClose={() => setShowReportModal(false)} />}
     </header>
   );
 }

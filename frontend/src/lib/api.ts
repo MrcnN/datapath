@@ -45,6 +45,9 @@ import type {
   ServerProfileCreate,
   ServerProfileListResponse,
   ServerPingResponse,
+  AlertsAndMailSummary,
+  IntegrityAndCorruptionSummary,
+  MemoryGrantsSummary,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -407,6 +410,25 @@ export async function deleteServerProfile(serverId: string): Promise<{ status: s
     method: 'DELETE',
   });
 }
+
+// ── Alerts & Database Mail ───────────────────────────────────────────────────
+
+export async function getAlertsAndMailSummary(): Promise<AlertsAndMailSummary> {
+  return apiFetch<AlertsAndMailSummary>('/api/agent-jobs/alerts-and-mail');
+}
+
+// ── Database Integrity & Suspect Pages ───────────────────────────────────────
+
+export async function getIntegritySummary(): Promise<IntegrityAndCorruptionSummary> {
+  return apiFetch<IntegrityAndCorruptionSummary>('/api/backups/integrity-summary');
+}
+
+// ── Memory Grants & Semaphore ────────────────────────────────────────────────
+
+export async function getMemoryGrantsSummary(): Promise<MemoryGrantsSummary> {
+  return apiFetch<MemoryGrantsSummary>('/api/tempdb-memory/memory-grants');
+}
+
 
 
 

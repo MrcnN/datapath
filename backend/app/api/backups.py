@@ -7,11 +7,17 @@ from fastapi import APIRouter, Query, HTTPException
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.backups import BackupRecord, DatabaseIntegrityCheck, RecoveryReadiness
+from app.schemas.backups import (
+    BackupRecord,
+    RecoveryReadiness,
+    DatabaseIntegrityCheck,
+    IntegrityAndCorruptionSummary,
+)
 from app.services.backup_service import (
     get_backup_history,
-    get_database_integrity_checks,
     get_recovery_readiness,
+    get_database_integrity_checks,
+    get_integrity_and_corruption_summary,
 )
 
 logger = logging.getLogger(__name__)
@@ -71,4 +77,17 @@ def read_database_integrity():
     except Exception as exc:
         logger.error("Database integrity check error: %s", exc)
         return []
+
+
+@router.get("/backups/integrity-summary", response_model=IntegrityAndCorruptionSummary)
+def read_integrity_summary():
+    """Check database integrity status along with msdb.dbo.suspect_pages physical corruption detection."""
+    params = _get_connection_params()
+    try:
+        return get_integrity_and_corruption_summary(params)
+    except Exception as exc:
+        logger.error("Database integrity summary error: %s", exc)
+        from app.services.demo_data import DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY
+        return DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY
+
 

@@ -13,7 +13,13 @@ from app.schemas.instances import (
     ServerConfigurationSummary,
     LiveProcessSummary,
 )
-from app.schemas.backups import BackupRecord, RecoveryReadiness, DatabaseIntegrityCheck
+from app.schemas.backups import (
+    BackupRecord,
+    RecoveryReadiness,
+    DatabaseIntegrityCheck,
+    SuspectPageRecord,
+    IntegrityAndCorruptionSummary,
+)
 from app.schemas.permissions import (
     DatabaseUser,
     ServerLogin,
@@ -46,7 +52,15 @@ from app.schemas.storage import (
     LogReuseWaitDetail,
     OpenTransactionsSummary,
 )
-from app.schemas.agent_jobs import AgentJobDetail, AgentJobsSummary, JobStepHistory
+from app.schemas.agent_jobs import (
+    AgentJobDetail,
+    AgentJobsSummary,
+    JobStepHistory,
+    SQLAlertDetail,
+    DatabaseMailItem,
+    DatabaseMailStatus,
+    AlertsAndMailSummary,
+)
 from app.schemas.tempdb_memory import (
     TempDBSpaceBreakdown,
     TempDBFile,
@@ -55,6 +69,8 @@ from app.schemas.tempdb_memory import (
     BufferPoolDatabaseUsage,
     BufferPoolTopObject,
     PlanCacheBloatAnalysis,
+    QueryMemoryGrantDetail,
+    MemoryGrantsSummary,
 )
 from app.schemas.query_performance import PlanWarningQuery, PlanAntiPatternsSummary
 from app.schemas.extended_events import (
@@ -1863,6 +1879,344 @@ DEMO_EXTENDED_EVENTS_SUMMARY = ExtendedEventsSummary(
     templates=DEMO_XE_TEMPLATES,
     is_demo=True,
 )
+
+# ---------------------------------------------------------------------------
+# Database Integrity & Suspect Pages Radar Demo
+# ---------------------------------------------------------------------------
+DEMO_SUSPECT_PAGES = [
+    SuspectPageRecord(
+        database_id=5,
+        database_name="AppDb_Staging",
+        file_id=1,
+        page_id=14208,
+        event_type=2,
+        event_desc="Bad Checksum (Sayfa sağlama toplamı eşleşmiyor)",
+        error_count=3,
+        last_update_date="2026-10-28 14:12:00",
+        page_restore_sql="RESTORE DATABASE [AppDb_Staging] PAGE = '1:14208' FROM DISK = 'N:\\Backups\\AppDb_Staging_Full.bak' WITH NORECOVERY;",
+    )
+]
+
+DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY = IntegrityAndCorruptionSummary(
+    total_databases=len(DEMO_INTEGRITY_CHECKS),
+    healthy_checkdb_count=len([c for c in DEMO_INTEGRITY_CHECKS if c.status == "HEALTHY"]),
+    stale_checkdb_count=len([c for c in DEMO_INTEGRITY_CHECKS if c.status == "WARNING"]),
+    critical_checkdb_count=len([c for c in DEMO_INTEGRITY_CHECKS if c.status == "CRITICAL"]),
+    suspect_pages_count=len(DEMO_SUSPECT_PAGES),
+    has_active_corruption=True,
+    checkdb_list=DEMO_INTEGRITY_CHECKS,
+    suspect_pages=DEMO_SUSPECT_PAGES,
+    is_demo=True,
+)
+
+# ---------------------------------------------------------------------------
+# SQL Server Alerts & Database Mail Demo
+# ---------------------------------------------------------------------------
+DEMO_SQL_ALERTS = [
+    SQLAlertDetail(
+        name="Severity 017: Insufficient Resources",
+        message_id=0,
+        severity=17,
+        enabled=True,
+        delay_between_responses=60,
+        last_occurrence="2026-10-25 11:30:00",
+        occurrence_count=2,
+        has_notification=True,
+        operator_name="DBA_Team_Alerts",
+        is_best_practice_missing=False,
+        status="CONFIGURED",
+    ),
+    SQLAlertDetail(
+        name="Severity 019: Fatal Error in Resource",
+        message_id=0,
+        severity=19,
+        enabled=True,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=True,
+        operator_name="DBA_Team_Alerts",
+        is_best_practice_missing=False,
+        status="CONFIGURED",
+    ),
+    SQLAlertDetail(
+        name="Severity 020: Fatal Error in Current Process",
+        message_id=0,
+        severity=20,
+        enabled=True,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=False,
+        status="NO_OPERATOR",
+    ),
+    SQLAlertDetail(
+        name="Severity 021: Fatal Error in Database Engine Mechanism",
+        message_id=0,
+        severity=21,
+        enabled=False,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=True,
+        status="MISSING_CRITICAL",
+    ),
+    SQLAlertDetail(
+        name="Severity 022: Fatal Error Table Integrity Suspect",
+        message_id=0,
+        severity=22,
+        enabled=False,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=True,
+        status="MISSING_CRITICAL",
+    ),
+    SQLAlertDetail(
+        name="Severity 023: Fatal Error Database Integrity Suspect",
+        message_id=0,
+        severity=23,
+        enabled=False,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=True,
+        status="MISSING_CRITICAL",
+    ),
+    SQLAlertDetail(
+        name="Severity 024: Fatal Hardware Error",
+        message_id=0,
+        severity=24,
+        enabled=False,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=True,
+        status="MISSING_CRITICAL",
+    ),
+    SQLAlertDetail(
+        name="Severity 025: Fatal System Error",
+        message_id=0,
+        severity=25,
+        enabled=False,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=True,
+        status="MISSING_CRITICAL",
+    ),
+    SQLAlertDetail(
+        name="Error 823: OS Hard I/O Failure",
+        message_id=823,
+        severity=0,
+        enabled=True,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=True,
+        operator_name="DBA_Team_Alerts",
+        is_best_practice_missing=False,
+        status="CONFIGURED",
+    ),
+    SQLAlertDetail(
+        name="Error 824: Logical Consistency / Bad Checksum",
+        message_id=824,
+        severity=0,
+        enabled=True,
+        delay_between_responses=60,
+        last_occurrence="2026-10-28 14:12:00",
+        occurrence_count=1,
+        has_notification=True,
+        operator_name="DBA_Team_Alerts",
+        is_best_practice_missing=False,
+        status="CONFIGURED",
+    ),
+    SQLAlertDetail(
+        name="Error 825: Read-Retry Hardware Warning",
+        message_id=825,
+        severity=0,
+        enabled=False,
+        delay_between_responses=60,
+        last_occurrence=None,
+        occurrence_count=0,
+        has_notification=False,
+        operator_name=None,
+        is_best_practice_missing=True,
+        status="MISSING_CRITICAL",
+    ),
+]
+
+DEMO_FAILED_MAIL_ITEMS = [
+    DatabaseMailItem(
+        mailitem_id=1042,
+        recipients="dba-oncall@kurum.com",
+        subject="[KRİTİK ALARM] SQL Server Error 824 Tespit Edildi",
+        send_request_date="2026-10-28 14:12:05",
+        send_request_user="sa",
+        sent_status="failed",
+        last_mod_date="2026-10-28 14:14:10",
+        error_description="The mail could not be sent to the recipients because of the mail server failure. (550 5.7.1 Relay access denied).",
+    ),
+    DatabaseMailItem(
+        mailitem_id=1043,
+        recipients="operasyon@kurum.com",
+        subject="Günlük Veritabanı Yedekleme Raporu",
+        send_request_date="2026-10-29 06:00:00",
+        send_request_user="SQLAgentUser",
+        sent_status="failed",
+        last_mod_date="2026-10-29 06:02:15",
+        error_description="Connection to SMTP host mail.kurum.local timed out after 60 seconds.",
+    ),
+]
+
+CREATE_MISSING_ALERTS_SCRIPT = """-- =====================================================================
+-- Eksik SQL Server Kritik Sistem Alarmlarını Oluşturma Betiği (Review-Only)
+-- Bu betik Severity 17-25 ve Error 823, 824, 825 alarmlarını oluşturur
+-- ve 'DBA_Team_Alerts' operatörüne e-posta bildirimi tanımlar.
+-- =====================================================================
+USE [msdb];
+GO
+
+-- 1. Operatör kontrolü
+IF NOT EXISTS (SELECT 1 FROM msdb.dbo.sysoperators WHERE name = N'DBA_Team_Alerts')
+BEGIN
+    EXEC msdb.dbo.sp_add_operator 
+        @name=N'DBA_Team_Alerts', 
+        @enabled=1, 
+        @email_address=N'dba@yourcompany.com';
+END
+GO
+
+-- 2. Error 823: Hard I/O Failure
+IF NOT EXISTS (SELECT 1 FROM msdb.dbo.sysalerts WHERE message_id = 823)
+    EXEC msdb.dbo.sp_add_alert @name=N'Error 823: Hard I/O Failure', @message_id=823, @severity=0, @enabled=1, @delay_between_responses=60, @include_event_description_in=1;
+
+-- 3. Error 824: Logical Page Checksum Error
+IF NOT EXISTS (SELECT 1 FROM msdb.dbo.sysalerts WHERE message_id = 824)
+    EXEC msdb.dbo.sp_add_alert @name=N'Error 824: Logical Consistency I/O Error', @message_id=824, @severity=0, @enabled=1, @delay_between_responses=60, @include_event_description_in=1;
+
+-- 4. Error 825: Read-Retry Warning (Disk Dying)
+IF NOT EXISTS (SELECT 1 FROM msdb.dbo.sysalerts WHERE message_id = 825)
+    EXEC msdb.dbo.sp_add_alert @name=N'Error 825: Read-Retry I/O Warning', @message_id=825, @severity=0, @enabled=1, @delay_between_responses=60, @include_event_description_in=1;
+
+-- 5. Severity 17 - 25 Alarmları
+DECLARE @sev INT = 17;
+WHILE @sev <= 25
+BEGIN
+    DECLARE @alert_name NVARCHAR(100) = N'Severity ' + RIGHT('00' + CAST(@sev AS NVARCHAR(2)), 3);
+    IF NOT EXISTS (SELECT 1 FROM msdb.dbo.sysalerts WHERE severity = @sev)
+    BEGIN
+        EXEC msdb.dbo.sp_add_alert @name=@alert_name, @message_id=0, @severity=@sev, @enabled=1, @delay_between_responses=60, @include_event_description_in=1;
+        EXEC msdb.dbo.sp_add_notification @alert_name=@alert_name, @operator_name=N'DBA_Team_Alerts', @notification_method=1;
+    END
+    SET @sev = @sev + 1;
+END
+GO
+"""
+
+DEMO_ALERTS_AND_MAIL_SUMMARY = AlertsAndMailSummary(
+    total_alerts=len(DEMO_SQL_ALERTS),
+    critical_alerts_missing_count=len([a for a in DEMO_SQL_ALERTS if a.is_best_practice_missing]),
+    has_unnotified_alerts=len([a for a in DEMO_SQL_ALERTS if not a.has_notification and a.enabled]) > 0,
+    mail_status=DatabaseMailStatus(
+        mail_queue_status="STARTED",
+        total_failed_items=len(DEMO_FAILED_MAIL_ITEMS),
+        total_unsent_items=3,
+        total_sent_items=4180,
+        recent_failed_items=DEMO_FAILED_MAIL_ITEMS,
+        restart_queue_sql="EXEC msdb.dbo.sysmail_stop_sp;\nWAITFOR DELAY '00:00:02';\nEXEC msdb.dbo.sysmail_start_sp;",
+        cleanup_failed_sql="-- 30 günden eski başarısız mailleri temizleme:\nDECLARE @oldest_date DATETIME = DATEADD(dd, -30, GETDATE());\nEXEC msdb.dbo.sysmail_delete_mailitems_sp @sent_before = @oldest_date, @sent_status = 'failed';",
+    ),
+    alerts=DEMO_SQL_ALERTS,
+    create_missing_alerts_sql=CREATE_MISSING_ALERTS_SCRIPT,
+    is_demo=True,
+)
+
+# ---------------------------------------------------------------------------
+# Query Memory Grants Demo
+# ---------------------------------------------------------------------------
+DEMO_MEMORY_GRANTS = [
+    QueryMemoryGrantDetail(
+        session_id=74,
+        request_id=0,
+        scheduler_id=3,
+        dop=4,
+        request_time="2026-10-30 16:15:20",
+        grant_time="2026-10-30 16:15:21",
+        requested_memory_mb=1450.0,
+        granted_memory_mb=1450.0,
+        required_memory_mb=24.0,
+        used_memory_mb=1320.0,
+        max_used_memory_mb=1410.0,
+        ideal_memory_mb=1450.0,
+        is_waiting=False,
+        wait_time_ms=0,
+        resource_semaphore_id=0,
+        query_text="SELECT o.CustomerID, SUM(od.Quantity * od.UnitPrice) FROM Orders o JOIN OrderDetails od ON o.OrderID = od.OrderID GROUP BY o.CustomerID ORDER BY 2 DESC OPTION(MAXDOP 4);",
+        waste_ratio_percent=2.7,
+    ),
+    QueryMemoryGrantDetail(
+        session_id=89,
+        request_id=0,
+        scheduler_id=1,
+        dop=8,
+        request_time="2026-10-30 16:20:00",
+        grant_time=None,
+        requested_memory_mb=3200.0,
+        granted_memory_mb=0.0,
+        required_memory_mb=64.0,
+        used_memory_mb=0.0,
+        max_used_memory_mb=0.0,
+        ideal_memory_mb=3200.0,
+        is_waiting=True,
+        wait_time_ms=18400,
+        resource_semaphore_id=0,
+        query_text="SELECT h.HistoryId, h.LogPayload, d.DocumentText FROM AuditHistory h HASH JOIN DocumentStore d ON h.DocId = d.DocId WHERE h.CreatedAt >= '2026-01-01';",
+        waste_ratio_percent=0.0,
+    ),
+    QueryMemoryGrantDetail(
+        session_id=102,
+        request_id=0,
+        scheduler_id=2,
+        dop=2,
+        request_time="2026-10-30 16:18:45",
+        grant_time="2026-10-30 16:18:46",
+        requested_memory_mb=2100.0,
+        granted_memory_mb=2100.0,
+        required_memory_mb=12.0,
+        used_memory_mb=85.0,
+        max_used_memory_mb=98.0,
+        ideal_memory_mb=2100.0,
+        is_waiting=False,
+        wait_time_ms=0,
+        resource_semaphore_id=0,
+        query_text="SELECT DISTINCT p.ProductCode, p.Title, s.WarehouseBin FROM Products p LEFT JOIN StockLevels s ON p.ProductId = s.ProductId WHERE p.IsActive = 1;",
+        waste_ratio_percent=95.3,
+    ),
+]
+
+DEMO_MEMORY_GRANTS_SUMMARY = MemoryGrantsSummary(
+    total_grant_count=len(DEMO_MEMORY_GRANTS),
+    waiting_grant_count=len([g for g in DEMO_MEMORY_GRANTS if g.is_waiting]),
+    total_granted_mb=sum(g.granted_memory_mb for g in DEMO_MEMORY_GRANTS),
+    total_requested_mb=sum(g.requested_memory_mb for g in DEMO_MEMORY_GRANTS),
+    semaphore_pressure="PRESSURE_DETECTED",
+    grants=DEMO_MEMORY_GRANTS,
+    is_demo=True,
+)
+
 
 
 

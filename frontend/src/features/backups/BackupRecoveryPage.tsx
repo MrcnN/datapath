@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, History, HeartPulse, Copy, Check, AlertTriangle, Code2 } from 'lucide-react';
+import { ShieldCheck, History, HeartPulse, Copy, Check, AlertTriangle, Code2, AlertOctagon, Flame } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
-import { getBackupHistory, getRecoveryReadiness, getDatabaseIntegrityChecks } from '../../lib/api';
-import type { BackupEntry, RecoveryReadiness, DatabaseIntegrityCheck } from '../../lib/types';
+import { getBackupHistory, getRecoveryReadiness, getDatabaseIntegrityChecks, getIntegritySummary } from '../../lib/api';
+import type { BackupEntry, RecoveryReadiness, DatabaseIntegrityCheck, IntegrityAndCorruptionSummary, SuspectPageRecord } from '../../lib/types';
 import styles from './BackupRecoveryPage.module.css';
 
 function formatAge(hours?: number | null, dateStr?: string | null): string {
@@ -30,6 +30,7 @@ export default function BackupRecoveryPage() {
   const [history, setHistory] = useState<BackupEntry[]>([]);
   const [readiness, setReadiness] = useState<RecoveryReadiness[]>([]);
   const [integrityList, setIntegrityList] = useState<DatabaseIntegrityCheck[]>([]);
+  const [integritySummary, setIntegritySummary] = useState<IntegrityAndCorruptionSummary | null>(null);
   const [daysBack, setDaysBack] = useState<number>(30);
   const [backupType, setBackupType] = useState<string>('all');
   const [loading, setLoading] = useState<boolean>(true);
@@ -43,14 +44,17 @@ export default function BackupRecoveryPage() {
       try {
         setLoading(true);
         setError(null);
-        const [histData, readyData, intData] = await Promise.all([
+        const [histData, readyData, intSummary] = await Promise.all([
           getBackupHistory({ days_back: daysBack, backup_type: backupType }).catch(() => []),
           getRecoveryReadiness().catch(() => []),
-          getDatabaseIntegrityChecks().catch(() => []),
+          getIntegritySummary().catch(() => null),
         ]);
         setHistory(histData);
         setReadiness(readyData);
-        setIntegrityList(intData);
+        if (intSummary) {
+          setIntegritySummary(intSummary);
+          setIntegrityList(intSummary.checkdb_list || []);
+        }
       } catch (err: any) {
         setError(err.message || 'Yedekleme ve bütünlük verileri alınamadı');
       } finally {
@@ -177,6 +181,57 @@ export default function BackupRecoveryPage() {
           onClick={() => setSelectedCheckdbSql({ dbName: item.database_name, sql: item.integrity_check_sql })}
         >
           <Code2 size={13} /> CHECKDB Betiği
+        </button>
+      ),
+    },
+  ];
+
+  const suspectColumns: Column<SuspectPageRecord>[] = [
+    {
+      key: 'database_name',
+      label: 'Veritabanı',
+      sortable: true,
+      render: (sp) => <strong>{sp.database_name}</strong>,
+    },
+    {
+      key: 'page_id',
+      label: 'Dosya & Sayfa No',
+      render: (sp) => (
+        <span style={{ fontFamily: 'monospace', fontSize: '12px', color: 'var(--status-danger)', fontWeight: 700 }}>
+          Dosya {sp.file_id} : Sayfa {sp.page_id}
+        </span>
+      ),
+    },
+    {
+      key: 'event_desc',
+      label: 'Hata Türü (Bozulma Nedeni)',
+      render: (sp) => (
+        <span style={{ fontSize: '12px', color: '#fca5a5', fontWeight: 600 }}>
+          {sp.event_desc}
+        </span>
+      ),
+    },
+    {
+      key: 'error_count',
+      label: 'Hata Sayısı',
+      sortable: true,
+      render: (sp) => <span style={{ fontWeight: 700 }}>{sp.error_count} kez</span>,
+    },
+    {
+      key: 'last_update_date',
+      label: 'Son Tespit',
+      sortable: true,
+      render: (sp) => <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sp.last_update_date}</span>,
+    },
+    {
+      key: 'actions',
+      label: 'Sayfa Kurtarma (T-SQL)',
+      render: (sp) => (
+        <button
+          className={styles.actionBtn}
+          onClick={() => setSelectedCheckdbSql({ dbName: `${sp.database_name} (Sayfa ${sp.file_id}:${sp.page_id})`, sql: sp.page_restore_sql })}
+        >
+          <Code2 size={13} /> Page Restore Betiği
         </button>
       ),
     },
@@ -316,6 +371,74 @@ export default function BackupRecoveryPage() {
       {/* Tab 3: Database Integrity & DBCC CHECKDB */}
       {activeTab === 'integrity' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {/* Integrity KPI Summary Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: 'var(--space-4)' }}>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Toplam Veritabanı</span>
+                <ShieldCheck size={18} color="var(--accent-blue)" />
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--text-primary)' }}>{integritySummary?.total_databases || integrityList.length}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Online veritabanları</div>
+            </div>
+
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Sağlıklı CHECKDB</span>
+                <ShieldCheck size={18} color="var(--status-success)" />
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: 'var(--status-success)' }}>
+                {integritySummary?.healthy_checkdb_count || integrityList.filter(c => c.status === 'HEALTHY').length} DB
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Son 7 gün içinde temiz</div>
+            </div>
+
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Gecikmiş / Kritik DB</span>
+                <AlertTriangle size={18} color="var(--status-warning)" />
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: (integritySummary?.critical_checkdb_count || 0) > 0 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
+                {(integritySummary?.critical_checkdb_count || 0) + (integritySummary?.stale_checkdb_count || 0)} DB
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>7 günden eski veya hiç yapılmamış</div>
+            </div>
+
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border-card)', borderRadius: 'var(--radius-lg)', padding: '16px 20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600, textTransform: 'uppercase' }}>Bozuk Sayfa Radarı</span>
+                <AlertOctagon size={18} color={(integritySummary?.suspect_pages_count || 0) > 0 ? 'var(--status-danger)' : 'var(--status-success)'} />
+              </div>
+              <div style={{ fontSize: '22px', fontWeight: 700, color: (integritySummary?.suspect_pages_count || 0) > 0 ? 'var(--status-danger)' : 'var(--status-success)' }}>
+                {integritySummary?.suspect_pages_count || 0} Sayfa
+              </div>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>msdb.dbo.suspect_pages</div>
+            </div>
+          </div>
+
+          {/* Suspect Pages Warning Banner and Table */}
+          {(integritySummary?.suspect_pages?.length || 0) > 0 && (
+            <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '8px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#fca5a5' }}>
+                <AlertOctagon size={24} style={{ flexShrink: 0 }} />
+                <div>
+                  <strong style={{ fontSize: '14px' }}>ACİL UYARI: msdb.dbo.suspect_pages tablosunda bozuk sayfalar (Page Corruption) tespit edildi!</strong>
+                  <div style={{ fontSize: '12px', marginTop: '2px' }}>
+                    SQL Server I/O alt sisteminde bozulmuş 8KB veri sayfaları yakaladı. İlgili sayfalar için acil disk/donanım kontrolü ve Page Restore uygulanmalıdır.
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--bg-surface)', borderRadius: '6px', overflow: 'hidden', border: '1px solid var(--border-card)' }}>
+                <DataTable
+                  columns={suspectColumns}
+                  data={integritySummary?.suspect_pages || []}
+                  emptyMessage="Bozuk sayfa kaydı yok."
+                />
+              </div>
+            </div>
+          )}
+
           <div className={styles.alertBox}>
             <ShieldCheck size={20} style={{ color: 'var(--accent-blue)', display: 'inline', marginRight: '8px', verticalAlign: '-3px' }} />
             <strong>DBCC CHECKDB Bütünlük Kuralı:</strong> Bozuk (corrupted) bir veritabanının yedeği de bozuktur. Kurumsal DBA standartları ve ISO/KVKK denetimleri gereği veritabanlarında en az haftada bir kez DBCC CHECKDB başarıyla tamamlanmış olmalıdır.

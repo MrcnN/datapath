@@ -13,8 +13,13 @@ from app.schemas.tempdb_memory import (
     BufferPoolDatabaseUsage,
     BufferPoolTopObject,
     PlanCacheBloatAnalysis,
+    QueryMemoryGrantDetail,
+    MemoryGrantsSummary,
 )
-from app.services.demo_data import DEMO_TEMPDB_MEMORY_SUMMARY
+from app.services.demo_data import (
+    DEMO_TEMPDB_MEMORY_SUMMARY,
+    DEMO_MEMORY_GRANTS_SUMMARY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -404,6 +409,105 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
         logger.error("Failed to query TempDB and memory summary: %s", exc)
         return DEMO_TEMPDB_MEMORY_SUMMARY
 
+
+def get_memory_grants_summary(params: Optional[ConnectionParams] = None) -> MemoryGrantsSummary:
+    """Retrieve active and waiting query memory grants (sys.dm_exec_query_memory_grants)
+
+    and detect RESOURCE_SEMAPHORE wait pressure and memory over-grant waste."""
+    conn = get_db_connection(params)
+    if not conn:
+        logger.info("TempDBMemoryService: No connection, returning demo memory grants.")
+        return DEMO_MEMORY_GRANTS_SUMMARY
+
+    try:
+        cursor = conn.cursor()
+        query = """
+        SELECT 
+            mg.session_id,
+            mg.request_id,
+            mg.scheduler_id,
+            mg.dop,
+            CONVERT(VARCHAR(19), mg.request_time, 120) AS request_time,
+            CONVERT(VARCHAR(19), mg.grant_time, 120) AS grant_time,
+            CAST(ROUND(mg.requested_memory_kb / 1024.0, 2) AS FLOAT) AS requested_memory_mb,
+            CAST(ROUND(mg.granted_memory_kb / 1024.0, 2) AS FLOAT) AS granted_memory_mb,
+            CAST(ROUND(mg.required_memory_kb / 1024.0, 2) AS FLOAT) AS required_memory_mb,
+            CAST(ROUND(mg.used_memory_kb / 1024.0, 2) AS FLOAT) AS used_memory_mb,
+            CAST(ROUND(mg.max_used_memory_kb / 1024.0, 2) AS FLOAT) AS max_used_memory_mb,
+            CAST(ROUND(mg.ideal_memory_kb / 1024.0, 2) AS FLOAT) AS ideal_memory_mb,
+            CASE WHEN mg.grant_time IS NULL THEN 1 ELSE 0 END AS is_waiting,
+            ISNULL(DATEDIFF(MILLISECOND, mg.request_time, ISNULL(mg.grant_time, GETDATE())), 0) AS wait_time_ms,
+            ISNULL(mg.resource_semaphore_id, 0) AS resource_semaphore_id,
+            ISNULL(SUBSTRING(t.text, (r.statement_start_offset/2)+1, 
+                ((CASE r.statement_end_offset WHEN -1 THEN DATALENGTH(t.text) ELSE r.statement_end_offset END - r.statement_start_offset)/2) + 1), t.text) AS query_text
+        FROM sys.dm_exec_query_memory_grants mg
+        LEFT JOIN sys.dm_exec_requests r ON mg.session_id = r.session_id AND mg.request_id = r.request_id
+        OUTER APPLY sys.dm_exec_sql_text(ISNULL(r.sql_handle, mg.plan_handle)) t
+        ORDER BY is_waiting DESC, mg.requested_memory_kb DESC;
+        """
+        cursor.execute(query)
+        rows = rows_to_dicts(cursor)
+        cursor.close()
+        conn.close()
+
+        grants: List[QueryMemoryGrantDetail] = []
+        waiting_count = 0
+        max_wait_ms = 0
+
+        for r in rows:
+            is_wait = bool(r.get("is_waiting", 0))
+            w_ms = int(r.get("wait_time_ms", 0) or 0)
+            if is_wait:
+                waiting_count += 1
+                if w_ms > max_wait_ms:
+                    max_wait_ms = w_ms
+
+            req_mb = float(r.get("requested_memory_mb", 0.0) or 0.0)
+            grant_mb = float(r.get("granted_memory_mb", 0.0) or 0.0)
+            max_used_mb = float(r.get("max_used_memory_mb", 0.0) or 0.0)
+
+            waste_pct = 0.0
+            if grant_mb > 0:
+                waste_pct = max(0.0, round(((grant_mb - max_used_mb) / grant_mb) * 100, 1))
+
+            grants.append(
+                QueryMemoryGrantDetail(
+                    session_id=int(r.get("session_id", 0)),
+                    request_id=int(r.get("request_id", 0)),
+                    scheduler_id=int(r.get("scheduler_id", 0)),
+                    dop=int(r.get("dop", 1)),
+                    request_time=str(r.get("request_time", "")),
+                    grant_time=str(r.get("grant_time", "")) or None,
+                    requested_memory_mb=req_mb,
+                    granted_memory_mb=grant_mb,
+                    required_memory_mb=float(r.get("required_memory_mb", 0.0) or 0.0),
+                    used_memory_mb=float(r.get("used_memory_mb", 0.0) or 0.0),
+                    max_used_memory_mb=max_used_mb,
+                    ideal_memory_mb=float(r.get("ideal_memory_mb", 0.0) or 0.0),
+                    is_waiting=is_wait,
+                    wait_time_ms=w_ms,
+                    resource_semaphore_id=int(r.get("resource_semaphore_id", 0)),
+                    query_text=str(r.get("query_text", "")).strip() or "-- Metin DMV önbelleğinde bulunamadı",
+                    waste_ratio_percent=waste_pct,
+                )
+            )
+
+        pressure = "HEALTHY"
+        if waiting_count > 0 and max_wait_ms > 5000:
+            pressure = "CRITICAL_STARVATION"
+        elif waiting_count > 0:
+            pressure = "PRESSURE_DETECTED"
+
+        return MemoryGrantsSummary(
+            total_grant_count=len(grants),
+            waiting_grant_count=waiting_count,
+            total_granted_mb=round(sum(g.granted_memory_mb for g in grants), 2),
+            total_requested_mb=round(sum(g.requested_memory_mb for g in grants), 2),
+            semaphore_pressure=pressure,
+            grants=grants,
+            is_demo=False,
+        )
     except Exception as exc:
-        logger.error("Failed to query TempDB and memory summary: %s", exc)
-        return DEMO_TEMPDB_MEMORY_SUMMARY
+        logger.error("Failed to query memory grants: %s", exc)
+        return DEMO_MEMORY_GRANTS_SUMMARY
+

@@ -9,8 +9,16 @@ from app.schemas.agent_jobs import (
     AgentJobDetail,
     AgentJobsSummary,
     JobStepHistory,
+    SQLAlertDetail,
+    DatabaseMailItem,
+    DatabaseMailStatus,
+    AlertsAndMailSummary,
 )
-from app.services.demo_data import DEMO_AGENT_JOBS_SUMMARY
+from app.services.demo_data import (
+    DEMO_AGENT_JOBS_SUMMARY,
+    DEMO_ALERTS_AND_MAIL_SUMMARY,
+    CREATE_MISSING_ALERTS_SCRIPT,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -214,3 +222,202 @@ def get_job_step_history(job_id: str, params: Optional[ConnectionParams] = None)
     except Exception as exc:
         logger.warning("Failed to fetch job step history: %s", exc)
         return []
+
+
+def get_alerts_and_mail_summary(params: Optional[ConnectionParams] = None) -> AlertsAndMailSummary:
+    """Retrieve SQL Server alerts, critical error definitions (Severity 17-25, 823-825),
+
+    and Database Mail queue status and delivery failures."""
+    conn = get_db_connection(params)
+    if not conn:
+        logger.info("AgentJobsService: No connection, returning demo alerts and mail data.")
+        return DEMO_ALERTS_AND_MAIL_SUMMARY
+
+    try:
+        cursor = conn.cursor()
+
+        # 1. Fetch configured alerts
+        alerts_query = """
+        SELECT 
+            a.name,
+            ISNULL(a.message_id, 0) AS message_id,
+            ISNULL(a.severity, 0) AS severity,
+            a.enabled,
+            ISNULL(a.delay_between_responses, 0) AS delay_between_responses,
+            a.last_occurrence_date,
+            a.last_occurrence_time,
+            ISNULL(a.occurrence_count, 0) AS occurrence_count,
+            ISNULL(a.has_notification, 0) AS has_notification,
+            ISNULL(o.name, '') AS operator_name
+        FROM msdb.dbo.sysalerts a
+        LEFT JOIN msdb.dbo.sysnotifications n ON a.id = n.alert_id
+        LEFT JOIN msdb.dbo.sysoperators o ON n.operator_id = o.id
+        ORDER BY a.severity DESC, a.message_id DESC, a.name ASC;
+        """
+        cursor.execute(alerts_query)
+        alert_rows = rows_to_dicts(cursor)
+
+        alerts_list: List[SQLAlertDetail] = []
+        configured_sev_set = set()
+        configured_msg_set = set()
+
+        for ar in alert_rows:
+            sev = int(ar.get("severity", 0))
+            msg_id = int(ar.get("message_id", 0))
+            if sev > 0:
+                configured_sev_set.add(sev)
+            if msg_id > 0:
+                configured_msg_set.add(msg_id)
+
+            has_notif = bool(ar.get("has_notification", 0))
+            op_name = str(ar.get("operator_name", "")).strip() or None
+            status_val = "CONFIGURED"
+            if not has_notif or not op_name:
+                status_val = "NO_OPERATOR"
+
+            alerts_list.append(
+                SQLAlertDetail(
+                    name=str(ar.get("name", "")),
+                    message_id=msg_id,
+                    severity=sev,
+                    enabled=bool(ar.get("enabled", True)),
+                    delay_between_responses=int(ar.get("delay_between_responses", 0)),
+                    last_occurrence=_format_sql_datetime(ar.get("last_occurrence_date"), ar.get("last_occurrence_time")),
+                    occurrence_count=int(ar.get("occurrence_count", 0)),
+                    has_notification=has_notif,
+                    operator_name=op_name,
+                    is_best_practice_missing=False,
+                    status=status_val,
+                )
+            )
+
+        # 2. Check missing best-practice alerts (823, 824, 825, Severity 17-25)
+        critical_messages = {
+            823: "Error 823: Hard I/O Failure",
+            824: "Error 824: Logical Consistency Checksum Error",
+            825: "Error 825: Read-Retry Warning",
+        }
+        for mid, mname in critical_messages.items():
+            if mid not in configured_msg_set:
+                alerts_list.append(
+                    SQLAlertDetail(
+                        name=mname,
+                        message_id=mid,
+                        severity=0,
+                        enabled=False,
+                        delay_between_responses=60,
+                        last_occurrence=None,
+                        occurrence_count=0,
+                        has_notification=False,
+                        operator_name=None,
+                        is_best_practice_missing=True,
+                        status="MISSING_CRITICAL",
+                    )
+                )
+
+        for s in range(17, 26):
+            if s not in configured_sev_set:
+                alerts_list.append(
+                    SQLAlertDetail(
+                        name=f"Severity {str(s).zfill(3)} System Alert",
+                        message_id=0,
+                        severity=s,
+                        enabled=False,
+                        delay_between_responses=60,
+                        last_occurrence=None,
+                        occurrence_count=0,
+                        has_notification=False,
+                        operator_name=None,
+                        is_best_practice_missing=True,
+                        status="MISSING_CRITICAL",
+                    )
+                )
+
+        # 3. Check Database Mail status & failures
+        mail_queue_status = "STARTED"
+        total_failed = 0
+        total_unsent = 0
+        total_sent = 0
+        failed_mail_items: List[DatabaseMailItem] = []
+
+        try:
+            cursor.execute("""
+            SELECT 
+                COUNT(CASE WHEN sent_status = 'failed' THEN 1 END) AS total_failed,
+                COUNT(CASE WHEN sent_status = 'unsent' THEN 1 END) AS total_unsent,
+                COUNT(CASE WHEN sent_status = 'sent' THEN 1 END) AS total_sent
+            FROM msdb.dbo.sysmail_mailitems;
+            """)
+            mrow = cursor.fetchone()
+            if mrow:
+                total_failed = int(mrow[0] or 0)
+                total_unsent = int(mrow[1] or 0)
+                total_sent = int(mrow[2] or 0)
+
+            # Recent failed items
+            failed_query = """
+            SELECT TOP 20
+                m.mailitem_id,
+                ISNULL(m.recipients, '') AS recipients,
+                ISNULL(m.subject, '') AS subject,
+                CONVERT(VARCHAR(19), m.send_request_date, 120) AS send_request_date,
+                ISNULL(m.send_request_user, '') AS send_request_user,
+                m.sent_status,
+                CONVERT(VARCHAR(19), m.last_mod_date, 120) AS last_mod_date,
+                ISNULL(l.description, '') AS error_description
+            FROM msdb.dbo.sysmail_mailitems m
+            LEFT JOIN (
+                SELECT mailitem_id, description,
+                       ROW_NUMBER() OVER(PARTITION BY mailitem_id ORDER BY log_date DESC) as rn
+                FROM msdb.dbo.sysmail_log
+                WHERE event_type = 3
+            ) l ON m.mailitem_id = l.mailitem_id AND l.rn = 1
+            WHERE m.sent_status = 'failed'
+            ORDER BY m.mailitem_id DESC;
+            """
+            cursor.execute(failed_query)
+            frows = rows_to_dicts(cursor)
+            for fr in frows:
+                failed_mail_items.append(
+                    DatabaseMailItem(
+                        mailitem_id=int(fr.get("mailitem_id", 0)),
+                        recipients=str(fr.get("recipients", "")),
+                        subject=str(fr.get("subject", "")),
+                        send_request_date=str(fr.get("send_request_date", "")),
+                        send_request_user=str(fr.get("send_request_user", "")),
+                        sent_status=str(fr.get("sent_status", "failed")),
+                        last_mod_date=str(fr.get("last_mod_date", "")) or None,
+                        error_description=str(fr.get("error_description", "")) or None,
+                    )
+                )
+        except Exception as mail_err:
+            logger.info("Database Mail tables not queryable: %s", mail_err)
+            mail_queue_status = "INACTIVE"
+
+        cursor.close()
+        conn.close()
+
+        missing_count = len([a for a in alerts_list if a.is_best_practice_missing])
+        has_unnotified = len([a for a in alerts_list if not a.has_notification and a.enabled]) > 0
+
+        return AlertsAndMailSummary(
+            total_alerts=len(alerts_list),
+            critical_alerts_missing_count=missing_count,
+            has_unnotified_alerts=has_unnotified,
+            mail_status=DatabaseMailStatus(
+                mail_queue_status=mail_queue_status,
+                total_failed_items=total_failed,
+                total_unsent_items=total_unsent,
+                total_sent_items=total_sent,
+                recent_failed_items=failed_mail_items,
+                restart_queue_sql="EXEC msdb.dbo.sysmail_stop_sp;\nWAITFOR DELAY '00:00:02';\nEXEC msdb.dbo.sysmail_start_sp;",
+                cleanup_failed_sql="-- 30 günden eski başarısız mailleri temizleme:\nDECLARE @oldest_date DATETIME = DATEADD(dd, -30, GETDATE());\nEXEC msdb.dbo.sysmail_delete_mailitems_sp @sent_before = @oldest_date, @sent_status = 'failed';",
+            ),
+            alerts=alerts_list,
+            create_missing_alerts_sql=CREATE_MISSING_ALERTS_SCRIPT,
+            is_demo=False,
+        )
+    except Exception as exc:
+        logger.error("Failed to query alerts and mail status: %s", exc)
+        return DEMO_ALERTS_AND_MAIL_SUMMARY
+

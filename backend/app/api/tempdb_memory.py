@@ -6,8 +6,11 @@ from fastapi import APIRouter
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.tempdb_memory import TempDBMemorySummary
-from app.services.tempdb_memory_service import get_tempdb_memory_summary
+from app.schemas.tempdb_memory import TempDBMemorySummary, MemoryGrantsSummary
+from app.services.tempdb_memory_service import (
+    get_tempdb_memory_summary,
+    get_memory_grants_summary,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -31,3 +34,11 @@ def read_tempdb_memory_summary():
     """Retrieve TempDB space breakdown, allocation contention, Page Life Expectancy (PLE), and Memory Clerks."""
     params = _get_connection_params()
     return get_tempdb_memory_summary(params)
+
+
+@router.get("/tempdb-memory/memory-grants", response_model=MemoryGrantsSummary)
+def read_memory_grants():
+    """Retrieve active query memory grants, wait queue on RESOURCE_SEMAPHORE, and over-grant memory waste."""
+    params = _get_connection_params()
+    return get_memory_grants_summary(params)
+

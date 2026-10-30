@@ -19,6 +19,7 @@ import DataTable, { type Column } from '../../components/ui/DataTable';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
+import MemoryGrantsViewer from './components/MemoryGrantsViewer';
 import { getTempDBMemorySummary } from '../../lib/api';
 import type {
   TempDBMemorySummary,
@@ -611,6 +612,9 @@ export default function TempDBPage() {
           </div>
         </div>
       )}
+
+      {/* Section: Query Memory Grants & RESOURCE_SEMAPHORE Contention */}
+      <MemoryGrantsViewer />
 
       {/* Section: Buffer Pool Deep Breakdown (Databases & Top Objects) */}
       <div className={styles.twoColGrid}>

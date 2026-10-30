@@ -8,8 +8,17 @@ from typing import List, Optional
 import pyodbc
 
 from app.db.connection import ConnectionParams, get_db_connection, rows_to_dicts
-from app.schemas.backups import BackupRecord, DatabaseIntegrityCheck, RecoveryReadiness
-from app.services.demo_data import DEMO_INTEGRITY_CHECKS
+from app.schemas.backups import (
+    BackupRecord,
+    DatabaseIntegrityCheck,
+    RecoveryReadiness,
+    SuspectPageRecord,
+    IntegrityAndCorruptionSummary,
+)
+from app.services.demo_data import (
+    DEMO_INTEGRITY_CHECKS,
+    DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -255,4 +264,81 @@ def get_database_integrity_checks(params: ConnectionParams) -> List[DatabaseInte
     except Exception as exc:
         logger.warning("Could not fetch live integrity checks, falling back to demo data: %s", exc)
         return DEMO_INTEGRITY_CHECKS
+
+
+def get_integrity_and_corruption_summary(params: ConnectionParams) -> IntegrityAndCorruptionSummary:
+    """Retrieve full database integrity summary, including DBCC CHECKDB history and msdb.dbo.suspect_pages radar."""
+    try:
+        checkdb_list = get_database_integrity_checks(params)
+
+        suspect_pages: List[SuspectPageRecord] = []
+        try:
+            with get_db_connection(params) as conn:
+                cursor = conn.cursor()
+                cursor.execute("""
+                SELECT 
+                    sp.database_id,
+                    ISNULL(d.name, 'DB #' + CAST(sp.database_id AS VARCHAR(10))) AS database_name,
+                    sp.file_id,
+                    sp.page_id,
+                    sp.event_type,
+                    sp.error_count,
+                    CONVERT(VARCHAR(19), sp.last_update_date, 120) AS last_update_date
+                FROM msdb.dbo.suspect_pages sp
+                LEFT JOIN sys.databases d ON sp.database_id = d.database_id
+                ORDER BY sp.last_update_date DESC;
+                """)
+                rows = rows_to_dicts(cursor)
+
+                event_map = {
+                    1: "823 Hatası (OS Hard CRC / I/O Arızası)",
+                    2: "824 Hatası (Kötü Checksum Doğrulaması)",
+                    3: "Torn Page (Eksik Yazılmış Sayfa)",
+                    4: "Restored (Kurtarıldı / Onarıldı)",
+                    5: "Repaired (DBCC ile onarıldı)",
+                    7: "Deallocated (Sayfa serbest bırakıldı)",
+                }
+
+                for r in rows:
+                    et = int(r.get("event_type", 0))
+                    dbname = str(r.get("database_name", ""))
+                    fid = int(r.get("file_id", 0))
+                    pid = int(r.get("page_id", 0))
+                    restore_sql = f"-- Sayfa bazlı kurtarma (Page Restore):\nRESTORE DATABASE [{dbname}] PAGE = '{fid}:{pid}' FROM DISK = 'N:\\Backups\\{dbname}_Full.bak' WITH NORECOVERY;\n-- Ardından en güncel Log yedeklerini WITH RECOVERY ile uygulayınız."
+                    suspect_pages.append(
+                        SuspectPageRecord(
+                            database_id=int(r.get("database_id", 0)),
+                            database_name=dbname,
+                            file_id=fid,
+                            page_id=pid,
+                            event_type=et,
+                            event_desc=event_map.get(et, f"Bilinmeyen Olay Türü ({et})"),
+                            error_count=int(r.get("error_count", 0)),
+                            last_update_date=str(r.get("last_update_date", "")),
+                            page_restore_sql=restore_sql,
+                        )
+                    )
+        except Exception as sp_err:
+            logger.info("Could not query suspect_pages: %s", sp_err)
+
+        healthy_cnt = len([c for c in checkdb_list if c.status == "HEALTHY"])
+        stale_cnt = len([c for c in checkdb_list if c.status == "WARNING"])
+        critical_cnt = len([c for c in checkdb_list if c.status == "CRITICAL"])
+        has_active = len([sp for sp in suspect_pages if sp.event_type in (1, 2, 3)]) > 0
+
+        return IntegrityAndCorruptionSummary(
+            total_databases=len(checkdb_list),
+            healthy_checkdb_count=healthy_cnt,
+            stale_checkdb_count=stale_cnt,
+            critical_checkdb_count=critical_cnt,
+            suspect_pages_count=len(suspect_pages),
+            has_active_corruption=has_active,
+            checkdb_list=checkdb_list,
+            suspect_pages=suspect_pages,
+            is_demo=False,
+        )
+    except Exception as exc:
+        logger.warning("Could not build integrity summary, falling back to demo: %s", exc)
+        return DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY
+
 

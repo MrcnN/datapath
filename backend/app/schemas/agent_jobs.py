@@ -38,3 +38,49 @@ class AgentJobsSummary(BaseModel):
     running_jobs_count: int
     jobs: List[AgentJobDetail] = []
     is_demo: bool = False
+
+
+class SQLAlertDetail(BaseModel):
+    name: str
+    message_id: int  # e.g. 823, 824, 825
+    severity: int    # 17-25
+    enabled: bool
+    delay_between_responses: int
+    last_occurrence: Optional[str] = None
+    occurrence_count: int
+    has_notification: bool
+    operator_name: Optional[str] = None
+    is_best_practice_missing: bool = False
+    status: str = "CONFIGURED"  # CONFIGURED | MISSING_CRITICAL | NO_OPERATOR
+
+
+class DatabaseMailItem(BaseModel):
+    mailitem_id: int
+    recipients: str
+    subject: str
+    send_request_date: str
+    send_request_user: str
+    sent_status: str  # failed | unsent | retrying | sent
+    last_mod_date: Optional[str] = None
+    error_description: Optional[str] = None
+
+
+class DatabaseMailStatus(BaseModel):
+    mail_queue_status: str  # STARTED | STOPPED | INACTIVE
+    total_failed_items: int
+    total_unsent_items: int
+    total_sent_items: int
+    recent_failed_items: List[DatabaseMailItem] = []
+    restart_queue_sql: str
+    cleanup_failed_sql: str
+
+
+class AlertsAndMailSummary(BaseModel):
+    total_alerts: int
+    critical_alerts_missing_count: int
+    has_unnotified_alerts: bool
+    mail_status: DatabaseMailStatus
+    alerts: List[SQLAlertDetail] = []
+    create_missing_alerts_sql: str
+    is_demo: bool = False
+

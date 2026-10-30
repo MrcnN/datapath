@@ -44,3 +44,28 @@ class DatabaseIntegrityCheck(BaseModel):
     page_verify_option: str
     is_read_only: bool
     integrity_check_sql: str
+
+
+class SuspectPageRecord(BaseModel):
+    database_id: int
+    database_name: str
+    file_id: int
+    page_id: int
+    event_type: int
+    event_desc: str
+    error_count: int
+    last_update_date: str
+    page_restore_sql: str
+
+
+class IntegrityAndCorruptionSummary(BaseModel):
+    total_databases: int
+    healthy_checkdb_count: int
+    stale_checkdb_count: int
+    critical_checkdb_count: int
+    suspect_pages_count: int
+    has_active_corruption: bool
+    checkdb_list: List[DatabaseIntegrityCheck] = []
+    suspect_pages: List[SuspectPageRecord] = []
+    is_demo: bool = False
+

@@ -11,7 +11,10 @@ import {
   HelpCircle,
   Activity,
   Layers,
+  Bell,
+  Mail,
 } from 'lucide-react';
+import AlertsAndMailViewer from './components/AlertsAndMailViewer';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -23,6 +26,7 @@ import type { AgentJobsSummary, AgentJobDetail, JobStepHistory } from '../../lib
 import styles from './AgentJobsPage.module.css';
 
 export default function AgentJobsPage() {
+  const [activeMainTab, setActiveMainTab] = useState<'jobs' | 'alerts'>('jobs');
   const [summary, setSummary] = useState<AgentJobsSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -238,7 +242,54 @@ export default function AgentJobsPage() {
 
       {summary?.is_demo && <DemoDataBanner />}
 
-      {/* KPI Cards */}
+      {/* Top Tab Switcher */}
+      <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
+        <button
+          style={{
+            background: activeMainTab === 'jobs' ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
+            color: activeMainTab === 'jobs' ? 'var(--accent-blue)' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+          onClick={() => setActiveMainTab('jobs')}
+        >
+          <CalendarClock size={16} />
+          Zamanlanmış Agent İşleri ({summary?.total_jobs || 0})
+        </button>
+        <button
+          style={{
+            background: activeMainTab === 'alerts' ? 'rgba(59, 130, 246, 0.12)' : 'transparent',
+            color: activeMainTab === 'alerts' ? 'var(--accent-blue)' : 'var(--text-secondary)',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 16px',
+            fontSize: '13px',
+            fontWeight: 600,
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+          }}
+          onClick={() => setActiveMainTab('alerts')}
+        >
+          <Bell size={16} />
+          Kritik Alarmlar & Database Mail (Severity 17-25, 823-825)
+        </button>
+      </div>
+
+      {activeMainTab === 'alerts' && <AlertsAndMailViewer />}
+
+      {activeMainTab === 'jobs' && (
+        <>
+          {/* KPI Cards */}
+
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>
           <div className={styles.kpiHeader}>
@@ -351,6 +402,8 @@ export default function AgentJobsPage() {
           emptyMessage="Kriterlere uygun SQL Agent işi bulunamadı."
         />
       </div>
+      </>
+      )}
 
       {/* Step History Drawer / Modal */}
       {selectedJob && (

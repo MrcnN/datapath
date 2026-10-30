@@ -7,8 +7,12 @@ from fastapi import APIRouter, Path
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.agent_jobs import AgentJobsSummary, JobStepHistory
-from app.services.agent_jobs_service import get_agent_jobs_summary, get_job_step_history
+from app.schemas.agent_jobs import AgentJobsSummary, JobStepHistory, AlertsAndMailSummary
+from app.services.agent_jobs_service import (
+    get_agent_jobs_summary,
+    get_job_step_history,
+    get_alerts_and_mail_summary,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +36,14 @@ def read_agent_jobs_summary():
     """Retrieve SQL Server Agent status, jobs list, last execution statuses, and failure details."""
     params = _get_connection_params()
     return get_agent_jobs_summary(params)
+
+
+@router.get("/agent-jobs/alerts-and-mail", response_model=AlertsAndMailSummary)
+def read_alerts_and_mail():
+    """Retrieve SQL Server critical alerts (Severity 17-25, 823-825) and Database Mail queue/delivery diagnostics."""
+    params = _get_connection_params()
+    return get_alerts_and_mail_summary(params)
+
 
 
 @router.get("/agent-jobs/{job_id}/history", response_model=List[JobStepHistory])

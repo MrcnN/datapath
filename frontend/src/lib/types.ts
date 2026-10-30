@@ -1074,6 +1074,114 @@ export interface ServerPingResponse {
   checked_at: string;
 }
 
+export interface SQLAlertDetail {
+  name: string;
+  message_id: number;
+  severity: number;
+  enabled: boolean;
+  delay_between_responses: number;
+  last_occurrence?: string | null;
+  occurrence_count: number;
+  has_notification: boolean;
+  operator_name?: string | null;
+  is_best_practice_missing: boolean;
+  status: string;
+  [key: string]: any;
+}
+
+export interface DatabaseMailItem {
+  mailitem_id: number;
+  recipients: string;
+  subject: string;
+  send_request_date: string;
+  send_request_user: string;
+  sent_status: string;
+  last_mod_date?: string | null;
+  error_description?: string | null;
+  [key: string]: any;
+}
+
+export interface DatabaseMailStatus {
+  mail_queue_status: string;
+  total_failed_items: number;
+  total_unsent_items: number;
+  total_sent_items: number;
+  recent_failed_items: DatabaseMailItem[];
+  restart_queue_sql: string;
+  cleanup_failed_sql: string;
+  [key: string]: any;
+}
+
+export interface AlertsAndMailSummary {
+  total_alerts: number;
+  critical_alerts_missing_count: number;
+  has_unnotified_alerts: boolean;
+  mail_status: DatabaseMailStatus;
+  alerts: SQLAlertDetail[];
+  create_missing_alerts_sql: string;
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+export interface SuspectPageRecord {
+  database_id: number;
+  database_name: string;
+  file_id: number;
+  page_id: number;
+  event_type: number;
+  event_desc: string;
+  error_count: number;
+  last_update_date: string;
+  page_restore_sql: string;
+  [key: string]: any;
+}
+
+export interface IntegrityAndCorruptionSummary {
+  total_databases: number;
+  healthy_checkdb_count: number;
+  stale_checkdb_count: number;
+  critical_checkdb_count: number;
+  suspect_pages_count: number;
+  has_active_corruption: boolean;
+  checkdb_list: DatabaseIntegrityCheck[];
+  suspect_pages: SuspectPageRecord[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+export interface QueryMemoryGrantDetail {
+  session_id: number;
+  request_id: number;
+  scheduler_id: number;
+  dop: number;
+  request_time: string;
+  grant_time?: string | null;
+  requested_memory_mb: number;
+  granted_memory_mb: number;
+  required_memory_mb: number;
+  used_memory_mb: number;
+  max_used_memory_mb: number;
+  ideal_memory_mb: number;
+  is_waiting: boolean;
+  wait_time_ms: number;
+  resource_semaphore_id: number;
+  query_text: string;
+  waste_ratio_percent: number;
+  [key: string]: any;
+}
+
+export interface MemoryGrantsSummary {
+  total_grant_count: number;
+  waiting_grant_count: number;
+  total_granted_mb: number;
+  total_requested_mb: number;
+  semaphore_pressure: string;
+  grants: QueryMemoryGrantDetail[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+
 
 
 

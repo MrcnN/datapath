@@ -38,3 +38,18 @@ def test_job_step_history_endpoint():
         assert "step_name" in first_step
         assert "run_status" in first_step
         assert "message" in first_step
+
+
+def test_alerts_and_mail_endpoint():
+    response = client.get("/api/agent-jobs/alerts-and-mail")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_alerts" in data
+    assert "critical_alerts_missing_count" in data
+    assert "mail_status" in data
+    assert "alerts" in data
+    assert "create_missing_alerts_sql" in data
+    assert len(data["alerts"]) > 0
+    assert "mail_queue_status" in data["mail_status"]
+    assert "recent_failed_items" in data["mail_status"]
+

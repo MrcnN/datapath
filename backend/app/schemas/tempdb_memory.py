@@ -96,3 +96,34 @@ class TempDBMemorySummary(BaseModel):
 
     is_demo: bool = False
 
+
+class QueryMemoryGrantDetail(BaseModel):
+    session_id: int
+    request_id: int
+    scheduler_id: int
+    dop: int
+    request_time: str
+    grant_time: Optional[str] = None
+    requested_memory_mb: float
+    granted_memory_mb: float
+    required_memory_mb: float
+    used_memory_mb: float
+    max_used_memory_mb: float
+    ideal_memory_mb: float
+    is_waiting: bool
+    wait_time_ms: int
+    resource_semaphore_id: int
+    query_text: str
+    waste_ratio_percent: float
+
+
+class MemoryGrantsSummary(BaseModel):
+    total_grant_count: int
+    waiting_grant_count: int
+    total_granted_mb: float
+    total_requested_mb: float
+    semaphore_pressure: str  # "HEALTHY" | "PRESSURE_DETECTED" | "CRITICAL_STARVATION"
+    grants: List[QueryMemoryGrantDetail] = []
+    is_demo: bool = False
+
+

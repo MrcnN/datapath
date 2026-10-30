@@ -6,11 +6,16 @@
   - [ ] Portföy sunumu için ekran görüntüleri ve GIF demolarının eklenmesi
 
 ## Sıradaki Görevler (To Do)
-- [ ] Gelişmiş T-SQL script şablonlarının genişletilmesi
-- [ ] Database Mail kuyruk izleme ve SQL Server kritik alarm (Severity 17-25) denetimi
+- [ ] Gelişmiş T-SQL script şablonlarının genişletilmesi (Index defrag, transaction snapshot, latch stats)
+- [ ] Portföy sunumu için ekran görüntüleri ve canlı demo dokümantasyonu
 
 ## Tamamlananlar (Done)
 - [x] **Sürüm 5: Kurumsal SQL Server Zekası & Çoklu Ortam**
+  - [x] Database Mail kuyruk izleme (`msdb.dbo.sysmail_mailitems`), iletilemeyen mail analizi ve kuyruk yönetimi
+  - [x] SQL Server Agent kritik alarmları (`msdb.dbo.sysalerts` - Severity 17-25 ve Error 823-825) denetimi ve eksik alarm tespit/oluşturma motoru
+  - [x] Fiziksel disk ve sayfa bozulma radarı (`msdb.dbo.suspect_pages`) ve tek tıkla Page Restore T-SQL üretimi
+  - [x] Sorgu çalışma belleği hibeleri (`sys.dm_exec_query_memory_grants`), `RESOURCE_SEMAPHORE` bekleme analitiği ve aşırı tahsis bellek israfı tespiti
+  - [x] Kapsamlı Mühendislik Teşhis Dosyası (DBA Incident & Health Dossier Export) tek tıkla Markdown, HTML/PDF ve JSON dışa aktarma sistemi
   - [x] Açık kalan ve askıdaki işlemler (Open Transactions - sys.dm_tran_active_transactions) ve sahipsiz sleeping oturum sızıntı tespiti
   - [x] Transaction log kesilme bloklayıcıları (log_reuse_wait_desc) kök neden teşhisi ve otomatik iyileştirme motoru
   - [x] Buffer Pool bellek dağılımı (sys.dm_os_buffer_descriptors): Veritabanı ve RAM'de en çok yer tutan nesneler

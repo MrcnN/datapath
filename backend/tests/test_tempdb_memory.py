@@ -59,3 +59,23 @@ def test_tempdb_memory_endpoint():
     assert "status" in bloat
     assert "remediation_script" in bloat
 
+
+def test_memory_grants_endpoint():
+    response = client.get("/api/tempdb-memory/memory-grants")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_grant_count" in data
+    assert "waiting_grant_count" in data
+    assert "total_granted_mb" in data
+    assert "semaphore_pressure" in data
+    assert data["semaphore_pressure"] in ("HEALTHY", "PRESSURE_DETECTED", "CRITICAL_STARVATION")
+    assert "grants" in data
+    assert len(data["grants"]) > 0
+    first_grant = data["grants"][0]
+    assert "session_id" in first_grant
+    assert "requested_memory_mb" in first_grant
+    assert "granted_memory_mb" in first_grant
+    assert "waste_ratio_percent" in first_grant
+    assert "query_text" in first_grant
+
+
