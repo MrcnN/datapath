@@ -206,29 +206,29 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
 
   return (
     <header className={styles.topBar}>
-      {/* Left: Breadcrumbs */}
+      {/* Left: Breadcrumbs with Icon Badge */}
       <div className={styles.leftSection}>
         <div className={styles.breadcrumbArea}>
+          <div className={styles.breadcrumbIconBadge}>
+            <RouteIcon size={15} />
+          </div>
           <span className={styles.categoryLabel}>{currentRoute.category}</span>
           <span className={styles.breadcrumbSep}>/</span>
-          <div className={styles.pageTitleBox}>
-            <RouteIcon size={14} className={styles.breadcrumbIcon} />
-            <span className={styles.breadcrumbCurrent}>{currentRoute.label}</span>
-          </div>
+          <span className={styles.breadcrumbCurrent}>{currentRoute.label}</span>
         </div>
       </div>
 
-      {/* Right: Dossier Button, Theme Toggle & Global Server Switcher Dropdown */}
+      {/* Right: Genel Sistem Özeti, Theme Toggle & Global Server Switcher Dropdown */}
       <div className={styles.rightSection}>
         <button
           type="button"
           className={styles.dossierBtn}
           onClick={() => setShowReportModal(true)}
-          title="Kapsamlı Mühendislik Teşhis Dosyası İndir & Görüntüle"
-          aria-label="Kapsamlı Mühendislik Teşhis Dosyası"
+          title="Genel Sistem Özeti ve Raporu İndir & Görüntüle"
+          aria-label="Genel Sistem Özeti"
         >
           <FileText size={14} className={styles.dossierBtnIcon} />
-          <span className={styles.dossierBtnText}>Mühendislik Teşhis Dosyası</span>
+          <span className={styles.dossierBtnText}>Genel Sistem Özeti</span>
         </button>
 
         <button

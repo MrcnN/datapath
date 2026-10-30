@@ -52,28 +52,29 @@
 }
 
 .categoryPill {
-  background: var(--bg-elevated);
+  background: rgba(255, 255, 255, 0.03);
   color: var(--text-secondary);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 5px 12px;
+  border: 1px solid var(--border-card);
+  border-radius: 7px;
+  padding: 6px 12px;
   font-size: 12px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .categoryPill:hover {
-  background: var(--bg-hover);
+  background: rgba(255, 255, 255, 0.06);
   color: #ffffff;
   border-color: var(--border-hover);
 }
 
 .categoryPillActive {
-  background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(2, 132, 199, 0.25));
-  color: #ffffff;
-  border-color: rgba(0, 210, 255, 0.5);
+  background: rgba(56, 189, 248, 0.14);
+  color: #38bdf8;
+  border-color: rgba(56, 189, 248, 0.35);
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
 }
 
 .grid {

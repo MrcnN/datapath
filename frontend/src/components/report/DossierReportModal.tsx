@@ -46,7 +46,7 @@ export default function DossierReportModal({ onClose }: DossierReportModalProps)
 
         setRawDossierData({ meta, alertsMail, integrity, memGrants, generated_at: nowStr });
 
-        let md = `# DATAPATH — SQL SERVER TEKNİK TEŞHİS VE SAĞLIK DOSYASI\n\n`;
+        let md = `# DATAPATH — GENEL SİSTEM VE SAĞLIK ÖZETİ RAPORU\n\n`;
         md += `> **Oluşturulma Tarihi:** ${nowStr}\n`;
         md += `> **Sunucu Adı:** ${serverName}\n`;
         md += `> **Sürüm:** ${edition}\n`;
@@ -146,7 +146,7 @@ export default function DossierReportModal({ onClose }: DossierReportModalProps)
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Datapath_Dossier_Report_${new Date().toISOString().substring(0, 10)}.md`;
+    link.download = `Datapath_Sistem_Ozeti_${new Date().toISOString().substring(0, 10)}.md`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -156,7 +156,7 @@ export default function DossierReportModal({ onClose }: DossierReportModalProps)
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `Datapath_Dossier_Data_${new Date().toISOString().substring(0, 10)}.json`;
+    link.download = `Datapath_Sistem_Ozeti_Veri_${new Date().toISOString().substring(0, 10)}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -168,7 +168,7 @@ export default function DossierReportModal({ onClose }: DossierReportModalProps)
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Datapath — SQL Server Teşhis Raporu</title>
+          <title>Datapath — Genel Sistem Özeti ve Sağlık Raporu</title>
           <style>
             body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #1e293b; padding: 40px; max-width: 900px; margin: 0 auto; }
             h1 { color: #0f172a; border-bottom: 2px solid #e2e8f0; padding-bottom: 12px; }
@@ -197,8 +197,8 @@ export default function DossierReportModal({ onClose }: DossierReportModalProps)
           <div className={styles.titleArea}>
             <FileText size={20} color="var(--accent-blue)" />
             <div>
-              <h3>Kapsamlı Mühendislik Teşhis Dosyası (DBA Dossier)</h3>
-              <p>Tüm operasyonel sağlık ve kriz teşhis verilerini tek tıkla derlenmiş teknik rapor olarak dışa aktarın.</p>
+              <h3>Genel Sistem Özeti (Sistem Sağlık Raporu)</h3>
+              <p>Canlı SQL Server ortamından derlenen bellek, disk, kilitlenme, bütünlük ve alarm metrikleri özeti.</p>
             </div>
           </div>
           <button className={styles.closeBtn} onClick={onClose}><X size={18} /></button>
