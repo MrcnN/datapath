@@ -15,11 +15,15 @@ from app.schemas.storage import (
     DatabaseGrowthForecast,
     GrowthHistoryPoint,
     DatabaseVLFInfo,
+    OpenTransaction,
+    LogReuseWaitDetail,
+    OpenTransactionsSummary,
 )
 from app.services.demo_data import (
     DEMO_STORAGE_SUMMARY,
     DEMO_GROWTH_FORECASTS,
     DEMO_VLF_INFOS,
+    DEMO_OPEN_TRANSACTIONS_SUMMARY,
 )
 
 logger = logging.getLogger(__name__)
@@ -504,3 +508,229 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
     except Exception as exc:
         logger.error("Failed to query storage summary: %s", exc)
         return DEMO_STORAGE_SUMMARY
+
+
+def get_open_transactions_summary(params: Optional[ConnectionParams] = None) -> OpenTransactionsSummary:
+    """Retrieve active open transactions and analyze log reuse wait blockers."""
+    conn = get_db_connection(params)
+    if not conn:
+        logger.info("StorageService: No database connection, returning demo open transactions.")
+        return DEMO_OPEN_TRANSACTIONS_SUMMARY
+
+    try:
+        cursor = conn.cursor()
+
+        # 1. Open Transactions Query
+        open_tran_query = """
+        SELECT 
+            s.session_id,
+            at.transaction_id,
+            ISNULL(at.name, 'unnamed') AS transaction_name,
+            ISNULL(DB_NAME(s.database_id), 'master') AS database_name,
+            ISNULL(s.login_name, '') AS login_name,
+            ISNULL(s.host_name, '') AS host_name,
+            ISNULL(s.program_name, '') AS program_name,
+            CONVERT(VARCHAR(19), at.transaction_begin_time, 120) AS begin_time,
+            ISNULL(DATEDIFF(SECOND, at.transaction_begin_time, GETDATE()), 0) AS duration_seconds,
+            CASE at.transaction_state
+                WHEN 0 THEN 'Başlatılmamış'
+                WHEN 1 THEN 'Başlatılmış'
+                WHEN 2 THEN 'Aktif'
+                WHEN 3 THEN 'Hazırlanmış'
+                WHEN 4 THEN 'Commit Edilmiş'
+                WHEN 5 THEN 'Hazırlık Aşamasında'
+                WHEN 6 THEN 'Aborted/Rollback'
+                ELSE 'Bilinmiyor'
+            END AS transaction_state,
+            CASE at.transaction_type
+                WHEN 1 THEN 'Okuma/Yazma (Read/Write)'
+                WHEN 2 THEN 'Salt Okunur (Read-Only)'
+                WHEN 3 THEN 'Sistem İşlemi'
+                WHEN 4 THEN 'Dağıtık İşlem'
+                ELSE 'Diğer'
+            END AS transaction_type,
+            s.status AS session_status,
+            CASE WHEN s.status = 'sleeping' AND s.open_transaction_count > 0 THEN 1 ELSE 0 END AS is_dormant_active,
+            ISNULL(s.open_transaction_count, 1) AS open_transaction_count,
+            CAST(ROUND(ISNULL(dt.database_transaction_log_bytes_used, 0) / 1048576.0, 2) AS FLOAT) AS log_bytes_used_mb,
+            ISNULL(dt.database_transaction_log_record_count, 0) AS log_records_count,
+            ISNULL(st.text, ISNULL(con_st.text, '')) AS sql_text,
+            ISNULL(blk.blocking_count, 0) AS blocking_session_count
+        FROM sys.dm_tran_active_transactions at
+        JOIN sys.dm_tran_session_transactions st_tran ON at.transaction_id = st_tran.transaction_id
+        JOIN sys.dm_exec_sessions s ON st_tran.session_id = s.session_id
+        LEFT JOIN sys.dm_tran_database_transactions dt ON at.transaction_id = dt.transaction_id
+        LEFT JOIN sys.dm_exec_requests r ON s.session_id = r.session_id
+        LEFT JOIN sys.dm_exec_connections c ON s.session_id = c.session_id
+        OUTER APPLY sys.dm_exec_sql_text(r.sql_handle) st
+        OUTER APPLY sys.dm_exec_sql_text(c.most_recent_sql_handle) con_st
+        LEFT JOIN (
+            SELECT blocking_session_id, COUNT(*) AS blocking_count 
+            FROM sys.dm_exec_requests 
+            WHERE blocking_session_id <> 0 
+            GROUP BY blocking_session_id
+        ) blk ON s.session_id = blk.blocking_session_id
+        WHERE s.is_user_process = 1
+        ORDER BY duration_seconds DESC;
+        """
+        cursor.execute(open_tran_query)
+        tran_rows = rows_to_dicts(cursor)
+
+        transactions: List[OpenTransaction] = []
+        for tr in tran_rows:
+            dur_sec = int(tr.get("duration_seconds") or 0)
+            if dur_sec >= 3600:
+                hours = dur_sec // 3600
+                mins = (dur_sec % 3600) // 60
+                dur_fmt = f"{hours} sa {mins} dk"
+            elif dur_sec >= 60:
+                mins = dur_sec // 60
+                secs = dur_sec % 60
+                dur_fmt = f"{mins} dk {secs} sn"
+            else:
+                dur_fmt = f"{dur_sec} sn"
+
+            spid = int(tr.get("session_id") or 0)
+            transactions.append(
+                OpenTransaction(
+                    session_id=spid,
+                    transaction_id=int(tr.get("transaction_id") or 0),
+                    transaction_name=str(tr.get("transaction_name") or "unnamed"),
+                    database_name=str(tr.get("database_name") or "master"),
+                    login_name=str(tr.get("login_name") or ""),
+                    host_name=str(tr.get("host_name") or ""),
+                    program_name=str(tr.get("program_name") or ""),
+                    begin_time=str(tr.get("begin_time") or ""),
+                    duration_seconds=dur_sec,
+                    duration_formatted=dur_fmt,
+                    transaction_state=str(tr.get("transaction_state") or "Aktif"),
+                    transaction_type=str(tr.get("transaction_type") or "Okuma/Yazma"),
+                    session_status=str(tr.get("session_status") or "running"),
+                    is_dormant_active=bool(tr.get("is_dormant_active", 0)),
+                    open_transaction_count=int(tr.get("open_transaction_count") or 1),
+                    log_bytes_used_mb=float(tr.get("log_bytes_used_mb") or 0.0),
+                    log_records_count=int(tr.get("log_records_count") or 0),
+                    sql_text=str(tr.get("sql_text") or "") if tr.get("sql_text") else None,
+                    blocking_session_count=int(tr.get("blocking_session_count") or 0),
+                    kill_script=f"-- DİKKAT: Yalnızca onaylı operasyonlarda çalıştırınız:\nKILL {spid};",
+                )
+            )
+
+        # 2. Log Reuse Wait Query & Analysis
+        log_reuse_query = """
+        SELECT 
+            d.name AS database_name,
+            d.recovery_model_desc AS recovery_model,
+            d.log_reuse_wait_desc,
+            CAST(ROUND(SUM(CASE WHEN f.type_desc = 'LOG' THEN f.size * 8.0 / 1024.0 ELSE 0 END), 2) AS FLOAT) AS log_size_mb
+        FROM sys.databases d
+        JOIN sys.master_files f ON d.database_id = f.database_id
+        WHERE d.state_desc = 'ONLINE'
+        GROUP BY d.name, d.recovery_model_desc, d.log_reuse_wait_desc
+        ORDER BY log_size_mb DESC;
+        """
+        cursor.execute(log_reuse_query)
+        lr_rows = rows_to_dicts(cursor)
+
+        log_reuse_waits: List[LogReuseWaitDetail] = []
+        for lr in lr_rows:
+            dbname = lr.get("database_name", "")
+            rec_model = lr.get("recovery_model", "FULL")
+            wait_desc = lr.get("log_reuse_wait_desc", "NOTHING")
+            log_size = float(lr.get("log_size_mb") or 0.0)
+
+            # Determine status & diagnostic mapping
+            if wait_desc == "NOTHING":
+                status = "HEALTHY"
+                root_cause = "Log kesilmesini (truncation) engelleyen bir durum bulunmuyor. Bir sonraki log yedeğinde veya checkpoint işleminde inaktif VLF'ler temizlenecektir."
+                impact = "Log büyümesi kontrol altında."
+                steps = ["Rutin log yedekleme planınızı sürdürün."]
+                remed_sql = f"-- {dbname} için log kesilmesi sağlıklı durumda."
+            elif wait_desc == "ACTIVE_TRANSACTION":
+                status = "CRITICAL"
+                root_cause = "Açık kalan veya uzun süredir çalışan bir işlem (Active Transaction) MinLSN değerini tutuyor. İşlem tamamlanana kadar hiçbir log alanı boşaltılamaz."
+                impact = "Log dosyası otomatik büyüyerek diski doldurabilir."
+                steps = [
+                    f"'{dbname}' üzerindeki açık işlemleri kontrol edin.",
+                    "Oturum sleeping durumundaysa geliştirici/uygulama sahibine bildirin veya KILL uygulayın.",
+                    "İşlem kapandıktan sonra log yedeği alarak log alanını geri kazanın.",
+                ]
+                remed_sql = f"-- 1. Açık işlemi inceleyin:\nDBCC OPENTRAN([{dbname}]);\nGO\n\n-- 2. Gerekirse askıdaki oturumu sonlandırın:\n-- KILL <SPID>;\nGO\n\n-- 3. Log yedeği alın:\nBACKUP LOG [{dbname}] TO DISK = N'C:\\Backups\\{dbname}_Log.trn' WITH COMPRESSION;\nGO"
+            elif wait_desc == "LOG_BACKUP":
+                status = "WARNING" if log_size < 5000 else "CRITICAL"
+                root_cause = f"Veritabanı '{rec_model}' kurtarma modelinde çalışıyor ancak son log kesilmesinden sonra yeni bir Transaction Log yedeği alınmamış."
+                impact = "Log dosyasında yer açılmıyor, her yeni işlem dosyanın diskte büyümesine neden oluyor."
+                steps = [
+                    f"'{dbname}' veritabanı için Transaction Log yedeği alın.",
+                    "SQL Agent üzerinde log yedekleme işinin (Örn: her 15 dakikada bir) çalıştığından emin olun.",
+                ]
+                remed_sql = f"BACKUP LOG [{dbname}] TO DISK = N'C:\\Backups\\{dbname}_LogBackup.trn' WITH COMPRESSION, STATS = 10;\nGO"
+            elif wait_desc == "CHECKPOINT":
+                status = "HEALTHY"
+                root_cause = "SIMPLE kurtarma modelinde bekleyen log kayıtlarının disk Checkpoint işlemi henüz gerçekleşmemiş."
+                impact = "Düşük risk. Rutin otomatik Checkpoint döngüsünde temizlenir."
+                steps = ["Gerekiyorsa manuel CHECKPOINT çalıştırılabilir."]
+                remed_sql = f"USE [{dbname}];\nCHECKPOINT;\nGO"
+            elif wait_desc in ("AVAILABILITY_GROUP", "DATABASE_MIRRORING"):
+                status = "WARNING"
+                root_cause = "AlwaysOn Availability Group veya Mirroring ikincil kopyası log kayıtlarını henüz kendi diskine yazmadı (harden etmedi)."
+                impact = "İkincil replika senkronizasyonu tamamlamadan birincil sunucuda log kesilemez."
+                steps = [
+                    "İkincil replikanın erişilebilir ve ONLINE olduğunu doğrulayın.",
+                    "Ağ gecikmesini ve replika senkronizasyon kuyruğunu kontrol edin.",
+                ]
+                remed_sql = f"SELECT replica_server_name, synchronization_health_desc, log_send_queue_size FROM sys.dm_hadr_database_replica_states WHERE is_local = 0;\nGO"
+            elif wait_desc == "REPLICATION":
+                status = "WARNING"
+                root_cause = "Transactional Replication veya Change Data Capture (CDC) Log Reader Agent henüz bekleyen işlemleri okumadı."
+                impact = "Replikasyon kuyruğu temizlenmeden log temizlenemez."
+                steps = [
+                    "SQL Server Agent üzerindeki Log Reader Agent işini kontrol edin.",
+                    "Replikasyon durdurulduysa veya artık kullanılmıyorsa sp_repldone çalıştırın.",
+                ]
+                remed_sql = f"-- Replikasyon durumunu inceleyiniz:\nEXEC sp_repltrans;\nGO"
+            else:
+                status = "WARNING"
+                root_cause = f"Log kesilmesi şu nedenle bekletiliyor: {wait_desc}."
+                impact = "Log dosyası büyüme riski."
+                steps = [f"SQL Server belgelerinde '{wait_desc}' nedenini inceleyin."]
+                remed_sql = f"-- {dbname}: Bekleme nedeni = {wait_desc}"
+
+            log_reuse_waits.append(
+                LogReuseWaitDetail(
+                    database_name=dbname,
+                    recovery_model=rec_model,
+                    log_reuse_wait_desc=wait_desc,
+                    log_size_mb=log_size,
+                    log_used_percent=50.0,
+                    status=status,
+                    root_cause_explanation=root_cause,
+                    impact_summary=impact,
+                    remediation_steps=steps,
+                    remediation_script=remed_sql,
+                )
+            )
+
+        cursor.close()
+        conn.close()
+
+        dormant_cnt = sum(1 for t in transactions if t.is_dormant_active)
+        max_dur = max((t.duration_seconds for t in transactions), default=0)
+        longest_spid = next((t.session_id for t in transactions if t.duration_seconds == max_dur), None)
+        tot_held = round(sum(t.log_bytes_used_mb for t in transactions), 2)
+
+        return OpenTransactionsSummary(
+            total_active_transactions=len(transactions),
+            dormant_open_transactions_count=dormant_cnt,
+            longest_running_duration_sec=max_dur,
+            longest_running_spid=longest_spid,
+            total_log_space_held_mb=tot_held,
+            transactions=transactions,
+            log_reuse_waits=log_reuse_waits,
+            is_demo=False,
+        )
+
+    except Exception as exc:
+        logger.error("Failed to query open transactions: %s", exc)
+        return DEMO_OPEN_TRANSACTIONS_SUMMARY
+

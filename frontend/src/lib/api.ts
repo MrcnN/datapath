@@ -34,6 +34,7 @@ import type {
   RedundantIndex,
   WaitStatsSummary,
   StorageSummary,
+  OpenTransactionsSummary,
   TempDBMemorySummary,
   AgentJobsSummary,
   JobStepHistory,
@@ -340,6 +341,10 @@ export async function getWaitStatistics(): Promise<WaitStatsSummary> {
 
 export async function getStorageSummary(): Promise<StorageSummary> {
   return apiFetch<StorageSummary>('/api/storage');
+}
+
+export async function getOpenTransactionsSummary(): Promise<OpenTransactionsSummary> {
+  return apiFetch<OpenTransactionsSummary>('/api/storage/open-transactions');
 }
 
 // ── TempDB & Memory Intelligence ──────────────────────────────

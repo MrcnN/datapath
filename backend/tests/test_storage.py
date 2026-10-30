@@ -63,3 +63,35 @@ def test_storage_summary_endpoint():
     assert first_vlf["status"] in ("HEALTHY", "WARNING", "CRITICAL")
     assert "remediation_script" in first_vlf
 
+
+def test_open_transactions_endpoint():
+    response = client.get("/api/storage/open-transactions")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_active_transactions" in data
+    assert "dormant_open_transactions_count" in data
+    assert "longest_running_duration_sec" in data
+    assert "total_log_space_held_mb" in data
+    assert "transactions" in data
+    assert "log_reuse_waits" in data
+
+    assert len(data["transactions"]) > 0
+    first_tran = data["transactions"][0]
+    assert "session_id" in first_tran
+    assert "transaction_name" in first_tran
+    assert "database_name" in first_tran
+    assert "duration_seconds" in first_tran
+    assert "is_dormant_active" in first_tran
+    assert "kill_script" in first_tran
+    assert "log_bytes_used_mb" in first_tran
+
+    assert len(data["log_reuse_waits"]) > 0
+    first_lr = data["log_reuse_waits"][0]
+    assert "database_name" in first_lr
+    assert "recovery_model" in first_lr
+    assert "log_reuse_wait_desc" in first_lr
+    assert "status" in first_lr
+    assert "root_cause_explanation" in first_lr
+    assert "remediation_script" in first_lr
+
+

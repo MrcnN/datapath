@@ -13,6 +13,7 @@ import {
   TrendingUp,
   Layers,
   Code2,
+  Clock,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -20,6 +21,7 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
+import OpenTransactionsViewer from './components/OpenTransactionsViewer';
 import { getStorageSummary } from '../../lib/api';
 import type {
   StorageSummary,
@@ -49,7 +51,7 @@ export default function StoragePage() {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'logs' | 'trace' | 'growth' | 'vlfs'>('files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs'>('files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
   const [selectedVlfForSql, setSelectedVlfForSql] = useState<DatabaseVLFInfo | null>(null);
@@ -783,6 +785,12 @@ export default function StoragePage() {
           <TrendingUp size={16} /> Kapasite & Büyüme Trendi ({summary?.growth_forecasts?.length || 0})
         </button>
         <button
+          className={`${styles.tabBtn} ${activeTab === 'open_trans' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('open_trans')}
+        >
+          <Clock size={16} /> Açık İşlemler & Log Kesilme Engelleri
+        </button>
+        <button
           className={`${styles.tabBtn} ${activeTab === 'logs' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('logs')}
         >
@@ -1021,6 +1029,9 @@ export default function StoragePage() {
           </div>
         </div>
       )}
+
+      {/* Tab: Open Transactions & Log Reuse Wait */}
+      {activeTab === 'open_trans' && <OpenTransactionsViewer />}
 
       {/* T-SQL Review Modal */}
       {selectedFileForSql && (

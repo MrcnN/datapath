@@ -777,6 +777,54 @@ export interface StorageSummary {
   [key: string]: any;
 }
 
+export interface OpenTransaction {
+  session_id: number;
+  transaction_id: number;
+  transaction_name: string;
+  database_name: string;
+  login_name: string;
+  host_name: string;
+  program_name: string;
+  begin_time: string;
+  duration_seconds: number;
+  duration_formatted: string;
+  transaction_state: string;
+  transaction_type: string;
+  session_status: string;
+  is_dormant_active: boolean;
+  open_transaction_count: number;
+  log_bytes_used_mb: number;
+  log_records_count: number;
+  sql_text?: string | null;
+  blocking_session_count: number;
+  kill_script: string;
+}
+
+export interface LogReuseWaitDetail {
+  database_name: string;
+  recovery_model: string;
+  log_reuse_wait_desc: string;
+  log_size_mb: number;
+  log_used_percent: number;
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | string;
+  root_cause_explanation: string;
+  impact_summary: string;
+  remediation_steps: string[];
+  remediation_script: string;
+}
+
+export interface OpenTransactionsSummary {
+  total_active_transactions: number;
+  dormant_open_transactions_count: number;
+  longest_running_duration_sec: number;
+  longest_running_spid?: number | null;
+  total_log_space_held_mb: number;
+  transactions: OpenTransaction[];
+  log_reuse_waits: LogReuseWaitDetail[];
+  is_demo?: boolean;
+}
+
+
 // ── TempDB & Memory Intelligence ──────────────────────────────
 export interface TempDBSpaceBreakdown {
   user_objects_mb: number;

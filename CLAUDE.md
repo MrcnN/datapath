@@ -2,9 +2,8 @@
 
 > **Ürün Adı:** Datapath
 > **Ürün Türü:** Veritabanı Zekası Platformu (Database Intelligence Platform)
-> **Slogan:** Araştır. Anla. Çöz.
 > **Birincil Veritabanı:** Microsoft SQL Server
-> **Proje Hedefi:** Öncelikle işlevsel bir MVP'yi (Minimum Uygulanabilir Ürün) tamamlayarak profesyonel, portföye uygun bir SQL Server DBA platformu oluşturmak.
+> **Proje Hedefi:** Öncelikle işlevsel bir MVP'yi (Minimum Uygulanabilir Ürün) tamamlayarak profesyonel bir SQL Server DBA platformu oluşturmak.
 
 ---
 

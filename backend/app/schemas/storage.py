@@ -119,3 +119,51 @@ class StorageSummary(BaseModel):
     min_disk_runway_days: Optional[int] = None
     is_demo: bool = False
 
+
+class OpenTransaction(BaseModel):
+    session_id: int
+    transaction_id: int
+    transaction_name: str
+    database_name: str
+    login_name: str
+    host_name: str
+    program_name: str
+    begin_time: str
+    duration_seconds: int
+    duration_formatted: str
+    transaction_state: str
+    transaction_type: str
+    session_status: str
+    is_dormant_active: bool  # Sleeping status but open_transaction_count > 0 (classic uncommitted transaction leak)
+    open_transaction_count: int
+    log_bytes_used_mb: float
+    log_records_count: int
+    sql_text: Optional[str] = None
+    blocking_session_count: int = 0
+    kill_script: str
+
+
+class LogReuseWaitDetail(BaseModel):
+    database_name: str
+    recovery_model: str
+    log_reuse_wait_desc: str
+    log_size_mb: float
+    log_used_percent: float
+    status: str  # 'HEALTHY', 'WARNING', 'CRITICAL'
+    root_cause_explanation: str
+    impact_summary: str
+    remediation_steps: List[str] = []
+    remediation_script: str
+
+
+class OpenTransactionsSummary(BaseModel):
+    total_active_transactions: int
+    dormant_open_transactions_count: int
+    longest_running_duration_sec: int
+    longest_running_spid: Optional[int] = None
+    total_log_space_held_mb: float
+    transactions: List[OpenTransaction] = []
+    log_reuse_waits: List[LogReuseWaitDetail] = []
+    is_demo: bool = False
+
+
