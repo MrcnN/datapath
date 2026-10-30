@@ -1,267 +1,297 @@
-# Datapath — Benim Proje Talimatlarım ve Geliştirme Kılavuzu
+# Datapath — Claude Code Proje Kılavuzu (Project Guide)
 
-> **Ürün Adı:** Datapath
-> **Ürün Türü:** Veritabanı Zekası Platformu (Database Intelligence Platform)
-> **Birincil Veritabanı:** Microsoft SQL Server
-> **Proje Hedefim:** Öncelikle işlevsel bir MVP'yi (Minimum Uygulanabilir Ürün) tamamlayarak profesyonel bir SQL Server DBA platformu oluşturmak.
+## Genel Kurallar
 
----
-
-## 1. Genel Kurallar
-
-Tahmin etme; kararsız kaldığında soru sor.
-
-### Temel Prensipler
-
-1. **Çalışan MVP Önceliğim:** Bitmemiş onlarca özellik yerine her zaman eksiksiz çalışan bir MVP'ye öncelik ver.
-2. **Sade ve Modüler Mimari:** Mimariyi daima basit, modüler ve sürdürülebilir tut.
-3. **Gerçek Veri ve Salt Okunurluk:** Mümkün olan her yerde gerçek SQL Server meta verilerini ve salt okunur (read-only) DMV sorgularını kullan.
-4. **Profesyonel Arayüz:** Geliştirdiğin arayüzün tutarlı, modern, responsive ve kurumsal seviyede olmasını bekliyorum.
-5. **Aşırı Mühendislikten Kaçınma:** Gereksiz üçüncü parti kütüphanelerden, karmaşık soyutlamalardan ve aşırı mühendislikten (overengineering) kesinlikle kaçın.
-6. **Eksiksiz Doğrulama:** Bana bir işi "tamamlandı" olarak bildirmeden önce testleri çalıştır ve varsa derleme/çalışma zamanı hatalarını gider.
+- Tahmin etme; kararsız kaldığında doğrudan bana soru sor.
 
 ---
 
-## 2. Ürün Vizyonu
+## 1. Proje Genel Bakışı (Project Overview)
 
-Datapath'i günlük SQL Server yönetimi, derin kök neden analizi, performans optimizasyonu ve operasyonel görünürlük sağlamak üzere tasarlıyorum.
+**Datapath**, Microsoft SQL Server ortamları için geliştirilen, salt okunur (read-only) mimariye sahip, cerrahi kök neden tespiti (root-cause diagnosis) ve derin DBA içgörüsü sağlayan kurumsal bir **Veritabanı Zekası Platformudur (Database Intelligence Platform)**.
 
-Platformumun bir DBA olarak bana ve kullanıcılara şu soruların yanıtını net şekilde vermesini istiyorum:
+Platform iki ana katmandan oluşur:
+- **Backend (API & Analitik Motoru):** Python 3.12+ ve FastAPI ile yazılmış, SQL Server Dinamik Yönetim Görünümlerini (DMV), Extended Events (XE) verilerini, katalog tablolarını ve Query Store metriklerini sorgulayan, hiçbir harici aracı (agent) SQL sunucusuna kurma zorunluluğu getirmeyen hafif API servisi.
+- **Frontend (Kullanıcı Arayüzü):** React 18, TypeScript ve Vite ile geliştirilmiş; koyu tema öncelikli (dark-first), profesyonel, yüksek yoğunluklu veri tablolarına, etkileşimli kilit ağaçlarına ve panoya kopyalanabilir T-SQL iyileştirme reçetelerine sahip modern web arayüzü.
 
-- Şu anda bu SQL Server örneğinde tam olarak neler oluyor?
-- Hangi oturumlar (sessions) kilitlenmiş (blocked), onları kilitleyen kök bloklayıcı kim ve hangi sorguyu çalıştırıyor?
-- Hangi sorgular en çok CPU, süre veya mantıksal okuma (logical read) tüketiyor?
-- Sorgu performanslarında gerileme (regression) veya yürütme planı anti-deseni var mı?
-- Veritabanı yedeklemelerim sağlıklı mı, kurtarma hazırlığım (RPO) ne durumda?
-- Hangi SQL Server Agent işleri veya adımları başarısız oldu?
-- İki veritabanı şeması arasında hangi nesneler farklılaştı?
-- Yaşanan bir sorunu güvenle araştırıp çözmek için hangi T-SQL betiklerine ihtiyacım var?
-- Açık kalan (uncommitted) sahipsiz işlemler log dosyamı şişiriyor mu, log kesilmesini engelleyen sebep nedir?
+### Ürünümün Temel Felsefesi ve Farkı
+Piyasadaki yüzeysel "Sağlık Monitörleri" (Health Check / Compliance checklist araçları) yalnızca dbachecks veya statik kurallar çalıştırıp "X veritabanı yavaş", "Y kuralı Fail oldu" gibi genel geçer puanlar üretir. 
 
-### Ürünümün Farkı ve Odak Noktam
-
-İlgilendiğim şirketin halihazırda yüzeysel bir Sağlık Monitörü (Health Monitor) ürünü bulunmaktadır. Bu yüzden senden sıradan bir genel check-up veya uyumluluk tarayıcısını yeniden üretmeni istemiyorum. 
-
-Ben "sisteminde genel bir yavaşlık var" diyen yüzeysel araçlar yerine; **"şu sorgundaki CONVERT_IMPLICIT yüzünden indeks scan ediliyor", "SPID 58 oturumu açık unutulduğu için log truncate edilemiyor"** gibi cerrahi nokta atışı yapan derin DBA teşhis iş akışlarına odaklanıyorum:
-
-- Canlı Olay ve Kilitlenme (Incident & Deadlock) araştırması
-- Engelleme (Blocking) zincirleri ve kök bloklayıcı analitiği
-- Derin sorgu performansı ve Query Store içgörüleri
-- Yedekleme geçmişi, RPO analizi ve kurtarma hazırlığı
-- Veritabanları arası şema karşılaştırması (Schema Diff)
-- İnceleme amaçlı, güvenli DBA T-SQL araç seti
-- Yüksek erişilebilirlik (AlwaysOn Availability Groups) görünürlüğü
-- Açık işlemler, VLF mimarisi, Buffer Pool dağılımı ve Plan Cache şişmesi teşhisleri
+Datapath ise **bir kıdemli veritabanı yöneticisinin (Senior/Principal DBA) kriz anındaki cerrahi teşhis refleksiyle** çalışır:
+- *"X sorgusunda `CONVERT_IMPLICIT` örtük veri tipi dönüşümü var, bu yüzden indeks `Index Seek` yerine `Index Scan` yapıyor ve CPU'yu %94'e kilitliyor."*
+- *"SPID 74 oturumu `Orders` tablosunda `BEGIN TRAN` açıp commit etmeden askıda kalmış (`sleeping`), Transaction Log dosyasının kesilmesini (`log_reuse_wait: ACTIVE_TRANSACTION`) engelliyor ve arkasındaki 18 oturumu kilitliyor."*
+- *"msdb.dbo.suspect_pages tablosunda 824 hatasıyla işaretlenmiş bozuk 8KB sayfa var; tüm veritabanını kurtarmak yerine şu T-SQL ile tek bir Page Restore yapabilirsin."*
 
 ---
 
-## 3. Seçtiğim Teknoloji Yığını
+## 2. Mimari ve Teknoloji Yığını (Architecture & Stack)
 
-Projede belirlediğim ve korumak istediğim teknoloji yığını şunlardır:
+### İletişim Modeli
+```
+[React Frontend] (Port 5173 / Tarayıcı)
+       │  REST API (JSON)
+       ▼
+[FastAPI Backend] (Port 8000 / Python 3.12+)
+       │  pyodbc (ODBC Driver 17 for SQL Server) — Read-Only Direct TDS Queries
+       ▼
+[Microsoft SQL Server Hedefleri] (On-Prem, Azure SQL MI, AWS RDS SQL Server)
+   ├── Dynamic Management Views (sys.dm_exec_*, sys.dm_os_*, sys.dm_db_*)
+   ├── System Catalog & MSDB Tables (msdb.dbo.sysalerts, sysmail_*, suspect_pages)
+   ├── Query Store Metrikleri (sys.query_store_*)
+   └── Extended Events Ring Buffer (system_health xevents)
+```
 
-### Frontend (Ön Yüz)
-- **Framework:** React + TypeScript + Vite
-- **Stil Yönetimi:** Sürdürülebilir CSS / CSS Modules
-- **Grafik:** Yalnızca gerçek ve faydalı bir analitik bilgi sunduğunda Recharts
-- **İkonlar:** Tutarlı Lucide Icons seti
+### Backend Yığını
+- **Çalışma Zamanı & Dil:** Python 3.12+
+- **Web Çerçevesi:** FastAPI (Asenkron & Yüksek Performanslı REST API)
+- **Veritabanı Sürücüsü:** `pyodbc` (ODBC Driver 17 for SQL Server üzerinden doğrudan yerel TDS bağlantısı)
+- **Doğrulama & Veri Modelleri:** Pydantic v2
+- **Test Çerçevesi:** `pytest`, `pytest-asyncio`, FastAPI `TestClient`
+- **Konfigürasyon:** `pydantic-settings` ve `.env` tabanlı ortam yönetimi
 
-### Backend (Arka Uç)
-- **Dil & Framework:** Python 3.12+ ve FastAPI
-- **Veritabanı Sürücüsü:** pyodbc (ODBC Driver 17 for SQL Server)
-- **Doğrulama & Şema:** Pydantic v2
-- **Test:** pytest ve pytest-asyncio
-
-### Veritabanı & Katman
-- Microsoft SQL Server
-- Sistem katalog görünümleri, Dinamik Yönetim Görünümleri (DMV'ler)
-- Query Store (aktif olduğunda)
-
-### Mimari Karar
-Ben modüler bir monolit yapı tercih ediyorum. Frontend doğrudan backend API ile konuşmalı; tüm SQL Server bağlantıları ve DMV sorguları backend servisleri tarafından güvenle yönetilmelidir. Projeme mikroservisler, RabbitMQ/Kafka gibi mesaj kuyrukları veya Kubernetes gibi gereksiz karmaşık altyapılar eklemeni istemiyorum.
-
----
-
-## 4. Geliştirme Stratejisi
-
-Projeyi aşamalar halinde, kontrollü bir şekilde büyütmek istiyorum. Bir aşama stabil hale gelmeden diğerine geçilmemelidir.
-
-### Sürüm 0 — İşlevsel MVP
-1. Profesyonel, temiz ve koyu temalı uygulama düzeni (`Sidebar`, `TopBar`, `PageHeader`).
-2. Canlı sunucuya bağlı olunmadığında açıkça etiketlenmiş demo verileriyle çalışan Dashboard.
-3. Güvenli SQL Server bağlantı formu ve test uç noktası.
-4. Başarılı bağlantı sonrası sunucu meta verileri ve kaynak bilgileri.
-5. Oturumları ve engellemeleri gösteren salt okunur ilk operasyonel ekran.
-6. Panoya kopyalanabilir, aranabilir DBA betik kütüphanesi (`ToolkitPage`).
-7. Yükleniyor, boş, hata ve demo durumları.
-8. Backend sağlık (`/api/health`) uç noktası.
-9. `README.md`, `.env.example` ve otomatik birim testleri.
-
-### Sürüm 1 — Olay Merkezi (Incident Center)
-- Canlı oturumlar ve engelleme zincirleri (Blocking Chains)
-- Deadlock XML yükleme, yapıştırma ve görsel ayrıştırma motoru
-- SQL Server Agent başarısız iş geçmişi ve adım detayları
-- SQL Server hata günlüğü (Error Log) görüntüleyici
-- Olay zaman çizelgesi (Incident Timeline)
-
-### Sürüm 2 — Sorgu Performansı
-- Query Store genel bakış metrikleri
-- CPU, süre, mantıksal okuma ve çalışma sayısına göre en maliyetli sorgular
-- Performans gerileme (Regression) analizi
-- Yürütme planı anti-desenleri, TempDB spill ve `CONVERT_IMPLICIT` teşhisi
-
-### Sürüm 3 — Yedekleme ve Şema Araçları
-- Veritabanı yedekleme geçmişi (Full, Diff, Log)
-- RPO kurtarma hazırlığı ve risk kontrol listesi
-- İki veritabanı arasında şema karşılaştırması (Schema Diff)
-- Yalnızca inceleme amaçlı üretilen, asla otomatik çalıştırılmayan T-SQL senkronizasyon betikleri
-
-### Sürüm 4 — Gelişmiş Operasyonlar
-- Sunucu loginleri, kullanıcılar, roller ve sysadmin denetimi
-- AlwaysOn Availability Groups replika sağlık durumları
-- Ek DBA analiz araçları
-
-### Sürüm 5 — Derin Kurumsal Teşhis & Zeka
-- Canlı işlem gezgini, kök bloklayıcı ve `sp_whoisactive` zekası
-- Tekrarlayan ve önek çakışmalı (redundant) indeks tespiti
-- Disk büyüme trendi ve kapasite tükenme tahmini (capacity runway)
-- `sp_configure` denetimi ve DBA uyumluluk skoru
-- VLF mimarisi denetimi ve yeniden boyutlandırma motoru
-- Extended Events (XE) oturum yönetimi ve `system_health` ring buffer tanılaması
-- Çoklu sunucu ortam geçişi (Multi-Server Registry)
-- Açık kalan işlemler (Open Transactions) ve log kesilme engelleri (`log_reuse_wait`)
-- Buffer Pool dağılımı ve Ad-Hoc Plan Cache şişmesi (Plan Cache Bloat)
+### Frontend Yığını
+- **Kütüphane & Dil:** React 18 + TypeScript + Vite
+- **Stil Yönetimi:** CSS Modules (Bileşen bazlı izole CSS) + CSS Değişkenleri (Semantik Tasarım Token'ları)
+- **Grafik & Veri Görselleştirme:** Recharts (CPU/Bellek trendleri, Signal Wait gauge'ları, bellek segmentleri)
+- **İkon Seti:** Lucide React (Tutarlı, minimalist SVG ikonlar)
+- **Veri Tabloları:** `DataTable` (Çoklu kolon filtreleme, sıralama, sayfalama ve boş durum yönetimi)
+- **Tema Motoru:** Koyu Tema Öncelikli (`dark` default, `light` destekli, `localStorage` kalıcı tema anahtarı)
 
 ---
 
-## 5. Uygulama Gezinimi (Navigation)
+## 3. Dizin Ağacı (Directory Structure)
 
-Uygulamamda şu menü yapısını benimsedim:
-
-- **Gösterge Paneli** (`/`)
-- **Sunucular & Bağlantı** (`/instances`)
-- **Olay Merkezi** (`/incidents`)
-- **Sorgu Performansı** (`/query-performance`)
-- **İndeks Zekası** (`/indexes`)
-- **Bekleme İstatistikleri** (`/waits`)
-- **Depolama & Dosyalar** (`/storage`)
-- **TempDB & Bellek** (`/tempdb`)
-- **Yedekleme & Kurtarma** (`/backups`)
-- **Yüksek Erişilebilirlik** (`/high-availability`)
-- **DBA Araç Seti** (`/toolkit`)
-- **SQL Agent İşleri** (`/agent-jobs`)
-- **Şema Karşılaştırması** (`/schema-diff`)
-- **İzinler & Güvenlik** (`/permissions`)
-- **Ayarlar** (`/settings`)
-
-Hiçbir işlevi olmayan sahte veya boş butonlar koymanı istemiyorum. Sahte verileri de sanki gerçek SQL Server'dan geliyormuş gibi gösterme; canlı bağlantı yoksa bunu her zaman açıkça belirt.
-
----
-
-## 6. Görsel Tasarım ve Markalama Kurallarım
-
-Arayüzün basit bir öğrenci projesi gibi değil, birinci sınıf bir kurumsal veritabanı platformu gibi hissettirmesini istiyorum.
-
-### Görsel Standartlarım:
-- **Karanlık Tema Öncelikli (Dark-first):** Kömür ve grafit tonlarında profesyonel arka planlar.
-- **Vurgu Renkleri:** Ölçülü mavi (`accent`), yeşil (başarı), sarı (uyarı) ve kırmızı (kritik hata).
-- **Tipografi & Boşluklar:** Temiz, dengeli ve tutarlı boşluk hiyerarşisi.
-- **Veri Odaklı Tablolar:** Sayfalama, sıralama ve okunabilir metrikler.
-- **Kaçınılacaklar:** Göz yoran neon efektleri, aşırı gradyanlar, anlamsız animasyonlar ve jenerik yer tutucu metinler.
-
-### Markalama:
-Marka tanımlarımı tek bir merkezde topladım:
-`frontend/src/config/brand.ts`
-- **Ürün Adı:** Datapath
-- **Ürün Tanımlayıcısı:** Veritabanı Zekası Platformu
-
-Bu bilgileri uygulamanın diğer sayfalarında asla sabit kodlama (hardcode); merkezi yapıdan çek.
-
----
-
-## 7. SQL Server Bağlantı ve Güvenlik Yönetimi
-
-- Bağlantı testlerini ve DMV sorgularını backend üzerinden güvenle yürüt.
-- Kullanıcıya açıklayıcı ve anlaşılır Türkçe hata/başarı mesajları dön.
-- **Asla Hassas Bilgi Loglama:** SQL Server şifrelerini veya tam bağlantı dizelerini (connection string) asla terminale veya loglara yazdırma.
-- Kimlik bilgilerini tarayıcının `localStorage` alanında saklama.
-- Yapılandırma için `.env` dosyasını kullan ve projede her zaman güncel bir `.env.example` bulundur. Gerçek şifre içeren `.env` dosyalarını asla git'e ekleme.
-
----
-
-## 8. Güvenlik ve Güvenli Varsayılanlar İlkem (Review-Only Policy)
-
-Platformum varsayılan olarak **salt okunur (read-only)** prensibiyle çalışmalıdır.
-
-Senden hiçbir koşulda şu işlemleri **otonom veya otomatik olarak çalıştırmamanı** istiyorum:
-- Bir veritabanı oturumunu aniden sonlandırmak (`KILL`)
-- İndeksleri doğrudan yeniden oluşturmak (`REBUILD`)
-- Sunucu yapılandırmasını (`sp_configure`) değiştirmek
-- Availability group failover tetiklemek
-- Veritabanını geri yüklemek veya üzerine yazmak
-- Üretilen şema eşitleme betiklerini otomatik yürütmek
-
-Bunun yerine her zaman DBA'in inceleyebileceği (review-only), gerekçesi ve riskleri açıkça belirtilmiş **T-SQL iyileştirme betikleri üret** ve kopyalama butonu sağla.
-
-Sorgularda kullanıcı girdilerini asla doğrudan SQL içine birleştirme; SQL Injection riskine karşı her zaman parametreli sorgu kullan.
-
----
-
-## 9. Proje Dizin Yapım
-
-Mevcut modüler yapıyı koru ve gereksiz klasör karmaşası yaratma:
-
-```text
+```
 datapath/
-  backend/
-    app/
-      api/          # REST uç nokta yönlendiricileri (FastAPI routers)
-      core/         # Yapılandırma, ayarlar ve özel istisnalar
-      db/           # pyodbc bağlantı fabrikası ve bağlam yöneticisi
-      schemas/      # Pydantic istek ve yanıt modelleri
-      services/     # SQL Server DMV sorguları ve iş mantığı
-      main.py       # FastAPI uygulama giriş noktası
-    tests/          # pytest birim ve entegrasyon testleri
-    requirements.txt
-    .env.example
-  frontend/
-    src/
-      app/          # Uygulama iskeleti ve Router
-      components/   # Ortak bileşenler (TopBar, Sidebar, DataTable, StatusBadge)
-      config/       # Merkezi marka kimliği (brand.ts)
-      features/     # Modül bazlı sayfalar ve bileşenler
-      lib/          # API istemcisi, TypeScript türleri, yardımcı fonksiyonlar
-      styles/       # Global CSS ve değişkenler
-  TODO.md           # Dinamik proje pusulası ve görev takibi
-  CLAUDE.md         # Bu talimatname
+├── backend/
+│   ├── app/
+│   │   ├── api/                    # REST API Uç Nokta Yönlendiricileri
+│   │   │   ├── agent_jobs.py       # SQL Agent işleri, adım geçmişi, kritik alarmlar & Database Mail
+│   │   │   ├── backups.py          # Yedekleme geçmişi, RPO riski, DBCC CHECKDB & suspect_pages radarı
+│   │   │   ├── connections.py      # SQL Server bağlantı testi ve sunucu doğrulama
+│   │   │   ├── extended_events.py  # XE oturum yaşam döngüsü ve system_health ring buffer ayrıştırma
+│   │   │   ├── health.py           # Backend sağlık ve sürüm uç noktası (/api/health)
+│   │   │   ├── high_availability.py# Always On AG topolojisi, replika sağlık durumları
+│   │   │   ├── incidents.py        # Olay merkezi, kilitlenme zaman çizelgesi & deadlock ayrıştırma
+│   │   │   ├── indexes.py          # Eksik, kullanılmayan, tekrarlayan ve parçalanmış indeksler
+│   │   │   ├── instances.py        # Canlı oturumlar, bloklayıcı zincirleri & sunucu meta verileri
+│   │   │   ├── permissions.py      # Logins, database users, sysadmin denetimi & yetim kullanıcılar
+│   │   │   ├── query_performance.py# Query Store en maliyetli sorgular, gerilemeler & anti-desenler
+│   │   │   ├── schema_diff.py      # İki veritabanı arası şema karşılaştırması ve review-only DDL
+│   │   │   ├── servers.py          # Çoklu sunucu profil kaydı (Server Registry) & geçiş API'si
+│   │   │   ├── storage.py          # Disk doluluğu, autogrowth, VLF mimarisi & I/O dosya gecikmesi
+│   │   │   ├── tempdb_memory.py    # TempDB alan çekişmesi, PLE, Buffer Pool & Memory Grants
+│   │   │   └── toolkit.py          # Aranabilir ve kopyalanabilir DBA T-SQL teşhis betikleri
+│   │   ├── core/
+│   │   │   ├── config.py           # Ortam değişkenleri, ayarlar ve gizli anahtar yönetimi
+│   │   │   └── exceptions.py       # Özel API hata sınıfları ve HTTP durum eşleyicileri
+│   │   ├── db/
+│   │   │   └── connection.py       # pyodbc bağlantı havuzu, context manager & satır sözlük dönüştürücü
+│   │   ├── schemas/                # Pydantic v2 İstek/Yanıt Şemaları
+│   │   │   ├── agent_jobs.py       # Jobs, step history, sysalerts ve sysmail modelleri
+│   │   │   ├── backups.py          # Backups, RPO readiness, CHECKDB ve suspect_pages modelleri
+│   │   │   ├── extended_events.py  # XESession, RingBufferEvent ve XETemplate modelleri
+│   │   │   ├── indexes.py          # Missing, Unused, Redundant, Fragmented index modelleri
+│   │   │   ├── instances.py        # Session, BlockingChain, ServerMetadata modelleri
+│   │   │   ├── permissions.py      # Logins, Users, Roles, SecurityFinding modelleri
+│   │   │   ├── query_performance.py# QueryStore, ExpensiveQuery, PlanWarning modelleri
+│   │   │   ├── schema_diff.py      # SchemaDiffRequest, DiffResult modelleri
+│   │   │   ├── servers.py          # ServerProfile, ServerProfileCreate modelleri
+│   │   │   ├── storage.py          # DatabaseFile, Autogrowth, VLF, OpenTransaction, FileIOLatency
+│   │   │   ├── tempdb_memory.py    # TempDB, BufferPool, PlanCacheBloat, QueryMemoryGrant
+│   │   │   └── wait_stats.py       # WaitStatEntry, CategoryWaitSummary modelleri
+│   │   ├── services/               # Saf İş Mantığı ve SQL Server DMV Sorguları
+│   │   │   ├── agent_jobs_service.py
+│   │   │   ├── backup_service.py
+│   │   │   ├── connection_service.py
+│   │   │   ├── demo_data.py        # Canlı bağlantı olmadığında devreye giren yüksek sadakatli demo veri
+│   │   │   ├── extended_events_service.py
+│   │   │   ├── ha_service.py
+│   │   │   ├── incident_service.py
+│   │   │   ├── index_service.py
+│   │   │   ├── instance_service.py
+│   │   │   ├── permissions_service.py
+│   │   │   ├── query_performance_service.py
+│   │   │   ├── schema_diff_service.py
+│   │   │   ├── server_registry.py
+│   │   │   ├── storage_service.py
+│   │   │   ├── tempdb_memory_service.py
+│   │   │   ├── toolkit_service.py
+│   │   │   └── wait_stats_service.py
+│   │   └── main.py                 # FastAPI Uygulama Giriş Noktası & CORS Yapılandırması
+│   ├── tests/                      # pytest Birim ve Entegrasyon Testleri (46 test)
+│   ├── requirements.txt            # Python Bağımlılıkları
+│   └── pytest.ini                  # Test Yapılandırması
+├── frontend/
+│   ├── src/
+│   │   ├── app/                    # React Router Rota Yapılandırması & App İskeleti
+│   │   ├── components/             # Yeniden Kullanılabilir Ortak UI Bileşenleri
+│   │   │   ├── layout/             # TopBar, Sidebar, PageHeader
+│   │   │   ├── report/             # DossierReportModal (Kapsamlı Mühendislik Raporu)
+│   │   │   └── ui/                 # DataTable, StatusBadge, LoadingSpinner, ErrorState, EmptyState
+│   │   ├── config/                 # brand.ts (Merkezi Marka Tanımlayıcıları)
+│   │   ├── features/               # Modüler Özellik Sayfaları ve Alt Bileşenler
+│   │   │   ├── agent-jobs/         # SQL Agent işleri, alarmlar ve Database Mail izleme
+│   │   │   ├── backups/            # Yedekleme geçmişi, RPO hazırlığı & suspect_pages radarı
+│   │   │   ├── dashboard/          # Birleşik sistem gösterge paneli ve KPI'lar
+│   │   │   ├── extended-events/    # XE oturumları ve system_health olayları
+│   │   │   ├── high-availability/  # AlwaysOn Availability Groups durumu
+│   │   │   ├── incidents/          # Kilitlenmeler, Deadlock XML ayrıştırma ve zaman çizelgesi
+│   │   │   ├── indexes/            # Eksik, kullanılmayan, mükerrer ve parçalanmış indeksler
+│   │   │   ├── instances/          # Sunucu bağlantıları, canlı oturumlar ve kök bloklayıcılar
+│   │   │   ├── permissions/        # Güvenlik, roller, yetim kullanıcılar ve sysadmin denetimi
+│   │   │   ├── query-performance/  # Query Store en pahalı sorgular ve plan anti-desenleri
+│   │   │   ├── schema-diff/        # Veritabanı şema karşılaştırması ve review-only DDL
+│   │   │   ├── settings/           # Genel ayarlar ve ortam tercihleri
+│   │   │   ├── storage/            # Disk doluluğu, autogrowth, VLF ve açık işlemler
+│   │   │   ├── tempdb/             # TempDB çekişmesi, PLE, Buffer Pool ve Memory Grants
+│   │   │   ├── toolkit/            # Kategorize DBA T-SQL betik kütüphanesi
+│   │   │   └── wait-stats/         # Bekleme istatistikleri ve Signal Wait oranı
+│   │   ├── lib/                    # api.ts (REST İstemcisi), types.ts (TypeScript Türleri)
+│   │   └── styles/                 # Global CSS değişkenleri, renk paletleri ve yardımcı stiller
+│   ├── index.html
+│   ├── package.json
+│   ├── tsconfig.json
+│   └── vite.config.ts
+├── TODO.md                         # Önceliklendirilmiş Güvenlik ve Geliştirme Yol Haritası
+├── TODOlist.md                     # Adım Adım İlerleme ve Sayfa Bazlı İşlem Defteri
+└── CLAUDE.md                       # Bu Kılavuz Belgesi
 ```
 
 ---
 
-## 10. Test ve Kalite Standartlarım
+## 4. Veri Modelleri ve Şemalar (Schemas)
 
-Geliştirdiğin her yeni modül için:
-1. Backend tarafında ilgili endpoint ve servisleri kapsayan **pytest testleri** yaz.
-2. Canlı veritabanı bağlantısı olmadığında testlerin taklit (mock) veya demo fallback verileriyle eksiksiz çalıştığından emin ol.
-3. Frontend tarafında `npm run build` komutunun **sıfır TypeScript ve derleme hatasıyla** bittiğini doğrula.
-4. Testleri gerçekten çalıştırmadan bana asla "testler başarılı" deme.
+Tüm veri modelleri backend'de Pydantic v2 sınıfları olarak, frontend'de ise karşılık gelen TypeScript arayüzleri (`src/lib/types.ts`) olarak tanımlanmıştır:
+
+| Şema / Model | Birincil Alanlar | Açıklama ve Kaynak |
+| :--- | :--- | :--- |
+| `ServerMetadata` | `server_name`, `version`, `edition`, `cpu_count`, `memory_gb`, `uptime` | Sunucu donanım ve işletim sistemi kimliği (`SERVERPROPERTY`, `sys.dm_os_sys_info`) |
+| `SessionInfo` | `session_id`, `status`, `cpu_time`, `logical_reads`, `sql_text`, `blocking_session_id` | Canlı oturumlar ve sorgular (`sys.dm_exec_requests`, `sys.dm_exec_sessions`) |
+| `BlockingChain` | `root_blocker_session_id`, `blocked_sessions_count`, `chain_depth`, `nodes[]` | Kilitlenme zincirindeki kök engelleyici oturum ve etkilenen alt kollar |
+| `DeadlockResult` | `victim_session_id`, `deadlock_graph_xml`, `process_list[]`, `resource_list[]` | XDL/XML deadlock grafiği ayrıştırma motoru çıktısı |
+| `ExpensiveQuery` | `query_id`, `avg_cpu_time_ms`, `avg_logical_reads`, `execution_count`, `query_sql_text` | Query Store bazlı en maliyetli sorgular (`sys.query_store_runtime_stats`) |
+| `PlanWarningQuery` | `query_id`, `warning_type`, `table_name`, `spill_mb`, `plan_xml` | Yürütme planı anti-desenleri (`CONVERT_IMPLICIT`, TempDB Spill, Index Scan) |
+| `MissingIndex` | `database_name`, `table_name`, `equality_columns`, `inequality_columns`, `impact_score` | DMV eksik indeks tespiti (`sys.dm_db_missing_index_details`) |
+| `RedundantIndex` | `table_name`, `index_name`, `overlapping_index_name`, `redundancy_type`, `drop_sql` | Önek çakışmalı ve mükerrer indeksler (Gereksiz INSERT/UPDATE I/O yükü) |
+| `WaitStatsSummary` | `top_waits[]`, `signal_wait_ratio_percent`, `cpu_pressure_detected`, `tuning_recs[]` | Sunucu kaynak bekleme analitiği (`sys.dm_os_wait_stats`) |
+| `DatabaseVLFInfo` | `database_name`, `vlf_count`, `active_vlf_count`, `status`, `remediation_script` | Sanal Log Dosyası (VLF) şişmesi ve küçültme/büyütme reçeteleri |
+| `OpenTransaction` | `transaction_id`, `session_id`, `host_name`, `login_name`, `elapsed_time_sec`, `is_sleeping` | Açık kalan uncommitted işlemler (`sys.dm_tran_active_transactions`) |
+| `LogReuseWaitDetail`| `database_name`, `log_reuse_wait_desc`, `risk_level`, `remediation_sql` | Log kesilmesini durduran kök neden (`sys.databases.log_reuse_wait_desc`) |
+| `BufferPoolDatabaseUsage` | `database_name`, `buffer_pool_mb`, `dirty_pages_mb`, `clean_pages_mb` | RAM'deki veri sayfalarının DB bazlı dağılımı (`sys.dm_os_buffer_descriptors`) |
+| `PlanCacheBloatAnalysis` | `total_cached_plans_count`, `single_use_plans_count`, `wasted_adhoc_mb`, `status` | Tek seferlik ad-hoc sorgu planlarının bellek israfı analizi |
+| `QueryMemoryGrantDetail` | `session_id`, `requested_memory_mb`, `granted_memory_mb`, `wait_time_ms`, `is_waiting` | Sorgu çalışma belleği ve `RESOURCE_SEMAPHORE` beklemesi (`sys.dm_exec_query_memory_grants`) |
+| `SuspectPageRecord` | `database_name`, `file_id`, `page_id`, `event_type`, `error_count`, `page_restore_sql` | Fiziksel bozuk 8KB sayfalar ve sayfa kurtarma reçetesi (`msdb.dbo.suspect_pages`) |
+| `DatabaseIntegrityCheck` | `database_name`, `last_clean_checkdb`, `days_since_checkdb`, `status`, `page_verify_option` | Son başarılı `DBCC CHECKDB` tarihi (`DATABASEPROPERTYEX`, DBINFO) |
+| `SQLAlertDetail` | `name`, `message_id`, `severity`, `enabled`, `occurrence_count`, `has_notification` | SQL Server Agent kritik alarmları (`msdb.dbo.sysalerts` - Sev 17-25, 823-825) |
+| `DatabaseMailStatus` | `mail_queue_status`, `total_failed_items`, `recent_failed_items[]`, `restart_queue_sql` | Database Mail servis kuyruğu ve iletim hata teşhisi (`msdb.dbo.sysmail_*`) |
+| `ServerProfile` | `id`, `name`, `host`, `port`, `default_database`, `environment`, `is_active`, `latency_ms` | Çoklu sunucu ortam kaydı ve anlık erişilebilirlik durumu |
 
 ---
 
-## 11. Dokümantasyon ve TODO.md İşleyişi
+## 5. Veri Akışı ve Tanılama Hattı (Data Flow)
 
-Projemin kök dizininde bulunan `TODO.md` dosyasını sürecin doğal bir parçası olarak **otonom şekilde güncel tutmanı** istiyorum:
-- Tamamlanan her özelliği anında `[x]` olarak işaretle ve "Tamamlananlar" bölümüne taşı.
-- Sıradaki somut hedefleri "Sıradaki Görevler" başlığı altında net tut.
-- Dosyanın karmaşık ve okunaksız hale gelmesine izin verme; daima kısa ve uygulanabilir eylemlerden oluşsun.
+```
+1. Kullanıcı Arayüzü Tetikleme
+   → İlgili ekran açılır veya üst bardan sunucu profili seçilir (Örn: /tempdb veya /storage)
+   → React bileşeni apiClient üzerinden ilgili FastAPI endpoint'ini çağırır.
+
+2. Backend Bağlantı ve Çözümleme
+   → FastAPI endpoint'i, ConnectionParams nesnesini oluşturur.
+   → Ortamda geçerli bir SQL Server bağlantısı yoksa, yüksek sadakatli DEMO_* veri modelleri devreye girer (Demo Fallback).
+   → Canlı bağlantı mevcutsa, pyodbc üzerinden güvenli ve salt okunur TDS bağlantısı kurulur.
+
+3. DMV ve Metrik Sorgulama (Surgical SQL Engine)
+   → Hedef SQL Server motorunda doğrudan optimize edilmiş DMV sorguları (WITH TABLERESULTS, CROSS APPLY) yürütülür.
+   → Sonuçlar sözlük listelerine (`rows_to_dicts`) dönüştürülür.
+
+4. Kök Neden Analitiği ve Güvenli Reçete Üretimi
+   → Backend servisi veriyi işler (Örn: Log reuse wait analizi, suspect page türü, memory waste yüzdesi).
+   → Her tespit edilen sorun için parametreli, incelenebilir (review-only) T-SQL düzeltme betiği üretilir.
+
+5. JSON İletimi ve Kullanıcı Deneyimi
+   → Veri, Pydantic şeması üzerinden doğrulanarak React istemcisine iletilir.
+   → Frontend tabloları filtreler, uyarı rozetlerini renklendirir ve tek tıkla T-SQL kopyalama butonu sağlar.
+```
 
 ---
 
-## 12. Senden Beklediğim Çalışma ve İletişim Akışı
+## 6. Güvenlik ve Güvenli Varsayılanlar İlkesi (Review-Only Policy)
 
-Benimle çalışırken her zaman şu 5 adımı izle:
+Datapath, güvenlik açısından **kesinlikle salt okunur (strictly read-only)** bir yaklaşım benimser:
 
-1. **Adım 1 — İncele:** Kod tabanını, mevcut modelleri ve testleri incele. Çalışan kodu gereksiz yere bozma veya silme.
-2. **Adım 2 — Kısaca Planla:** En sade ve doğrudan geliştirme yolunu belirle, uzun teorik metinlerle vakit kaybetme.
-3. **Adım 3 — Uygula:** Uçtan uca geliştir; backend şemasını, servisini, API endpoint'ini ve frontend arayüzünü birbiriyle tam uyumlu bağla.
-4. **Adım 4 — Doğrula:** `pytest` ile backend testlerini, `npm run build` ile frontend derlemesini çalıştır. Hata çıkarsa kendi kendine çöz.
-5. **Adım 5 — Raporla ve Commit'le:** 
+1. **Otonom Eylem Yasağı:**
+   Sistem hiçbir koşulda kullanıcı adına arka planda şu işlemleri **otonom veya otomatik olarak çalıştırmaz**:
+   - Bir veritabanı oturumunu sonlandırmak (`KILL <spid>`)
+   - İndeksleri yeniden oluşturmak (`ALTER INDEX ... REBUILD`)
+   - Sunucu parametrelerini değiştirmek (`sp_configure ... RECONFIGURE`)
+   - Availability Group yük devretmesi (Failover) tetiklemek
+   - Veritabanı veya sayfa geri yükleme komutu (`RESTORE DATABASE`) çalıştırmak
+   - Üretilen şema eşitleme DDL betiklerini hedef veritabanında yürütmek
+
+2. **İncelenebilir T-SQL Reçeteleri:**
+   Platform her zaman DBA'in inceleyebileceği, test ortamında deneyebileceği ve risklerini anlayabileceği **açıklamalı T-SQL kod blokları** üretir ve arayüzde panoya kopyalama imkanı sunar.
+
+3. **SQL Injection Koruması:**
+   Tüm kullanıcı girdileri (filtreler, arama metinleri, sunucu profilleri) backend katmanında parametreli sorgularla çalıştırılır; asla string birleştirme (concatenation) ile dinamik SQL üretilmez.
+
+4. **Hassas Bilgi ve Bağlantı Güvenliği:**
+   - SQL Server kullanıcı şifreleri asla terminale, konsola veya uygulama loglarına yazdırılmaz.
+   - Tarayıcının `localStorage` alanında hiçbir veritabanı şifresi veya bağlantı dizesi saklanmaz.
+
+---
+
+## 7. Geliştirme Komutları (Development Commands)
+
+### Backend (Python / FastAPI)
+```bash
+# Backend dizinine geçiş
+cd datapath/backend
+
+# Bağımlılıkları yükleme
+pip install -r requirements.txt
+
+# Geliştirme sunucusunu başlatma (Port 8000)
+uvicorn app.main:app --reload --port 8000
+
+# Otomatik birim ve entegrasyon testlerini çalıştırma (46 test)
+pytest
+
+# Belirli bir test modülünü çalıştırma
+pytest tests/test_agent_jobs.py
+```
+
+### Frontend (React / Vite / TypeScript)
+```bash
+# Frontend dizinine geçiş
+cd datapath/frontend
+
+# Paket bağımlılıklarını kurma
+npm install
+
+# Geliştirme sunucusunu başlatma (Port 5173)
+npm run dev
+
+# TypeScript tür kontrolü ve üretim derlemesi (Sıfır hata doğrulaması)
+npm run build
+
+# Kod önizlemesi
+npm run preview
+```
+
+---
+
+## 8. Ortam Değişkenleri (Environment Variables)
+
+Platformun `.env` dosyasında yer alan temel değişkenler:
+
+| Değişken | Varsayılan | Açıklama |
+| :--- | :--- | :--- |
+| `DB_SERVER` | `localhost` | Hedef Microsoft SQL Server sunucu adresi veya IP |
+| `DB_DATABASE` | `master` | İlk bağlantının açılacağı veritabanı |
+| `DB_USERNAME` | `sa` | SQL Authentication kullanıcı adı (Windows Auth kapalıysa) |
+| `DB_PASSWORD` | — | SQL Authentication parolası (Hassas bilgi) |
+| `DB_TRUSTED_CONNECTION` | `yes` | Windows Integrated Authentication kullanımı (`yes`/`no`) |
+| `DB_DRIVER` | `ODBC Driver 17 for SQL Server` | Kurulu Microsoft ODBC sürücüsü |
+| `DB_TIMEOUT` | `5` | Bağlantı zaman aşımı süresi (saniye) |
+| `VITE_API_URL` | `http://localhost:8000` | Frontend'in bağlandığı FastAPI backend adresi |
