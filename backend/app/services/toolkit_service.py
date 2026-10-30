@@ -535,6 +535,428 @@ SELECT
 DBCC TRACESTATUS(-1) WITH NO_INFOMSGS;
 """.strip(),
     ),
+
+    # ── Bellek & Önbellek ────────────────────────────────────────────────────
+    DBAScript(
+        id="memory-001",
+        name="Page Life Expectancy (PLE) ve Bellek Sayaçları",
+        category="Bellek & Önbellek",
+        description="Buffer Pool sayfa ömrünü (PLE), Buffer Cache Hit Ratio ve SQL Server hedeflenen/toplam bellek tüketimini ölçer.",
+        risk_level="read_only",
+        tags=["bellek", "memory", "ple", "buffer pool", "hit ratio"],
+        min_sql_version="2008",
+        sql="""
+SELECT
+    RTRIM(object_name) AS object_name,
+    RTRIM(counter_name) AS counter_name,
+    cntr_value,
+    CASE 
+        WHEN counter_name = 'Page life expectancy' AND cntr_value < 300 THEN 'Kritik: Bellek Baskısı Var (<300s)'
+        WHEN counter_name = 'Page life expectancy' THEN 'Sağlıklı (>300s)'
+        ELSE 'Metrik'
+    END AS status_desc
+FROM sys.dm_os_performance_counters
+WHERE (object_name LIKE '%:Buffer Manager%' AND counter_name IN ('Page life expectancy', 'Buffer cache hit ratio', 'Buffer cache hit ratio base'))
+   OR (object_name LIKE '%:Memory Manager%' AND counter_name IN ('Total Server Memory (KB)', 'Target Server Memory (KB)'));
+""".strip(),
+    ),
+    DBAScript(
+        id="memory-002",
+        name="Veritabanı ve Tablo Bazında Buffer Pool Kullanımı",
+        category="Bellek & Önbellek",
+        description="RAM'deki Buffer Pool veri sayfalarının hangi veritabanları tarafından ne kadar kullanıldığını ve kirli (dirty) sayfa oranlarını gösterir.",
+        risk_level="read_only",
+        tags=["bellek", "buffer pool", "veritabani", "dirty pages"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    ISNULL(DB_NAME(database_id), 'Kaynak / Sistem') AS database_name,
+    COUNT(*) AS total_pages_8kb,
+    CAST(ROUND(COUNT(*) * 8.0 / 1024.0, 2) AS FLOAT) AS buffer_pool_mb,
+    CAST(ROUND(SUM(CASE WHEN is_modified = 1 THEN 1 ELSE 0 END) * 8.0 / 1024.0, 2) AS FLOAT) AS dirty_pages_mb,
+    CAST(ROUND(SUM(CASE WHEN is_modified = 0 THEN 1 ELSE 0 END) * 8.0 / 1024.0, 2) AS FLOAT) AS clean_pages_mb
+FROM sys.dm_os_buffer_descriptors
+GROUP BY database_id
+ORDER BY total_pages_8kb DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="memory-003",
+        name="Ad-Hoc Plan Cache Şişmesi (Single-Use Plans)",
+        category="Bellek & Önbellek",
+        description="Yalnızca bir kez çalıştırılmış ad-hoc dinamik sorguların bellekte kilitlediği israf edilen alanı hesaplar.",
+        risk_level="read_only",
+        tags=["bellek", "plan cache", "bloat", "adhoc", "single-use"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    objtype AS plan_type,
+    COUNT(*) AS total_cached_plans,
+    SUM(CASE WHEN usecounts = 1 THEN 1 ELSE 0 END) AS single_use_plans,
+    CAST(ROUND(SUM(size_in_bytes) / 1024.0 / 1024.0, 2) AS FLOAT) AS total_cache_mb,
+    CAST(ROUND(SUM(CASE WHEN usecounts = 1 THEN size_in_bytes ELSE 0 END) / 1024.0 / 1024.0, 2) AS FLOAT) AS wasted_single_use_mb
+FROM sys.dm_exec_cached_plans
+GROUP BY objtype
+ORDER BY wasted_single_use_mb DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="memory-004",
+        name="Query Memory Grants & RESOURCE_SEMAPHORE Beklemeleri",
+        category="Bellek & Önbellek",
+        description="Büyük sıralama (sort) ve hash join sorgularının çalışma belleği hibelerini, bekleme kuyruklarını ve israf oranlarını listeler.",
+        risk_level="read_only",
+        tags=["bellek", "memory grants", "resource_semaphore", "sort", "hash"],
+        min_sql_version="2008",
+        sql="""
+SELECT
+    mg.session_id,
+    mg.request_time,
+    mg.grant_time,
+    CAST(ROUND(mg.requested_memory_kb / 1024.0, 2) AS FLOAT) AS requested_mb,
+    CAST(ROUND(mg.granted_memory_kb / 1024.0, 2) AS FLOAT)   AS granted_mb,
+    CAST(ROUND(mg.used_memory_kb / 1024.0, 2) AS FLOAT)      AS used_mb,
+    CASE 
+        WHEN mg.granted_memory_kb > 0 
+        THEN CAST(ROUND((1.0 - (CAST(mg.used_memory_kb AS FLOAT) / CAST(mg.granted_memory_kb AS FLOAT))) * 100.0, 1) AS FLOAT)
+        ELSE 0 
+    END AS waste_pct,
+    mg.is_waiting,
+    mg.wait_time_ms,
+    SUBSTRING(CAST(t.text AS NVARCHAR(MAX)), 1, 300) AS sql_text
+FROM sys.dm_exec_query_memory_grants mg
+CROSS APPLY sys.dm_exec_sql_text(mg.sql_handle) t
+ORDER BY mg.requested_memory_kb DESC;
+""".strip(),
+    ),
+
+    # ── Disk & IO ────────────────────────────────────────────────────────────
+    DBAScript(
+        id="storage-001",
+        name="Dosya Bazında Disk Gecikmesi (IO Stall Latency)",
+        category="Disk & IO",
+        description="sys.dm_io_virtual_file_stats üzerinden veri ve log dosyalarının okuma/yazma gecikmelerini (ms/stall) hesaplar.",
+        risk_level="read_only",
+        tags=["disk", "io", "stall", "gecikme", "latency", "storage"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    DB_NAME(vfs.database_id) AS database_name,
+    mf.name AS file_name,
+    mf.type_desc AS file_type,
+    mf.physical_name,
+    CASE WHEN vfs.num_of_reads = 0 THEN 0 ELSE (vfs.io_stall_read_ms / vfs.num_of_reads) END AS read_latency_ms,
+    CASE WHEN vfs.num_of_writes = 0 THEN 0 ELSE (vfs.io_stall_write_ms / vfs.num_of_writes) END AS write_latency_ms,
+    CASE 
+        WHEN (vfs.io_stall_read_ms / NULLIF(vfs.num_of_reads, 0)) > 20 THEN 'Kritik Okuma Gecikmesi (>20ms)'
+        WHEN (vfs.io_stall_write_ms / NULLIF(vfs.num_of_writes, 0)) > 20 THEN 'Kritik Yazma Gecikmesi (>20ms)'
+        ELSE 'Normal'
+    END AS latency_status
+FROM sys.dm_io_virtual_file_stats(NULL, NULL) vfs
+JOIN sys.master_files mf ON vfs.database_id = mf.database_id AND vfs.file_id = mf.file_id
+ORDER BY (vfs.io_stall_read_ms + vfs.io_stall_write_ms) DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="storage-002",
+        name="Sanal Log Dosyaları (VLF) Parçalanma Analizi",
+        category="Disk & IO",
+        description="sys.dm_db_log_info ile veritabanlarının Transaction Log (LDF) dosyalarındaki VLF sayılarını ve aktif/inaktif oranlarını gösterir.",
+        risk_level="read_only",
+        tags=["disk", "log", "vlf", "parcalanma", "ldf", "virtual log file"],
+        min_sql_version="2016 SP2",
+        sql="""
+SELECT 
+    d.name AS database_name,
+    d.recovery_model_desc,
+    d.log_reuse_wait_desc,
+    COUNT(li.vlf_sequence_number) AS vlf_count,
+    SUM(CASE WHEN li.vlf_status = 2 THEN 1 ELSE 0 END) AS active_vlf_count,
+    SUM(CASE WHEN li.vlf_status != 2 THEN 1 ELSE 0 END) AS inactive_vlf_count,
+    CAST(ROUND(SUM(li.vlf_size_mb), 2) AS FLOAT) AS total_log_size_mb,
+    CASE 
+        WHEN COUNT(li.vlf_sequence_number) > 1000 THEN 'Kritik Parçalanma (>1000 VLF)'
+        WHEN COUNT(li.vlf_sequence_number) > 500 THEN 'Uyarı (500-1000 VLF)'
+        ELSE 'Sağlıklı'
+    END AS vlf_health
+FROM sys.databases d
+CROSS APPLY sys.dm_db_log_info(d.database_id) li
+GROUP BY d.name, d.recovery_model_desc, d.log_reuse_wait_desc
+ORDER BY vlf_count DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="storage-003",
+        name="Log Kesilmesini Engelleyen Sebepler (log_reuse_wait)",
+        category="Disk & IO",
+        description="Transaction Log dosyasının küçültülmesini veya üzerine yazılmasını engelleyen kök nedenleri listeler.",
+        risk_level="read_only",
+        tags=["disk", "log", "log_reuse_wait", "truncate", "shrink"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    name AS database_name,
+    recovery_model_desc AS recovery_model,
+    log_reuse_wait_desc,
+    CASE 
+        WHEN log_reuse_wait_desc = 'NOTHING' THEN 'Log kesilmesini engelleyen durum yok.'
+        WHEN log_reuse_wait_desc = 'ACTIVE_TRANSACTION' THEN 'Açık kalan uncommitted işlem log truncate edilmesini engelliyor.'
+        WHEN log_reuse_wait_desc = 'LOG_BACKUP' THEN 'Log yedeği (BACKUP LOG) alınması gerekiyor.'
+        WHEN log_reuse_wait_desc = 'REPLICATION' THEN 'Replikasyon log okuyucu ajanı bekleniyor.'
+        WHEN log_reuse_wait_desc = 'AVAILABILITY_GROUP' THEN 'Always On ikincil replika senkronizasyonu bekleniyor.'
+        WHEN log_reuse_wait_desc = 'CHECKPOINT' THEN 'Simple modelde Checkpoint işlemi bekleniyor.'
+        ELSE 'Özel sebep: ' + log_reuse_wait_desc
+    END AS explanation
+FROM sys.databases
+WHERE database_id > 4
+ORDER BY log_reuse_wait_desc;
+""".strip(),
+    ),
+
+    # ── Veri Bütünlüğü & Kurtarma ────────────────────────────────────────────
+    DBAScript(
+        id="integrity-001",
+        name="Fiziksel Disk Bozulmaları ve Hasarlı Sayfa Radarı (suspect_pages)",
+        category="Veri Bütünlüğü",
+        description="msdb.dbo.suspect_pages tablosunda 823/824 I/O sağlama hatalarıyla işaretlenmiş hasarlı 8KB veri sayfalarını listeler.",
+        risk_level="read_only",
+        tags=["butunluk", "suspect_pages", "corruption", "824", "823", "hasarli sayfa"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    DB_NAME(sp.database_id) AS database_name,
+    sp.file_id,
+    sp.page_id,
+    sp.event_type,
+    CASE sp.event_type
+        WHEN 1 THEN '823 (İşletim Sistemi / Disk I/O Hatası)'
+        WHEN 2 THEN '824 (Bozuk Veri Sayfası / Checksum Hatası)'
+        WHEN 3 THEN 'Yırtık Sayfa (Torn Page)'
+        WHEN 4 THEN 'Geri Yüklendi (Restored)'
+        WHEN 5 THEN 'Onarıldı (Repaired)'
+        WHEN 7 THEN 'Sayfa Başarıyla Yeniden Okundu'
+        ELSE 'Bilinmeyen Hata Kodu'
+    END AS event_desc,
+    sp.error_count,
+    sp.last_update_date
+FROM msdb.dbo.suspect_pages sp
+ORDER BY sp.last_update_date DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="integrity-002",
+        name="DBCC CHECKDB Son Başarılı Bütünlük Denetim Tarihleri",
+        category="Veri Bütünlüğü",
+        description="Her veritabanında DBCC CHECKDB bütünlük kontrolünün en son ne zaman hatasız çalıştığını dbi_dbccLastKnownGood ile denetler.",
+        risk_level="read_only",
+        tags=["butunluk", "checkdb", "integrity", "last known good"],
+        min_sql_version="2008",
+        sql="""
+CREATE TABLE #DbccDates (
+    DatabaseName NVARCHAR(128),
+    Field VARCHAR(50),
+    Value VARCHAR(100)
+);
+
+EXEC sp_MSforeachdb '
+IF ''?'' NOT IN (''tempdb'')
+BEGIN
+    INSERT INTO #DbccDates (Field, Value)
+    EXEC (''DBCC DBINFO (''''?'''') WITH TABLERESULTS, NO_INFOMSGS'');
+    UPDATE #DbccDates SET DatabaseName = ''?'' WHERE DatabaseName IS NULL;
+END
+';
+
+SELECT 
+    DatabaseName,
+    TRY_CAST(Value AS DATETIME) AS LastSuccessfulCheckdb,
+    DATEDIFF(DAY, TRY_CAST(Value AS DATETIME), GETDATE()) AS DaysSinceLastCheckdb,
+    CASE 
+        WHEN Value = '1900-01-01 00:00:00.000' OR Value IS NULL THEN 'Kritik: Hiç CHECKDB Yapılmamış!'
+        WHEN DATEDIFF(DAY, TRY_CAST(Value AS DATETIME), GETDATE()) > 7 THEN 'Uyarı: Son 7 Gündür CHECKDB Çalışmamış'
+        ELSE 'Sağlıklı'
+    END AS integrity_status
+FROM #DbccDates
+WHERE Field = 'dbi_dbccLastKnownGood';
+
+DROP TABLE #DbccDates;
+""".strip(),
+    ),
+
+    # ── Bekleme İstatistikleri ───────────────────────────────────────────────
+    DBAScript(
+        id="waits-001",
+        name="En Yüksek Kaynak Beklemeleri (Top Wait Stats)",
+        category="Bekleme İstatistikleri",
+        description="sys.dm_os_wait_stats üzerinden önemsiz kuyruk beklemelerini eleyerek sisteme en çok zaman kaybettiren bekleme türlerini ve yüzdelerini gösterir.",
+        risk_level="read_only",
+        tags=["bekleme", "wait stats", "cxpacket", "pageiolatch", "performans"],
+        min_sql_version="2008",
+        sql="""
+WITH Waits AS (
+    SELECT 
+        wait_type,
+        wait_time_ms / 1000.0 AS wait_time_s,
+        (wait_time_ms - signal_wait_time_ms) / 1000.0 AS resource_wait_s,
+        signal_wait_time_ms / 1000.0 AS signal_wait_s,
+        waiting_tasks_count,
+        100.0 * wait_time_ms / SUM(wait_time_ms) OVER() AS percentage
+    FROM sys.dm_os_wait_stats
+    WHERE wait_type NOT IN (
+        'CLR_SEMAPHORE', 'LAZYWRITER_SLEEP', 'RESOURCE_QUEUE', 'SLEEP_TASK',
+        'SLEEP_SYSTEMTASK', 'SQLTRACE_BUFFER_FLUSH', 'WAITFOR', 'LOGMGR_QUEUE',
+        'CHECKPOINT_QUEUE', 'REQUEST_FOR_DEADLOCK_SEARCH', 'XE_TIMER_EVENT',
+        'BROKER_TO_FLUSH', 'BROKER_TASK_STOP', 'CLR_MANUAL_EVENT',
+        'CLR_AUTO_EVENT', 'DISPATCHER_QUEUE_SEMAPHORE', 'FT_IFTS_SCHEDULER_IDLE_WAIT',
+        'XE_DISPATCHER_WAIT', 'XE_DISPATCHER_JOIN', 'SQLTRACE_INCREMENTAL_FLUSH_SLEEP'
+    )
+)
+SELECT TOP 15
+    wait_type,
+    CAST(ROUND(wait_time_s, 2) AS FLOAT) AS wait_time_s,
+    CAST(ROUND(resource_wait_s, 2) AS FLOAT) AS resource_wait_s,
+    CAST(ROUND(signal_wait_s, 2) AS FLOAT) AS signal_wait_s,
+    waiting_tasks_count,
+    CAST(ROUND(percentage, 2) AS FLOAT) AS percentage
+FROM Waits
+WHERE percentage > 0.5
+ORDER BY wait_time_s DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="waits-002",
+        name="Extended Events (system_health) Son Deadlock XML Analizi",
+        category="Bekleme İstatistikleri",
+        description="Varsayılan system_health oturumunun ring buffer alanından son gerçekleşen kilitlenme (deadlock) grafiklerini ve XML detaylarını çıkarır.",
+        risk_level="read_only",
+        tags=["deadlock", "kilitlenme", "system_health", "xevent", "xml_deadlock_report"],
+        min_sql_version="2008 R2",
+        sql="""
+SELECT 
+    CAST(event_data AS XML).value('(/event/@timestamp)[1]', 'DATETIME2') AS deadlock_timestamp,
+    CAST(event_data AS XML).query('/event/data[@name="xml_report"]/value/deadlock') AS deadlock_graph_xml
+FROM sys.fn_xe_file_target_read_file('system_health*.xel', NULL, NULL, NULL)
+WHERE object_name = 'xml_deadlock_report'
+ORDER BY deadlock_timestamp DESC;
+""".strip(),
+    ),
+
+    # ── Güvenlik ─────────────────────────────────────────────────────────────
+    DBAScript(
+        id="security-001",
+        name="Sysadmin ve Sunucu Rolü Üyeleri Denetimi",
+        category="Güvenlik",
+        description="sysadmin, serveradmin ve securityadmin gibi yüksek yetkili sunucu rollerine atanmış hesapları ve tipini (SQL/Windows) listeler.",
+        risk_level="read_only",
+        tags=["guvenlik", "sysadmin", "server role", "yetki", "audit"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    r.name AS server_role,
+    m.name AS member_login,
+    m.type_desc AS login_type,
+    m.is_disabled,
+    m.create_date,
+    m.modify_date
+FROM sys.server_role_members rm
+JOIN sys.server_principals r ON rm.role_principal_id = r.principal_id
+JOIN sys.server_principals m ON rm.member_principal_id = m.principal_id
+ORDER BY r.name, m.name;
+""".strip(),
+    ),
+    DBAScript(
+        id="security-002",
+        name="Yetim Kullanıcılar (Orphaned Users - SID Uyuşmazlığı)",
+        category="Güvenlik",
+        description="Veritabanı kullanıcısı olup master veritabanında karşılık gelen sunucu login'i bulunmayan sahipsiz hesapları listeler.",
+        risk_level="read_only",
+        tags=["guvenlik", "orphaned users", "yetim kullanici", "sid mismatch"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    dp.name AS database_user,
+    dp.type_desc,
+    dp.create_date,
+    'ALTER USER [' + dp.name + '] WITH LOGIN = [' + dp.name + '];' AS repair_sql
+FROM sys.database_principals dp
+LEFT JOIN sys.server_principals sp ON dp.sid = sp.sid
+WHERE dp.type IN ('S', 'U', 'G')
+  AND dp.authentication_type = 1
+  AND sp.sid IS NULL
+  AND dp.name NOT IN ('guest', 'INFORMATION_SCHEMA', 'sys', 'without login');
+""".strip(),
+    ),
+    DBAScript(
+        id="security-003",
+        name="Parola Politikası (CHECK_POLICY) Kapalı SQL Login'leri",
+        category="Güvenlik",
+        description="Windows şifre karmaşıklığı denetimi (CHECK_POLICY) veya süre sonu denetimi (CHECK_EXPIRATION) kapalı olan SQL kimlik doğrulamalı hesapları listeler.",
+        risk_level="read_only",
+        tags=["guvenlik", "check_policy", "password", "parola", "guvenlik riski"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    name AS login_name,
+    is_disabled,
+    is_policy_checked,
+    is_expiration_checked,
+    create_date,
+    modify_date,
+    'ALTER LOGIN [' + name + '] WITH CHECK_POLICY = ON, CHECK_EXPIRATION = ON;' AS hardening_sql
+FROM sys.sql_logins
+WHERE is_policy_checked = 0 OR is_expiration_checked = 0
+ORDER BY is_policy_checked ASC, name;
+""".strip(),
+    ),
+
+    # ── SQL Agent & Bakım ────────────────────────────────────────────────────
+    DBAScript(
+        id="agent-001",
+        name="Son 24 Saatte Hata Alan SQL Server Agent Adımları",
+        category="SQL Agent",
+        description="msdb.dbo.sysjobhistory üzerinden son 24 saat içinde hata alan işleri, başarısız adımları ve hata mesajlarını listeler.",
+        risk_level="read_only",
+        tags=["agent", "jobs", "hata", "failed jobs", "sysjobhistory"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    j.name AS job_name,
+    h.step_name,
+    h.step_id,
+    msdb.dbo.agent_datetime(h.run_date, h.run_time) AS failure_time,
+    h.run_duration AS duration_hhmmss,
+    h.sql_severity,
+    h.message AS error_message
+FROM msdb.dbo.sysjobhistory h
+JOIN msdb.dbo.sysjobs j ON h.job_id = j.job_id
+WHERE h.run_status = 0 -- 0 = Failed
+  AND msdb.dbo.agent_datetime(h.run_date, h.run_time) >= DATEADD(HOUR, -24, GETDATE())
+ORDER BY failure_time DESC;
+""".strip(),
+    ),
+    DBAScript(
+        id="agent-002",
+        name="SQL Server Kritik Sistem Alarmları (sysalerts - Severity 17-25)",
+        category="SQL Agent",
+        description="msdb.dbo.sysalerts tablosunda kritik donanım, bozulma (823, 824, 825) ve kaynak tükenme alarmlarının tanımlı olup olmadığını denetler.",
+        risk_level="read_only",
+        tags=["agent", "alerts", "sysalerts", "severity", "donanim hatasi"],
+        min_sql_version="2008",
+        sql="""
+SELECT 
+    name AS alert_name,
+    event_source,
+    message_id,
+    severity,
+    enabled,
+    delay_between_responses AS delay_seconds,
+    last_occurrence_date,
+    last_occurrence_time,
+    occurrence_count
+FROM msdb.dbo.sysalerts
+ORDER BY severity DESC, message_id;
+""".strip(),
+    ),
 ]
 
 
@@ -566,6 +988,12 @@ def get_categories() -> List[ScriptCategory]:
         "Query Store": "Query Store durumunu ve en çok kaynak tüketen sorguları analiz edin.",
         "Hata Günlüğü": "SQL Server hata günlüğü (error log) kayıtlarını okuyun ve inceleyin.",
         "Yapılandırma": "SQL Server sunucu ve veritabanı yapılandırma ayarlarını denetleyin.",
+        "Bellek & Önbellek": "Buffer Pool dağılımı, PLE bellek ömrü, Plan Cache şişmesi ve bellek hibelerini (grants) analiz edin.",
+        "Disk & IO": "Veri ve log dosyası disk gecikmelerini (stalls), VLF parçalanmasını ve log kesilme engellerini denetleyin.",
+        "Veri Bütünlüğü": "Fiziksel bozuk sayfa radarı (suspect_pages) ve DBCC CHECKDB son başarılı çalışma geçmişini inceleyin.",
+        "Bekleme İstatistikleri": "Sunucu genelindeki en yüksek kaynak beklemelerini ve ring buffer deadlock grafiklerini analiz edin.",
+        "Güvenlik": "Sysadmin yetkili hesapları, yetim kullanıcıları ve zayıf parola politikalarını denetleyin.",
+        "SQL Agent": "Son 24 saatte hata alan SQL Agent adımlarını ve kritik sistem hata alarmlarını (sysalerts) izleyin.",
     }
     return [
         ScriptCategory(name=cat, description=category_descs.get(cat, ""), script_count=cnt)

@@ -92,7 +92,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.5** AlwaysOn Availability Groups replika sağlık durumları ve senkronizasyon takibi
 - [x] **5.6** İki veritabanı arası şema karşılaştırması (Schema Diff) ve review-only DDL üretimi
 - [x] **5.7** DBA Teşhis Araç Seti aranabilir T-SQL betik kütüphanesi (`ToolkitPage`)
-- [ ] **5.8** Gelişmiş T-SQL script şablonlarının genişletilmesi (İndeks defrag & Latch analizleri)
+- [x] **5.8** Gelişmiş T-SQL script şablonlarının genişletilmesi (37 adet üretim hazır DBA acil durum ve teşhis betiği)
 - [ ] **5.9** Webhook tabanlı canlı kriz uyarı fırlatıcı (Slack/Teams)
 
 ---

@@ -9,7 +9,7 @@ def test_get_all_scripts():
     res = client.get("/api/toolkit/scripts")
     assert res.status_code == 200
     scripts = res.json()
-    assert len(scripts) >= 10
+    assert len(scripts) >= 35
     # Every script must have required fields
     for s in scripts:
         assert "id" in s
@@ -32,3 +32,8 @@ def test_get_categories():
     cats = res.json()
     assert "Oturumlar" in cats
     assert "Engellemeler" in cats
+    assert "Bellek & Önbellek" in cats
+    assert "Disk & IO" in cats
+    assert "Veri Bütünlüğü" in cats
+    assert "Güvenlik" in cats
+    assert "SQL Agent" in cats
