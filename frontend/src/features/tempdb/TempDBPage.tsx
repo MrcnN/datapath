@@ -8,6 +8,11 @@ import {
   HardDrive,
   Clock,
   PieChart,
+  Copy,
+  Check,
+  Flame,
+  Database,
+  FileCode,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -19,6 +24,9 @@ import type {
   TempDBMemorySummary,
   TempDBFile,
   MemoryClerk,
+  BufferPoolDatabaseUsage,
+  BufferPoolTopObject,
+  PlanCacheBloatAnalysis,
 } from '../../lib/types';
 import styles from './TempDBPage.module.css';
 
@@ -26,6 +34,7 @@ export default function TempDBPage() {
   const [summary, setSummary] = useState<TempDBMemorySummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [copiedScript, setCopiedScript] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadData() {
@@ -139,6 +148,122 @@ export default function TempDBPage() {
       ),
     },
   ];
+
+  const bpColumns: Column<BufferPoolDatabaseUsage>[] = [
+    {
+      key: 'database_name',
+      label: 'Veritabanı',
+      sortable: true,
+      render: (d) => <strong style={{ color: 'var(--text-primary)' }}>{d.database_name}</strong>,
+    },
+    {
+      key: 'buffer_pool_mb',
+      label: 'Buffer Pool Boyutu',
+      sortable: true,
+      render: (d) => (
+        <span style={{ fontWeight: 600 }}>
+          {d.buffer_pool_mb >= 1024 ? `${(d.buffer_pool_mb / 1024).toFixed(2)} GB` : `${d.buffer_pool_mb.toFixed(1)} MB`}
+        </span>
+      ),
+    },
+    {
+      key: 'percentage_of_buffer_pool',
+      label: 'RAM Payı (%)',
+      sortable: true,
+      render: (d) => (
+        <div style={{ minWidth: '100px' }}>
+          <div style={{ fontSize: '11px', fontWeight: 600, marginBottom: '2px' }}>
+            {d.percentage_of_buffer_pool.toFixed(1)}%
+          </div>
+          <div className={styles.barTrack}>
+            <div
+              className={styles.barFill}
+              style={{
+                width: `${Math.min(100, d.percentage_of_buffer_pool)}%`,
+                background: 'var(--accent-blue)',
+              }}
+            />
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: 'clean_pages_mb',
+      label: 'Temiz / Kirli Sayfalar (Checkpoint)',
+      render: (d) => {
+        const total = d.clean_pages_mb + d.dirty_pages_mb || 1;
+        const cleanPct = (d.clean_pages_mb / total) * 100;
+        const dirtyPct = (d.dirty_pages_mb / total) * 100;
+        return (
+          <div className={styles.dirtyCleanWrap}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10.5px', color: 'var(--text-muted)' }}>
+              <span>Temiz: {d.clean_pages_mb.toFixed(0)} MB</span>
+              <span style={{ color: d.dirty_pages_mb > 500 ? '#f59e0b' : 'inherit' }}>
+                Kirli: {d.dirty_pages_mb.toFixed(0)} MB
+              </span>
+            </div>
+            <div className={styles.dirtyCleanBar}>
+              <div className={styles.cleanSegment} style={{ width: `${cleanPct}%` }} title="Temiz sayfalar" />
+              <div className={styles.dirtySegment} style={{ width: `${dirtyPct}%` }} title="Diske yazılmayı bekleyen kirli sayfalar" />
+            </div>
+          </div>
+        );
+      },
+    },
+  ];
+
+  const objectColumns: Column<BufferPoolTopObject>[] = [
+    {
+      key: 'table_name',
+      label: 'Tablo & Şema',
+      sortable: true,
+      render: (o) => (
+        <div>
+          <strong style={{ color: 'var(--text-primary)' }}>{o.table_name}</strong>
+          <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginLeft: '6px' }}>
+            ({o.schema_name})
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: 'index_name',
+      label: 'İndeks & Tür',
+      sortable: true,
+      render: (o) => (
+        <div>
+          <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{o.index_name || 'HEAP'}</span>
+          <div style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>{o.index_type}</div>
+        </div>
+      ),
+    },
+    {
+      key: 'buffer_mb',
+      label: 'RAM Boyutu (Buffer MB)',
+      sortable: true,
+      render: (o) => (
+        <span style={{ fontWeight: 600, color: 'var(--accent-blue)' }}>
+          {o.buffer_mb >= 1024 ? `${(o.buffer_mb / 1024).toFixed(2)} GB` : `${o.buffer_mb.toFixed(1)} MB`}
+        </span>
+      ),
+    },
+    {
+      key: 'page_count',
+      label: 'Bellek Sayfası',
+      sortable: true,
+      render: (o) => (
+        <span style={{ fontSize: '11.5px', fontFamily: 'monospace' }}>
+          {o.page_count.toLocaleString()} sayfa
+        </span>
+      ),
+    },
+  ];
+
+  const handleCopyScript = (scriptText: string) => {
+    navigator.clipboard.writeText(scriptText);
+    setCopiedScript(true);
+    setTimeout(() => setCopiedScript(false), 2000);
+  };
 
   const space = summary?.space_breakdown;
 
@@ -354,6 +479,172 @@ export default function TempDBPage() {
             data={summary?.top_memory_clerks || []}
             columns={clerkColumns}
             emptyMessage="Memory clerk verisi bulunamadı."
+          />
+        </div>
+      </div>
+
+      {/* Section: Ad-Hoc Plan Cache Bloat Analysis */}
+      {summary?.plan_cache_bloat && (
+        <div
+          className={`${styles.bloatCard} ${
+            summary.plan_cache_bloat.status === 'CRITICAL' ? styles.bloatCardCritical : ''
+          }`}
+        >
+          <div className={styles.bloatHeader}>
+            <div className={styles.bloatHeaderLeft}>
+              <Flame
+                size={20}
+                color={
+                  summary.plan_cache_bloat.status === 'CRITICAL'
+                    ? '#ef4444'
+                    : summary.plan_cache_bloat.status === 'WARNING'
+                    ? '#f59e0b'
+                    : 'var(--status-success)'
+                }
+              />
+              <h3 className={styles.bloatTitle}>
+                Ad-Hoc Plan Cache Şişmesi &amp; Bellek İsrafı (sys.dm_exec_cached_plans)
+              </h3>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span
+                className={
+                  summary.plan_cache_bloat.status === 'CRITICAL'
+                    ? styles.badgeDanger
+                    : summary.plan_cache_bloat.status === 'WARNING'
+                    ? styles.badgeWarning
+                    : styles.badgeSuccess
+                }
+              >
+                {summary.plan_cache_bloat.status === 'CRITICAL'
+                  ? 'Kritik Bellek İsrafı'
+                  : summary.plan_cache_bloat.status === 'WARNING'
+                  ? 'Orta Seviye Şişme'
+                  : 'Sağlıklı Önbellek'}
+              </span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  padding: '2px 8px',
+                  borderRadius: '4px',
+                  background: summary.plan_cache_bloat.optimize_for_adhoc_enabled
+                    ? 'rgba(34, 197, 94, 0.15)'
+                    : 'rgba(239, 68, 68, 0.15)',
+                  color: summary.plan_cache_bloat.optimize_for_adhoc_enabled
+                    ? 'var(--status-success)'
+                    : '#ef4444',
+                  fontWeight: 600,
+                }}
+              >
+                optimize for ad hoc workloads:{' '}
+                {summary.plan_cache_bloat.optimize_for_adhoc_enabled ? 'AÇIK (1)' : 'KAPALI (0)'}
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.bloatGrid}>
+            <div className={styles.bloatItem}>
+              <span className={styles.bloatLabel}>Toplam Önbellek Planı</span>
+              <span className={styles.bloatValue}>
+                {summary.plan_cache_bloat.total_cached_plans_count.toLocaleString()}
+              </span>
+            </div>
+            <div className={styles.bloatItem}>
+              <span className={styles.bloatLabel}>Tek Seferlik (Single-Use) Plan</span>
+              <span
+                className={styles.bloatValue}
+                style={{
+                  color:
+                    summary.plan_cache_bloat.single_use_plans_percent > 40
+                      ? '#ef4444'
+                      : 'inherit',
+                }}
+              >
+                {summary.plan_cache_bloat.single_use_plans_count.toLocaleString()}{' '}
+                <span style={{ fontSize: '12px', fontWeight: 500 }}>
+                  (%{summary.plan_cache_bloat.single_use_plans_percent})
+                </span>
+              </span>
+            </div>
+            <div className={styles.bloatItem}>
+              <span className={styles.bloatLabel}>Plan Cache Toplam Boyut</span>
+              <span className={styles.bloatValue}>
+                {summary.plan_cache_bloat.total_cache_size_mb >= 1024
+                  ? `${(summary.plan_cache_bloat.total_cache_size_mb / 1024).toFixed(2)} GB`
+                  : `${summary.plan_cache_bloat.total_cache_size_mb.toFixed(1)} MB`}
+              </span>
+            </div>
+            <div className={styles.bloatItem}>
+              <span className={styles.bloatLabel}>İsraf Edilen RAM Alanı</span>
+              <span
+                className={styles.bloatValue}
+                style={{
+                  color:
+                    summary.plan_cache_bloat.wasted_memory_percent > 30 ? '#ef4444' : 'inherit',
+                }}
+              >
+                {summary.plan_cache_bloat.wasted_adhoc_mb >= 1024
+                  ? `${(summary.plan_cache_bloat.wasted_adhoc_mb / 1024).toFixed(2)} GB`
+                  : `${summary.plan_cache_bloat.wasted_adhoc_mb.toFixed(1)} MB`}{' '}
+                <span style={{ fontSize: '12px', fontWeight: 500 }}>
+                  (%{summary.plan_cache_bloat.wasted_memory_percent})
+                </span>
+              </span>
+            </div>
+          </div>
+
+          <div className={styles.bloatRecBox}>
+            <strong>Kök Neden &amp; Çözüm Teşhisi:</strong> {summary.plan_cache_bloat.recommendation}
+          </div>
+
+          <div className={styles.scriptWrapper}>
+            <button
+              type="button"
+              className={styles.copyScriptBtn}
+              onClick={() => handleCopyScript(summary.plan_cache_bloat?.remediation_script || '')}
+              title="İyileştirme T-SQL betiğini kopyala"
+            >
+              {copiedScript ? <Check size={12} /> : <Copy size={12} />}
+              {copiedScript ? 'Kopyalandı' : 'T-SQL Betiğini Kopyala'}
+            </button>
+            <pre className={styles.scriptPre}>{summary.plan_cache_bloat.remediation_script}</pre>
+          </div>
+        </div>
+      )}
+
+      {/* Section: Buffer Pool Deep Breakdown (Databases & Top Objects) */}
+      <div className={styles.twoColGrid}>
+        {/* Left: Buffer Pool Per-Database Distribution */}
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Database size={18} color="var(--accent-blue)" />
+              <h3 style={{ margin: 0, fontSize: '15px' }}>
+                Veritabanı Bazında Buffer Pool Kullanımı (sys.dm_os_buffer_descriptors)
+              </h3>
+            </div>
+          </div>
+          <DataTable
+            data={summary?.buffer_pool_db_distribution || []}
+            columns={bpColumns}
+            emptyMessage="Buffer pool veritabanı dağılımı bulunamadı."
+          />
+        </div>
+
+        {/* Right: Top In-Memory Cached Objects */}
+        <div className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <FileCode size={18} color="var(--accent-cyan)" />
+              <h3 style={{ margin: 0, fontSize: '15px' }}>
+                RAM'de En Çok Yer Kaplayan Tablolar &amp; İndeksler
+              </h3>
+            </div>
+          </div>
+          <DataTable
+            data={summary?.buffer_pool_top_objects || []}
+            columns={objectColumns}
+            emptyMessage="Bellekteki nesne dağılımı bulunamadı."
           />
         </div>
       </div>

@@ -859,6 +859,38 @@ export interface MemoryClerk {
   [key: string]: any;
 }
 
+export interface BufferPoolDatabaseUsage {
+  database_name: string;
+  buffer_pool_mb: number;
+  percentage_of_buffer_pool: number;
+  dirty_pages_mb: number;
+  clean_pages_mb: number;
+  total_pages_count: number;
+}
+
+export interface BufferPoolTopObject {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  index_name?: string | null;
+  index_type: string;
+  buffer_mb: number;
+  page_count: number;
+}
+
+export interface PlanCacheBloatAnalysis {
+  total_cached_plans_count: number;
+  single_use_plans_count: number;
+  single_use_plans_percent: number;
+  total_cache_size_mb: number;
+  wasted_adhoc_mb: number;
+  wasted_memory_percent: number;
+  status: 'HEALTHY' | 'WARNING' | 'CRITICAL' | string;
+  optimize_for_adhoc_enabled: boolean;
+  recommendation: string;
+  remediation_script: string;
+}
+
 export interface TempDBMemorySummary {
   space_breakdown: TempDBSpaceBreakdown;
   tempdb_files: TempDBFile[];
@@ -877,6 +909,9 @@ export interface TempDBMemorySummary {
   target_server_memory_mb: number;
   memory_utilization_pct: number;
   top_memory_clerks: MemoryClerk[];
+  buffer_pool_db_distribution?: BufferPoolDatabaseUsage[];
+  buffer_pool_top_objects?: BufferPoolTopObject[];
+  plan_cache_bloat?: PlanCacheBloatAnalysis | null;
   is_demo?: boolean;
   [key: string]: any;
 }

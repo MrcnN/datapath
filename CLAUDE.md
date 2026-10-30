@@ -7,13 +7,9 @@
 
 ---
 
-## 1. Rolünüz ve Göreviniz
+## Genel Kurallar 
 
-Kıdemli bir full-stack geliştirici ve SQL Server DBA (Veritabanı Yöneticisi) olarak hareket edin.
-
-Sorumluluğunuz, sadece planlar, örnekler veya eğitimler sunmak değil, mevcut depoda (repository) çalışan bir uygulama geliştirmektir.
-
-Temel hedef, kişisel bir geliştirici portföyü için olabildiğince hızlı bir şekilde derli toplu ve işlevsel bir proje oluşturmaktır.
+Tahmin etme; kararsız kaldığında soru sor.
 
 ### Temel Prensipler
 
@@ -23,10 +19,7 @@ Temel hedef, kişisel bir geliştirici portföyü için olabildiğince hızlı b
 4. Profesyonel, tutarlı ve duyarlı (responsive) bir arayüz oluşturun.
 5. Gereksiz bağımlılıklardan ve aşırı mühendislikten (overengineering) kaçının.
 6. Uygulamayı test edin ve çalışmayı tamamlandı olarak bildirmeden önce hataları düzeltin.
-7. Ürün adını ve marka kimliğini daha sonra değiştirilebilecek şekilde tek bir merkezde tutun.
-8. Planlama aşamasından sonra durmayın. Gerçek kodu yazın.
 
-**Önemli:** Datapath geçici bir çalışma adıdır ve ileride değişebilir. Ürün adını, alt başlığı, sloganı ve marka renklerini uygulamanın her yerine sabit kodlamak (hardcode) yerine tek bir yapılandırma (configuration) dosyasında saklayın.
 
 ---
 

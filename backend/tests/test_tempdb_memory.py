@@ -40,3 +40,22 @@ def test_tempdb_memory_endpoint():
     assert "friendly_name" in first_clerk
     assert "size_mb" in first_clerk
     assert "percentage_of_total" in first_clerk
+
+    # Buffer Pool Distribution & Plan Cache Bloat
+    assert "buffer_pool_db_distribution" in data
+    assert len(data["buffer_pool_db_distribution"]) > 0
+    first_db = data["buffer_pool_db_distribution"][0]
+    assert "database_name" in first_db
+    assert "buffer_pool_mb" in first_db
+    assert "dirty_pages_mb" in first_db
+    assert "clean_pages_mb" in first_db
+
+    assert "plan_cache_bloat" in data
+    assert data["plan_cache_bloat"] is not None
+    bloat = data["plan_cache_bloat"]
+    assert "total_cached_plans_count" in bloat
+    assert "single_use_plans_count" in bloat
+    assert "wasted_adhoc_mb" in bloat
+    assert "status" in bloat
+    assert "remediation_script" in bloat
+

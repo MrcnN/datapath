@@ -10,6 +10,9 @@ from app.schemas.tempdb_memory import (
     TempDBFile,
     TempDBMemorySummary,
     TempDBSpaceBreakdown,
+    BufferPoolDatabaseUsage,
+    BufferPoolTopObject,
+    PlanCacheBloatAnalysis,
 )
 from app.services.demo_data import DEMO_TEMPDB_MEMORY_SUMMARY
 
@@ -226,6 +229,150 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
                 )
             )
 
+        # 7. Buffer Pool Database Distribution (sys.dm_os_buffer_descriptors)
+        buffer_pool_dbs: List[BufferPoolDatabaseUsage] = []
+        try:
+            bp_query = """
+            SELECT 
+                ISNULL(DB_NAME(database_id), 'Kaynak / Diğer') AS database_name,
+                CAST(ROUND(COUNT(*) * 8.0 / 1024.0, 2) AS FLOAT) AS buffer_pool_mb,
+                CAST(ROUND(SUM(CASE WHEN is_modified = 1 THEN 1 ELSE 0 END) * 8.0 / 1024.0, 2) AS FLOAT) AS dirty_pages_mb,
+                CAST(ROUND(SUM(CASE WHEN is_modified = 0 THEN 1 ELSE 0 END) * 8.0 / 1024.0, 2) AS FLOAT) AS clean_pages_mb,
+                COUNT(*) AS total_pages_count
+            FROM sys.dm_os_buffer_descriptors
+            GROUP BY database_id
+            ORDER BY total_pages_count DESC;
+            """
+            cursor.execute(bp_query)
+            bp_rows = rows_to_dicts(cursor)
+            tot_bp_mb = sum(float(r.get("buffer_pool_mb") or 0.0) for r in bp_rows) or 1.0
+            for r in bp_rows:
+                mb = float(r.get("buffer_pool_mb") or 0.0)
+                pct = round((mb / tot_bp_mb * 100.0), 2)
+                buffer_pool_dbs.append(
+                    BufferPoolDatabaseUsage(
+                        database_name=str(r.get("database_name") or "Diğer"),
+                        buffer_pool_mb=mb,
+                        percentage_of_buffer_pool=pct,
+                        dirty_pages_mb=float(r.get("dirty_pages_mb") or 0.0),
+                        clean_pages_mb=float(r.get("clean_pages_mb") or 0.0),
+                        total_pages_count=int(r.get("total_pages_count") or 0),
+                    )
+                )
+        except Exception as bp_err:
+            logger.warning("Could not query sys.dm_os_buffer_descriptors: %s", bp_err)
+            buffer_pool_dbs = DEMO_TEMPDB_MEMORY_SUMMARY.buffer_pool_db_distribution
+
+        # 8. Buffer Pool Top In-Memory Cached Objects
+        buffer_pool_objects: List[BufferPoolTopObject] = []
+        try:
+            obj_query = """
+            SELECT TOP 10
+                DB_NAME() AS database_name,
+                s.name AS schema_name,
+                o.name AS table_name,
+                ISNULL(i.name, 'HEAP') AS index_name,
+                ISNULL(i.type_desc, 'HEAP') AS index_type,
+                CAST(ROUND(COUNT(bd.page_id) * 8.0 / 1024.0, 2) AS FLOAT) AS buffer_mb,
+                COUNT(bd.page_id) AS page_count
+            FROM sys.dm_os_buffer_descriptors bd
+            JOIN sys.allocation_units au ON bd.allocation_unit_id = au.allocation_unit_id
+            JOIN sys.partitions p ON au.container_id = p.hobt_id
+            JOIN sys.objects o ON p.object_id = o.object_id
+            JOIN sys.schemas s ON o.schema_id = s.schema_id
+            LEFT JOIN sys.indexes i ON p.object_id = i.object_id AND p.index_id = i.index_id
+            WHERE bd.database_id = DB_ID() AND o.is_ms_shipped = 0
+            GROUP BY s.name, o.name, i.name, i.type_desc
+            ORDER BY page_count DESC;
+            """
+            cursor.execute(obj_query)
+            obj_rows = rows_to_dicts(cursor)
+            for obr in obj_rows:
+                buffer_pool_objects.append(
+                    BufferPoolTopObject(
+                        database_name=str(obr.get("database_name") or ""),
+                        schema_name=str(obr.get("schema_name") or "dbo"),
+                        table_name=str(obr.get("table_name") or ""),
+                        index_name=str(obr.get("index_name")) if obr.get("index_name") else None,
+                        index_type=str(obr.get("index_type") or "CLUSTERED"),
+                        buffer_mb=float(obr.get("buffer_mb") or 0.0),
+                        page_count=int(obr.get("page_count") or 0),
+                    )
+                )
+        except Exception as obj_err:
+            logger.warning("Could not query top buffer pool objects: %s", obj_err)
+            buffer_pool_objects = DEMO_TEMPDB_MEMORY_SUMMARY.buffer_pool_top_objects
+
+        # 9. Ad-Hoc Plan Cache Bloat Analysis (sys.dm_exec_cached_plans)
+        plan_cache_bloat: Optional[PlanCacheBloatAnalysis] = None
+        try:
+            bloat_query = """
+            SELECT 
+                COUNT(*) AS total_cached_plans,
+                ISNULL(SUM(CASE WHEN usecounts = 1 AND objtype = 'Adhoc' THEN 1 ELSE 0 END), 0) AS single_use_adhoc_plans,
+                CAST(ROUND(ISNULL(SUM(size_in_bytes), 0) / 1048576.0, 2) AS FLOAT) AS total_cache_mb,
+                CAST(ROUND(ISNULL(SUM(CASE WHEN usecounts = 1 AND objtype = 'Adhoc' THEN size_in_bytes ELSE 0 END), 0) / 1048576.0, 2) AS FLOAT) AS wasted_adhoc_mb
+            FROM sys.dm_exec_cached_plans;
+            """
+            cursor.execute(bloat_query)
+            bl_row = rows_to_dicts(cursor)[0]
+
+            tot_plans = int(bl_row.get("total_cached_plans") or 0)
+            single_plans = int(bl_row.get("single_use_adhoc_plans") or 0)
+            single_pct = round((single_plans / tot_plans * 100.0), 2) if tot_plans > 0 else 0.0
+
+            tot_cache_mb = float(bl_row.get("total_cache_mb") or 0.0)
+            wasted_mb = float(bl_row.get("wasted_adhoc_mb") or 0.0)
+            wasted_pct = round((wasted_mb / tot_cache_mb * 100.0), 2) if tot_cache_mb > 0 else 0.0
+
+            # Check optimize for ad hoc workloads
+            adhoc_opt = False
+            try:
+                cursor.execute("SELECT CAST(value_in_use AS INT) FROM sys.configurations WHERE name = 'optimize for ad hoc workloads';")
+                cfg_row = cursor.fetchone()
+                if cfg_row:
+                    adhoc_opt = bool(cfg_row[0])
+            except Exception:
+                pass
+
+            if wasted_pct >= 30.0 or single_pct >= 50.0:
+                bloat_status = "CRITICAL"
+                rec_msg = f"Plan Cache bellek alanının %{wasted_pct}'si ({wasted_mb:.1f} MB) yalnızca bir kez yürütülmüş tek seferlik ad-hoc sorgular tarafından işgal edilmektedir! Parametresiz SQL sorguları değerli sunucu RAM'ini tüketmektedir. 'optimize for ad hoc workloads' ayarı aktif edilmelidir."
+            elif wasted_pct >= 15.0 or single_pct >= 30.0:
+                bloat_status = "WARNING"
+                rec_msg = f"Plan Cache üzerinde {wasted_mb:.1f} MB (%{wasted_pct}) tek kullanımlık plan tespit edildi. 'optimize for ad hoc workloads' ayarının açılması tavsiye edilir."
+            else:
+                bloat_status = "HEALTHY"
+                rec_msg = "Plan Cache dağılımı sağlıklı; tek seferlik planlar makul bir eşiktedir."
+
+            remed_sql = (
+                "EXEC sp_configure 'show advanced options', 1;\n"
+                "RECONFIGURE;\n"
+                "GO\n"
+                "EXEC sp_configure 'optimize for ad hoc workloads', 1;\n"
+                "RECONFIGURE;\n"
+                "GO\n"
+                "-- İsteğe bağlı: Bellekteki şişmiş tek kullanımlık ad-hoc planları temizlemek için:\n"
+                "-- DBCC FREESYSTEMCACHE('SQL Plans');\n"
+                "-- GO"
+            )
+
+            plan_cache_bloat = PlanCacheBloatAnalysis(
+                total_cached_plans_count=tot_plans,
+                single_use_plans_count=single_plans,
+                single_use_plans_percent=single_pct,
+                total_cache_size_mb=tot_cache_mb,
+                wasted_adhoc_mb=wasted_mb,
+                wasted_memory_percent=wasted_pct,
+                status=bloat_status,
+                optimize_for_adhoc_enabled=adhoc_opt,
+                recommendation=rec_msg,
+                remediation_script=remed_sql,
+            )
+        except Exception as bl_err:
+            logger.warning("Could not query plan cache bloat: %s", bl_err)
+            plan_cache_bloat = DEMO_TEMPDB_MEMORY_SUMMARY.plan_cache_bloat
+
         cursor.close()
         conn.close()
 
@@ -247,8 +394,15 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
             target_server_memory_mb=target_mem_mb,
             memory_utilization_pct=mem_util_pct,
             top_memory_clerks=memory_clerks,
+            buffer_pool_db_distribution=buffer_pool_dbs,
+            buffer_pool_top_objects=buffer_pool_objects,
+            plan_cache_bloat=plan_cache_bloat,
             is_demo=False,
         )
+
+    except Exception as exc:
+        logger.error("Failed to query TempDB and memory summary: %s", exc)
+        return DEMO_TEMPDB_MEMORY_SUMMARY
 
     except Exception as exc:
         logger.error("Failed to query TempDB and memory summary: %s", exc)

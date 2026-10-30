@@ -35,6 +35,38 @@ class MemoryClerk(BaseModel):
     percentage_of_total: float
 
 
+class BufferPoolDatabaseUsage(BaseModel):
+    database_name: str
+    buffer_pool_mb: float
+    percentage_of_buffer_pool: float
+    dirty_pages_mb: float
+    clean_pages_mb: float
+    total_pages_count: int
+
+
+class BufferPoolTopObject(BaseModel):
+    database_name: str
+    schema_name: str
+    table_name: str
+    index_name: Optional[str] = None
+    index_type: str
+    buffer_mb: float
+    page_count: int
+
+
+class PlanCacheBloatAnalysis(BaseModel):
+    total_cached_plans_count: int
+    single_use_plans_count: int
+    single_use_plans_percent: float
+    total_cache_size_mb: float
+    wasted_adhoc_mb: float
+    wasted_memory_percent: float
+    status: str  # 'HEALTHY' (<15%), 'WARNING' (15-30%), 'CRITICAL' (>30%)
+    optimize_for_adhoc_enabled: bool
+    recommendation: str
+    remediation_script: str
+
+
 class TempDBMemorySummary(BaseModel):
     # TempDB
     space_breakdown: TempDBSpaceBreakdown
@@ -57,4 +89,10 @@ class TempDBMemorySummary(BaseModel):
     memory_utilization_pct: float
     top_memory_clerks: List[MemoryClerk] = []
 
+    # Buffer Pool Deep Distribution & Ad-Hoc Plan Bloat
+    buffer_pool_db_distribution: List[BufferPoolDatabaseUsage] = []
+    buffer_pool_top_objects: List[BufferPoolTopObject] = []
+    plan_cache_bloat: Optional[PlanCacheBloatAnalysis] = None
+
     is_demo: bool = False
+

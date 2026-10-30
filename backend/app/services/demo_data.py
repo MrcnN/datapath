@@ -47,7 +47,15 @@ from app.schemas.storage import (
     OpenTransactionsSummary,
 )
 from app.schemas.agent_jobs import AgentJobDetail, AgentJobsSummary, JobStepHistory
-from app.schemas.tempdb_memory import TempDBSpaceBreakdown, TempDBFile, MemoryClerk, TempDBMemorySummary
+from app.schemas.tempdb_memory import (
+    TempDBSpaceBreakdown,
+    TempDBFile,
+    MemoryClerk,
+    TempDBMemorySummary,
+    BufferPoolDatabaseUsage,
+    BufferPoolTopObject,
+    PlanCacheBloatAnalysis,
+)
 from app.schemas.query_performance import PlanWarningQuery, PlanAntiPatternsSummary
 from app.schemas.extended_events import (
     XESession,
@@ -1132,6 +1140,32 @@ DEMO_TEMPDB_MEMORY_SUMMARY = TempDBMemorySummary(
         MemoryClerk(clerk_type="MEMORYCLERK_SQLCLR", friendly_name="SQL CLR Runtime", size_mb=650.0, percentage_of_total=1.16),
         MemoryClerk(clerk_type="MEMORYCLERK_SOSNODE", friendly_name="SOS Memory Nodes", size_mb=480.0, percentage_of_total=0.85),
     ],
+    buffer_pool_db_distribution=[
+        BufferPoolDatabaseUsage(database_name="AppDb_Production", buffer_pool_mb=28400.0, percentage_of_buffer_pool=66.82, dirty_pages_mb=1420.0, clean_pages_mb=26980.0, total_pages_count=3635200),
+        BufferPoolDatabaseUsage(database_name="Reporting_Warehouse", buffer_pool_mb=8200.0, percentage_of_buffer_pool=19.29, dirty_pages_mb=120.0, clean_pages_mb=8080.0, total_pages_count=1049600),
+        BufferPoolDatabaseUsage(database_name="AppDb_Staging", buffer_pool_mb=3900.0, percentage_of_buffer_pool=9.18, dirty_pages_mb=350.0, clean_pages_mb=3550.0, total_pages_count=499200),
+        BufferPoolDatabaseUsage(database_name="tempdb", buffer_pool_mb=1500.0, percentage_of_buffer_pool=3.53, dirty_pages_mb=420.0, clean_pages_mb=1080.0, total_pages_count=192000),
+        BufferPoolDatabaseUsage(database_name="msdb / master", buffer_pool_mb=500.0, percentage_of_buffer_pool=1.18, dirty_pages_mb=10.0, clean_pages_mb=490.0, total_pages_count=64000),
+    ],
+    buffer_pool_top_objects=[
+        BufferPoolTopObject(database_name="AppDb_Production", schema_name="dbo", table_name="app_orders", index_name="PK_app_orders", index_type="CLUSTERED", buffer_mb=6840.0, page_count=875520),
+        BufferPoolTopObject(database_name="AppDb_Production", schema_name="dbo", table_name="order_items", index_name="PK_order_items", index_type="CLUSTERED", buffer_mb=5120.0, page_count=655360),
+        BufferPoolTopObject(database_name="Reporting_Warehouse", schema_name="dbo", table_name="fact_sales", index_name="PK_fact_sales", index_type="CLUSTERED", buffer_mb=4200.0, page_count=537600),
+        BufferPoolTopObject(database_name="AppDb_Production", schema_name="dbo", table_name="app_audit_logs", index_name="IX_audit_created", index_type="NONCLUSTERED", buffer_mb=3450.0, page_count=441600),
+        BufferPoolTopObject(database_name="AppDb_Production", schema_name="dbo", table_name="customer_accounts", index_name="PK_customer_accounts", index_type="CLUSTERED", buffer_mb=2150.0, page_count=275200),
+    ],
+    plan_cache_bloat=PlanCacheBloatAnalysis(
+        total_cached_plans_count=14250,
+        single_use_plans_count=9840,
+        single_use_plans_percent=69.05,
+        total_cache_size_mb=5100.0,
+        wasted_adhoc_mb=2840.0,
+        wasted_memory_percent=55.69,
+        status="CRITICAL",
+        optimize_for_adhoc_enabled=False,
+        recommendation="SQL Plan Cache içerisindeki 14,250 planın %69'u (9,840 adet) yalnızca 1 kez çalıştırılmış ad-hoc dinamik sorgulardır! Parametresiz SQL sorguları (Literal SQL) nedeniyle her sorgu için ayrı bir derleme planı oluşturulmuş ve 2.84 GB değerli RAM alanı israf edilmektedir. 'optimize for ad hoc workloads' ayarı aktif edilerek tek seferlik sorguların ilk yürütmede yalnızca küçük bir plan taslağı (compiled plan stub - 64 bayt) saklaması sağlanmalıdır.",
+        remediation_script="EXEC sp_configure 'show advanced options', 1;\nRECONFIGURE;\nGO\nEXEC sp_configure 'optimize for ad hoc workloads', 1;\nRECONFIGURE;\nGO\n-- İsteğe bağlı: Tek seferlik şişmiş plan önbelleğini temizlemek için:\n-- DBCC FREESYSTEMCACHE('SQL Plans');\n-- GO",
+    ),
     is_demo=True,
 )
 
