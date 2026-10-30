@@ -2,10 +2,6 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--bg-base);
-  background-image: 
-    radial-gradient(ellipse 70% 35% at 50% -10%, rgba(56, 189, 248, 0.045), transparent 70%),
-    radial-gradient(circle at 10% 15%, rgba(14, 165, 233, 0.02), transparent 45%);
-  background-attachment: fixed;
 }
 
 .mainArea {
@@ -25,7 +21,6 @@
   flex: 1;
   padding: var(--space-5) var(--space-6);
   overflow-y: auto;
-  min-height: calc(100vh - var(--topbar-height));
 }
 
 @media (max-width: 768px) {

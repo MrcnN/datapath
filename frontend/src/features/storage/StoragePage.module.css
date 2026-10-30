@@ -66,46 +66,34 @@
 
 .tabBar {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  background: rgba(19, 24, 34, 0.75);
-  border: 1px solid var(--border-card);
-  padding: 5px;
-  border-radius: 10px;
-  backdrop-filter: blur(8px);
-  width: fit-content;
-  max-width: 100%;
-  overflow-x: auto;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  gap: var(--space-2);
+  border-bottom: 1px solid var(--border);
+  padding-bottom: var(--space-2);
 }
 
 .tabBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   background: transparent;
-  border: 1px solid transparent;
-  padding: 7px 14px;
-  font-size: 12.5px;
-  font-weight: 500;
+  border: none;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 600;
   color: var(--text-secondary);
-  border-radius: 7px;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  white-space: nowrap;
+  transition: all 0.2s ease;
 }
 
 .tabBtn:hover {
-  color: #ffffff;
-  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  background: var(--bg-surface);
 }
 
 .activeTab {
-  color: #38bdf8 !important;
-  background: rgba(56, 189, 248, 0.14) !important;
-  border-color: rgba(56, 189, 248, 0.32) !important;
-  font-weight: 600;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  color: var(--accent-blue) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
 }
 
 .tableCard {
