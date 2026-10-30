@@ -2,11 +2,12 @@
 from __future__ import annotations
 
 import logging
+from typing import List
 from fastapi import APIRouter
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.storage import StorageSummary, OpenTransactionsSummary
+from app.schemas.storage import StorageSummary, OpenTransactionsSummary, DatabaseVLFInfo
 from app.services.server_registry import server_registry
 from app.services.storage_service import get_storage_summary, get_open_transactions_summary
 
@@ -31,4 +32,12 @@ def read_open_transactions_summary():
     """Retrieve active open transactions, dormant uncommitted transactions, and log reuse wait blockers."""
     params = _get_connection_params()
     return get_open_transactions_summary(params)
+
+
+@router.get("/storage/vlfs", response_model=List[DatabaseVLFInfo])
+def read_vlf_summary():
+    """Retrieve Virtual Log File (VLF) health, fragmentation, and recovery model across databases."""
+    params = _get_connection_params()
+    summary = get_storage_summary(params)
+    return summary.vlf_infos
 

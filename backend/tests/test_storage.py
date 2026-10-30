@@ -95,3 +95,18 @@ def test_open_transactions_endpoint():
     assert "remediation_script" in first_lr
 
 
+def test_vlf_summary_endpoint():
+    response = client.get("/api/storage/vlfs")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+    first_vlf = data[0]
+    assert "database_name" in first_vlf
+    assert "vlf_count" in first_vlf
+    assert "active_vlf_count" in first_vlf
+    assert "status" in first_vlf
+    assert "remediation_script" in first_vlf
+
+
+

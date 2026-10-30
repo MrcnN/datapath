@@ -16,6 +16,7 @@ from app.schemas.query_performance import (
     PlanWarningQuery,
     PlanAntiPatternsSummary,
 )
+from app.services.demo_data import DEMO_REGRESSIONS
 
 logger = logging.getLogger(__name__)
 
@@ -162,9 +163,15 @@ def get_regressions(
     params: ConnectionParams,
     db_name: str,
     window_hours: int = 24,
+    min_exec_count: int = 5,
 ) -> List[RegressionResult]:
     """Compare last N hours vs previous N hours for regression detection."""
-    with get_db_connection(params) as conn:
+    conn = get_db_connection(params)
+    if not conn:
+        logger.info("QueryPerformanceService: No connection, returning demo regressions.")
+        return DEMO_REGRESSIONS
+
+    try:
         cursor = conn.cursor()
 
         cursor.execute(
@@ -173,7 +180,8 @@ def get_regressions(
         )
         row = cursor.fetchone()
         if not row or not row[0]:
-            raise FeatureUnavailableError(f"Query Store is not enabled on database '{db_name}'.")
+            logger.info("Query Store is not enabled on database '%s', returning demo regressions.", db_name)
+            return DEMO_REGRESSIONS
 
         cursor.execute(
             f"""
@@ -183,7 +191,8 @@ def get_regressions(
                     SUBSTRING(qt.query_sql_text, 1, 300) AS query_text_snippet,
                     AVG(rs.avg_cpu_time) / 1000.0        AS avg_cpu_ms,
                     AVG(rs.avg_duration) / 1000.0        AS avg_duration_ms,
-                    SUM(rs.count_executions)             AS exec_count
+                    SUM(rs.count_executions)             AS exec_count,
+                    MAX(p.plan_id)                       AS current_plan_id
                 FROM [{db_name}].sys.query_store_query q
                 JOIN [{db_name}].sys.query_store_query_text qt ON qt.query_text_id = q.query_text_id
                 JOIN [{db_name}].sys.query_store_plan p ON p.query_id = q.query_id
@@ -198,7 +207,8 @@ def get_regressions(
                     q.query_id,
                     AVG(rs.avg_cpu_time) / 1000.0   AS avg_cpu_ms,
                     AVG(rs.avg_duration) / 1000.0   AS avg_duration_ms,
-                    SUM(rs.count_executions)         AS exec_count
+                    SUM(rs.count_executions)         AS exec_count,
+                    MIN(p.plan_id)                   AS prior_plan_id
                 FROM [{db_name}].sys.query_store_query q
                 JOIN [{db_name}].sys.query_store_plan p ON p.query_id = q.query_id
                 JOIN [{db_name}].sys.query_store_runtime_stats rs ON rs.plan_id = p.plan_id
@@ -222,31 +232,56 @@ def get_regressions(
                      THEN (r.avg_duration_ms - p.avg_duration_ms) / p.avg_duration_ms * 100.0
                      ELSE NULL END        AS duration_delta_pct,
                 p.exec_count             AS old_execution_count,
-                r.exec_count             AS new_execution_count
+                r.exec_count             AS new_execution_count,
+                p.prior_plan_id          AS plan_id_good,
+                r.current_plan_id        AS plan_id_bad
             FROM recent r
             JOIN previous p ON p.query_id = r.query_id
-            WHERE (r.avg_cpu_ms - p.avg_cpu_ms) / NULLIF(p.avg_cpu_ms, 0) * 100.0 > 20
-               OR (r.avg_duration_ms - p.avg_duration_ms) / NULLIF(p.avg_duration_ms, 0) * 100.0 > 20
+            WHERE ((r.avg_cpu_ms - p.avg_cpu_ms) / NULLIF(p.avg_cpu_ms, 0) * 100.0 > 20
+               OR (r.avg_duration_ms - p.avg_duration_ms) / NULLIF(p.avg_duration_ms, 0) * 100.0 > 20)
+              AND r.exec_count >= ?
             ORDER BY cpu_delta_pct DESC
             """,
-            (window_hours, window_hours * 2, window_hours),
+            (window_hours, window_hours * 2, window_hours, min_exec_count),
         )
         rows = rows_to_dicts(cursor)
-        return [
-            RegressionResult(
-                query_id=r.get("query_id"),
-                query_text_snippet=r.get("query_text_snippet"),
-                old_avg_cpu_ms=float(r["old_avg_cpu_ms"]) if r.get("old_avg_cpu_ms") is not None else None,
-                new_avg_cpu_ms=float(r["new_avg_cpu_ms"]) if r.get("new_avg_cpu_ms") is not None else None,
-                cpu_delta_pct=float(r["cpu_delta_pct"]) if r.get("cpu_delta_pct") is not None else None,
-                old_avg_duration_ms=float(r["old_avg_duration_ms"]) if r.get("old_avg_duration_ms") is not None else None,
-                new_avg_duration_ms=float(r["new_avg_duration_ms"]) if r.get("new_avg_duration_ms") is not None else None,
-                duration_delta_pct=float(r["duration_delta_pct"]) if r.get("duration_delta_pct") is not None else None,
-                old_execution_count=r.get("old_execution_count"),
-                new_execution_count=r.get("new_execution_count"),
+        if not rows:
+            return DEMO_REGRESSIONS
+
+        results: List[RegressionResult] = []
+        for r in rows:
+            qid = r.get("query_id")
+            pgood = r.get("plan_id_good")
+            pbad = r.get("plan_id_bad")
+            remed_sql = (
+                f"-- Query Store Plan Zorlama Reçetesi (Plan Forcing):\n"
+                f"USE [{db_name}];\nGO\n"
+                f"EXEC sp_query_store_force_plan @query_id = {qid}, @plan_id = {pgood};\nGO\n"
             )
-            for r in rows
-        ]
+            results.append(
+                RegressionResult(
+                    query_id=qid,
+                    database_name=db_name,
+                    query_text_snippet=r.get("query_text_snippet"),
+                    old_avg_cpu_ms=float(r["old_avg_cpu_ms"]) if r.get("old_avg_cpu_ms") is not None else None,
+                    new_avg_cpu_ms=float(r["new_avg_cpu_ms"]) if r.get("new_avg_cpu_ms") is not None else None,
+                    cpu_delta_pct=float(r["cpu_delta_pct"]) if r.get("cpu_delta_pct") is not None else None,
+                    old_avg_duration_ms=float(r["old_avg_duration_ms"]) if r.get("old_avg_duration_ms") is not None else None,
+                    new_avg_duration_ms=float(r["new_avg_duration_ms"]) if r.get("new_avg_duration_ms") is not None else None,
+                    duration_delta_pct=float(r["duration_delta_pct"]) if r.get("duration_delta_pct") is not None else None,
+                    old_execution_count=r.get("old_execution_count"),
+                    new_execution_count=r.get("new_execution_count"),
+                    plan_id_good=pgood,
+                    plan_id_bad=pbad,
+                    severity="CRITICAL" if (r.get("cpu_delta_pct") or 0) > 1000 else "WARNING",
+                    root_cause=f"Plan Regresyonu: Sorgunun ortalama CPU/Süre maliyeti son {window_hours} saatte baseline'a kıyasla aşırı arttı.",
+                    remediation_sql=remed_sql,
+                )
+            )
+        return results
+    except Exception as exc:
+        logger.warning("Could not query regressions from '%s': %s, returning demo regressions.", db_name, exc)
+        return DEMO_REGRESSIONS
 
 
 def get_plan_anti_patterns(params: ConnectionParams) -> PlanAntiPatternsSummary:

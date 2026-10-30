@@ -6,10 +6,15 @@ from fastapi import APIRouter
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.tempdb_memory import TempDBMemorySummary, MemoryGrantsSummary
+from app.schemas.tempdb_memory import (
+    TempDBMemorySummary,
+    MemoryGrantsSummary,
+    TempDBContentionSummary,
+)
 from app.services.tempdb_memory_service import (
     get_tempdb_memory_summary,
     get_memory_grants_summary,
+    get_tempdb_contention_summary,
 )
 
 logger = logging.getLogger(__name__)
@@ -41,4 +46,12 @@ def read_memory_grants():
     """Retrieve active query memory grants, wait queue on RESOURCE_SEMAPHORE, and over-grant memory waste."""
     params = _get_connection_params()
     return get_memory_grants_summary(params)
+
+
+@router.get("/tempdb-memory/contention", response_model=TempDBContentionSummary)
+@router.get("/tempdb/contention", response_model=TempDBContentionSummary)
+def read_tempdb_contention():
+    """Retrieve active PAGELATCH waits on TempDB PFS/GAM/SGAM pages and session space consumption."""
+    params = _get_connection_params()
+    return get_tempdb_contention_summary(params)
 

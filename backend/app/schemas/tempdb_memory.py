@@ -127,3 +127,42 @@ class MemoryGrantsSummary(BaseModel):
     is_demo: bool = False
 
 
+class TempDBContentionWaiter(BaseModel):
+    session_id: int
+    wait_type: str
+    wait_duration_ms: int
+    wait_resource: str
+    page_type: str  # "PFS", "GAM", "SGAM", "DATA_PAGE"
+    blocking_session_id: Optional[int] = None
+    status_desc: str
+
+
+class TempDBSessionSpaceUsage(BaseModel):
+    session_id: int
+    login_name: str
+    program_name: str
+    host_name: Optional[str] = None
+    user_objects_alloc_mb: float
+    user_objects_dealloc_mb: float
+    user_net_mb: float
+    internal_objects_alloc_mb: float
+    internal_objects_dealloc_mb: float
+    internal_net_mb: float
+    is_sleeping_open_tran: bool = False
+    remediation_sql: str
+
+
+class TempDBContentionSummary(BaseModel):
+    has_contention: bool
+    contention_severity: str  # "HEALTHY" | "WARNING" | "CRITICAL"
+    pfs_wait_count: int
+    gam_wait_count: int
+    sgam_wait_count: int
+    total_active_waiters: int
+    recommended_action: str
+    remediation_sql: str
+    waiters: List[TempDBContentionWaiter] = []
+    top_space_consumers: List[TempDBSessionSpaceUsage] = []
+    is_demo: bool = False
+
+

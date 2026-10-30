@@ -48,6 +48,7 @@ import type {
   AlertsAndMailSummary,
   IntegrityAndCorruptionSummary,
   MemoryGrantsSummary,
+  TempDBContentionSummary,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -209,12 +210,12 @@ export async function getExpensiveQueries(params: {
   );
 }
 
-export async function getQueryRegressions(params: {
-  database: string;
+export async function getQueryRegressions(params?: {
+  database?: string;
   min_exec_count?: number;
 }): Promise<QueryRegression[]> {
   return apiFetch<QueryRegression[]>(
-    `/api/query-store/regressions${buildQuery(params)}`
+    `/api/query-store/regressions${buildQuery(params ?? {})}`
   );
 }
 
@@ -427,6 +428,12 @@ export async function getIntegritySummary(): Promise<IntegrityAndCorruptionSumma
 
 export async function getMemoryGrantsSummary(): Promise<MemoryGrantsSummary> {
   return apiFetch<MemoryGrantsSummary>('/api/tempdb-memory/memory-grants');
+}
+
+// ── TempDB Latch Contention & Session Space ─────────────────────────────────
+
+export async function getTempDBContentionSummary(): Promise<TempDBContentionSummary> {
+  return apiFetch<TempDBContentionSummary>('/api/tempdb-memory/contention');
 }
 
 

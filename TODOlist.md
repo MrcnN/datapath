@@ -132,11 +132,14 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 46 Test (Tamamı Başarılı)
+- **Mevcut pytest Test Sayısı:** 49 Test (Tamamı Başarılı)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
   - `GET /api/agent-jobs/alerts-and-mail` ✅
   - `GET /api/backups/integrity-summary` ✅
   - `GET /api/tempdb-memory/memory-grants` ✅
+  - `GET /api/tempdb-memory/contention` ✅
+  - `GET /api/query-store/regressions` ✅
+  - `GET /api/storage/vlfs` ✅
   - `GET /api/storage/open-transactions` ✅
   - `GET /api/servers` & `POST /api/servers/:id/activate` ✅

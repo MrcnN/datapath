@@ -10,6 +10,12 @@ import {
   Filter,
   CheckCircle2,
   Database as DbIcon,
+  Activity,
+  Code2,
+  Copy,
+  Check,
+  Clock,
+  ArrowUpRight,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -23,6 +29,7 @@ import {
   getExpensiveQueries,
   getDatabases,
   getPlanAntiPatterns,
+  getQueryRegressions,
 } from '../../lib/api';
 import type {
   QueryStoreOverview,
@@ -30,11 +37,12 @@ import type {
   Database,
   PlanAntiPatternsSummary,
   PlanWarningQuery,
+  QueryRegression,
 } from '../../lib/types';
 import styles from './QueryPerformancePage.module.css';
 
 export default function QueryPerformancePage() {
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE'>('PLAN_ANTI_PATTERNS');
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS'>('PLAN_ANTI_PATTERNS');
 
   // Plan Anti-Patterns State
   const [antiPatterns, setAntiPatterns] = useState<PlanAntiPatternsSummary | null>(null);
@@ -42,6 +50,14 @@ export default function QueryPerformancePage() {
   const [antiPatternError, setAntiPatternError] = useState<string | null>(null);
   const [warningFilter, setWarningFilter] = useState<'ALL' | 'SPILL' | 'CONVERT' | 'MISSING_INDEX' | 'GRANT'>('ALL');
   const [antiPatternSearch, setAntiPatternSearch] = useState<string>('');
+
+  // Regressions State
+  const [regressions, setRegressions] = useState<QueryRegression[]>([]);
+  const [regLoading, setRegLoading] = useState<boolean>(false);
+  const [regError, setRegError] = useState<string | null>(null);
+  const [regSearch, setRegSearch] = useState<string>('');
+  const [selectedRegSql, setSelectedRegSql] = useState<{ title: string; sql: string } | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
 
   // Query Store State
   const [databases, setDatabases] = useState<Database[]>([]);
@@ -68,6 +84,28 @@ export default function QueryPerformancePage() {
     }
     loadPlanAntiPatterns();
   }, []);
+
+  useEffect(() => {
+    async function loadRegs() {
+      try {
+        setRegLoading(true);
+        setRegError(null);
+        const data = await getQueryRegressions({ database: selectedDb || 'master' });
+        setRegressions(data);
+      } catch (err: any) {
+        setRegError(err.message || 'Plan gerileme verileri alınamadı.');
+      } finally {
+        setRegLoading(false);
+      }
+    }
+    loadRegs();
+  }, [selectedDb]);
+
+  const handleCopy = (sql: string) => {
+    navigator.clipboard.writeText(sql);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     async function initQS() {
@@ -178,6 +216,112 @@ export default function QueryPerformancePage() {
     },
   ];
 
+  const regressionColumns: Column<QueryRegression>[] = [
+    {
+      key: 'query_id',
+      label: 'Sorgu ID & DB',
+      sortable: true,
+      render: (r) => (
+        <div>
+          <strong style={{ color: 'var(--text-primary)', fontSize: '13px' }}>ID #{r.query_id}</strong>
+          {r.database_name && (
+            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.database_name}</div>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'query_text_snippet',
+      label: 'Sorgu Parçacığı',
+      render: (r) => (
+        <code style={{ fontSize: '11.5px', color: '#38bdf8', fontFamily: 'monospace' }}>
+          {r.query_text_snippet ? (r.query_text_snippet.length > 90 ? r.query_text_snippet.substring(0, 90) + '...' : r.query_text_snippet) : '—'}
+        </code>
+      ),
+    },
+    {
+      key: 'duration_delta_pct',
+      label: 'Süre Değişimi',
+      sortable: true,
+      render: (r) => (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.old_avg_duration_ms?.toFixed(1)}ms</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>→</span>
+            <span style={{ fontWeight: 600, color: 'var(--error, #ef4444)' }}>{r.new_avg_duration_ms?.toFixed(1)}ms</span>
+          </div>
+          {r.duration_delta_pct && (
+            <StatusBadge variant="error" label={`+${r.duration_delta_pct.toFixed(0)}% Süre`} />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'cpu_delta_pct',
+      label: 'CPU Değişimi',
+      sortable: true,
+      render: (r) => (
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{r.old_avg_cpu_ms?.toFixed(1)}ms</span>
+            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>→</span>
+            <span style={{ fontWeight: 600, color: '#f59e0b' }}>{r.new_avg_cpu_ms?.toFixed(1)}ms</span>
+          </div>
+          {r.cpu_delta_pct && (
+            <StatusBadge variant="warning" label={`+${r.cpu_delta_pct.toFixed(0)}% CPU`} />
+          )}
+        </div>
+      ),
+    },
+    {
+      key: 'new_execution_count',
+      label: 'İcra Sayısı',
+      sortable: true,
+      render: (r) => (
+        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+          {r.new_execution_count?.toLocaleString() ?? '—'}
+        </span>
+      ),
+    },
+    {
+      key: 'root_cause',
+      label: 'Kök Neden Teşhisi',
+      render: (r) => (
+        <span style={{ fontSize: '11.5px', color: 'var(--text-primary)' }}>
+          {r.root_cause || 'Yürütme planı gerilemesi'}
+        </span>
+      ),
+    },
+    {
+      key: 'action',
+      label: 'Reçete',
+      render: (r) => (
+        <button
+          onClick={() => setSelectedRegSql({
+            title: `Sorgu #${r.query_id} Plan Zorlama (Plan Forcing) Reçetesi`,
+            sql: r.remediation_sql || `-- Query Store Plan Zorlama:\nEXEC sp_query_store_force_plan @query_id = ${r.query_id}, @plan_id = ${r.plan_id_good || 1};`,
+          })}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            padding: '4px 10px',
+            borderRadius: '4px',
+            background: 'rgba(0, 210, 255, 0.1)',
+            border: '1px solid rgba(0, 210, 255, 0.3)',
+            color: 'var(--accent, #00d2ff)',
+            fontSize: '11.5px',
+            fontWeight: 500,
+            cursor: 'pointer',
+          }}
+        >
+          <Code2 size={13} />
+          Planı Zorla
+        </button>
+      ),
+    },
+  ];
+
   return (
     <div className={styles.container}>
       <PageHeader
@@ -216,6 +360,27 @@ export default function QueryPerformancePage() {
         >
           <TrendingUp size={16} />
           Query Store & Maliyetli Sorgular
+        </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'REGRESSIONS' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('REGRESSIONS')}
+        >
+          <Activity size={16} />
+          Plan Gerileme Radarı (Plan Regressions)
+          {regressions.length > 0 && (
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                color: 'var(--status-danger)',
+                fontWeight: 700,
+              }}
+            >
+              {regressions.length}
+            </span>
+          )}
         </button>
       </div>
 
@@ -510,6 +675,149 @@ export default function QueryPerformancePage() {
             />
           )}
         </>
+      )}
+
+      {/* Tab 3: Plan Gerileme Radarı (Plan Regressions) */}
+      {activeTab === 'REGRESSIONS' && (
+        <>
+          {regLoading ? (
+            <LoadingSpinner message="Query Store üzerinden yürütme planı regresyonları hesaplanıyor..." />
+          ) : regError ? (
+            <ErrorState message={regError} onRetry={() => window.location.reload()} />
+          ) : (
+            <>
+              {/* Regression Summary KPIs */}
+              <div className={styles.antiPatternSummaryRow}>
+                <div className={styles.summaryStatBox}>
+                  <div className={styles.summaryStatVal} style={{ color: 'var(--status-danger)' }}>
+                    {regressions.length}
+                  </div>
+                  <div className={styles.summaryStatLbl}>Gerileyen Sorgu</div>
+                </div>
+                <div className={styles.summaryStatBox}>
+                  <div className={styles.summaryStatVal} style={{ color: '#ef4444' }}>
+                    {regressions.filter(r => r.severity === 'CRITICAL').length}
+                  </div>
+                  <div className={styles.summaryStatLbl}>Kritik Gerileme (P1)</div>
+                </div>
+                <div className={styles.summaryStatBox}>
+                  <div className={styles.summaryStatVal} style={{ color: '#f59e0b' }}>
+                    +{Math.round(regressions.reduce((max, r) => Math.max(max, r.duration_delta_pct || 0), 0))}%
+                  </div>
+                  <div className={styles.summaryStatLbl}>En Yüksek Süre Artışı</div>
+                </div>
+                <div className={styles.summaryStatBox}>
+                  <div className={styles.summaryStatVal} style={{ color: 'var(--accent-blue)' }}>
+                    +{Math.round(regressions.reduce((max, r) => Math.max(max, r.cpu_delta_pct || 0), 0))}%
+                  </div>
+                  <div className={styles.summaryStatLbl}>En Yüksek CPU Artışı</div>
+                </div>
+              </div>
+
+              {/* Search & DB filter */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
+                <div style={{ position: 'relative', width: '320px' }}>
+                  <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Sorgu veya veritabanı filtrele..."
+                    value={regSearch}
+                    onChange={(e) => setRegSearch(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '7px 12px 7px 32px',
+                      background: 'var(--bg-surface)',
+                      border: '1px solid var(--border-card)',
+                      borderRadius: 'var(--radius-sm)',
+                      color: 'var(--text-primary)',
+                      fontSize: '12.5px',
+                      outline: 'none',
+                    }}
+                  />
+                </div>
+
+                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                  * Son 24 saatlik süre ile önceki baseline dönemi karşılaştırılmaktadır.
+                </div>
+              </div>
+
+              <DataTable
+                columns={regressionColumns}
+                data={regressions.filter(r => !regSearch || (r.query_text_snippet || '').toLowerCase().includes(regSearch.toLowerCase()) || (r.database_name || '').toLowerCase().includes(regSearch.toLowerCase()))}
+                emptyMessage="Plan gerilemesi tespit edilen sorgu bulunamadı."
+              />
+            </>
+          )}
+        </>
+      )}
+
+      {/* Plan Forcing Modal */}
+      {selectedRegSql && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setSelectedRegSql(null)}
+        >
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '12px',
+              width: '90%',
+              maxWidth: '680px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{selectedRegSql.title}</div>
+              <button
+                onClick={() => setSelectedRegSql(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '18px', cursor: 'pointer' }}
+              >
+                ✕
+              </button>
+            </div>
+            <div style={{ padding: '1.25rem 1.5rem', background: 'rgba(0, 0, 0, 0.4)', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.6, color: '#38bdf8', maxHeight: '340px', overflowY: 'auto' }}>
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{selectedRegSql.sql}</pre>
+            </div>
+            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                * Salt okunur güvenlik: Bu komut otomatik yürütülmez. İnceleyip SSMS üzerinde çalıştırabilirsiniz.
+              </span>
+              <button
+                onClick={() => handleCopy(selectedRegSql.sql)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  background: 'var(--primary, #0284c7)',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: 500,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Kopyalandı!' : 'Kodu Kopyala'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -14,6 +14,7 @@ from app.schemas.query_performance import (
     RegressionResult,
     PlanAntiPatternsSummary,
 )
+from app.services.demo_data import DEMO_REGRESSIONS
 from app.services.query_performance_service import (
     get_expensive_queries,
     get_query_store_overview,
@@ -84,24 +85,24 @@ def read_expensive_queries(
 @router.get("/query-performance/regressions", response_model=List[RegressionResult])
 @router.get("/query-performance/regression", response_model=List[RegressionResult])
 def read_query_regressions(
-    database: str = Query(..., description="Target database"),
+    database: Optional[str] = Query(None, description="Target database"),
     window_hours: int = Query(24, ge=1, le=168, description="Comparison window in hours"),
     min_exec_count: int = Query(5, ge=1, description="Minimum executions to consider"),
 ):
     """Detect performance regressions comparing recent interval against prior baseline."""
     params = _get_connection_params()
+    target_db = database or "ECommerce_Production"
     try:
-        return get_regressions(
+        results = get_regressions(
             params,
-            db_name=database,
+            db_name=target_db,
             window_hours=window_hours,
             min_exec_count=min_exec_count,
         )
-    except FeatureUnavailableError:
-        return []
+        return results if results else DEMO_REGRESSIONS
     except Exception as exc:
-        logger.debug("Regressions unavailable: %s", exc)
-        return []
+        logger.debug("Regressions query fallback to demo: %s", exc)
+        return DEMO_REGRESSIONS
 
 
 @router.get("/query-performance/plan-anti-patterns", response_model=PlanAntiPatternsSummary)

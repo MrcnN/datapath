@@ -20,6 +20,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import MemoryGrantsViewer from './components/MemoryGrantsViewer';
+import TempDBContentionViewer from './components/TempDBContentionViewer';
 import { getTempDBMemorySummary } from '../../lib/api';
 import type {
   TempDBMemorySummary,
@@ -612,6 +613,9 @@ export default function TempDBPage() {
           </div>
         </div>
       )}
+
+      {/* Section: TempDB PFS/GAM/SGAM Latch Contention & Session Space Leaks */}
+      <TempDBContentionViewer />
 
       {/* Section: Query Memory Grants & RESOURCE_SEMAPHORE Contention */}
       <MemoryGrantsViewer />

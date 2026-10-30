@@ -75,14 +75,22 @@
 
 - [x] **[FEAT-08] Virtual Log File (VLF) Mimarisi & Boyutlandırma Motoru**
   - 1000'den fazla VLF içeren veritabanlarını uyarır, log dosyasını doğru büyütme/küçültme adımlarını sunar.
+  - Bağımsız `/api/storage/vlfs` uç noktası ve 1 tıkla T-SQL küçültme/büyütme reçetesi sağlar.
 
 - [x] **[FEAT-09] Disk Kapasite Tükenme Tahmini (Capacity Runway Forecasting)**
   - Son 30/60/90 günlük büyüme trendini hesaplar ve diskin dolmasına kalan gün sayısını modeller.
 
-- [ ] **[FEAT-10] Gelişmiş T-SQL Teşhis Script Şablonlarının Genişletilmesi**
-  - `ToolkitPage` kütüphanesine Latch Stats, TempDB allocation botllenecks ve Index Reorganize şablonları eklenmesi.
+- [x] **[FEAT-10] TempDB Allocation & Sayfa Mandallanması (PAGELATCH_UP/EX) & Sızıntı Takibi**
+  - Dosyalar: `backend/app/services/tempdb_memory_service.py`, `frontend/src/features/tempdb/components/TempDBContentionViewer.tsx`
+  - PFS (Page 1), GAM (Page 2), SGAM (Page 3) mandallanmalarını tespit eder.
+  - `sys.dm_db_session_space_usage` ile `#temp` ve internal sıralama alanı sızdıran uyuyan işlemleri yakalar, çoklu dosya ve `AUTOGROW_ALL_FILES` reçetesi sunar.
 
-- [ ] **[FEAT-11] Canlı Deadlock Grafiği İnteraktif SVG/Canvas Görselleştiricisi**
+- [x] **[FEAT-11] Plan Gerileme Radarı & Plan Zorlama (Query Store Plan Forcing)**
+  - Dosyalar: `backend/app/services/query_performance_service.py`, `frontend/src/features/query-performance/QueryPerformancePage.tsx`
+  - Baseline döneme kıyasla süresi ve CPU'su %500 ile %2500 arasında artan sorguları listeler.
+  - Tek tıkla güvenli `sp_query_store_force_plan` T-SQL plan sabitleme reçetesi sağlar.
+
+- [ ] **[FEAT-12] Canlı Deadlock Grafiği İnteraktif SVG/Canvas Görselleştiricisi**
   - XML metni yerine tarayıcıda düğüm ve kilit yönü çizimi.
 
 ---
@@ -104,7 +112,7 @@
 ## 🔵 ALTYAPI & KALİTE (CI/CD, Test Kapsamı & Doğrulama)
 
 - [x] **[INFRA-01] Backend Birim ve Entegrasyon Testleri (pytest)**
-  - 46 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
+  - 49 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
 
 - [x] **[INFRA-02] Frontend Sıfır-Hata Derleme Kapısı (TypeScript & Vite)**
   - `tsc && vite build` komutunun sıfır hata ve temiz bundle ile tamamlanması.

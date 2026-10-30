@@ -268,14 +268,21 @@ export interface ExpensiveQuery {
 
 export interface QueryRegression {
   query_id: number;
+  database_name?: string;
   query_text_snippet?: string | null;
-  recent_avg_cpu_ms?: number | null;
-  prior_avg_cpu_ms?: number | null;
-  cpu_increase_pct?: number | null;
-  recent_avg_duration_ms?: number | null;
-  prior_avg_duration_ms?: number | null;
-  duration_increase_pct?: number | null;
-  recent_executions?: number | null;
+  old_avg_cpu_ms?: number | null;
+  new_avg_cpu_ms?: number | null;
+  cpu_delta_pct?: number | null;
+  old_avg_duration_ms?: number | null;
+  new_avg_duration_ms?: number | null;
+  duration_delta_pct?: number | null;
+  old_execution_count?: number | null;
+  new_execution_count?: number | null;
+  plan_id_good?: number | null;
+  plan_id_bad?: number | null;
+  severity?: 'CRITICAL' | 'WARNING';
+  root_cause?: string | null;
+  remediation_sql?: string | null;
   [key: string]: any;
 }
 
@@ -1177,6 +1184,48 @@ export interface MemoryGrantsSummary {
   total_requested_mb: number;
   semaphore_pressure: string;
   grants: QueryMemoryGrantDetail[];
+  is_demo?: boolean;
+  [key: string]: any;
+}
+
+export interface TempDBContentionWaiter {
+  session_id: number;
+  wait_type: string;
+  wait_duration_ms: number;
+  wait_resource: string;
+  page_type: 'PFS' | 'GAM' | 'SGAM' | 'DATA_PAGE' | string;
+  blocking_session_id?: number | null;
+  status_desc: string;
+  [key: string]: any;
+}
+
+export interface TempDBSessionSpaceUsage {
+  session_id: number;
+  login_name: string;
+  program_name: string;
+  host_name?: string | null;
+  user_objects_alloc_mb: number;
+  user_objects_dealloc_mb: number;
+  user_net_mb: number;
+  internal_objects_alloc_mb: number;
+  internal_objects_dealloc_mb: number;
+  internal_net_mb: number;
+  is_sleeping_open_tran: boolean;
+  remediation_sql: string;
+  [key: string]: any;
+}
+
+export interface TempDBContentionSummary {
+  has_contention: boolean;
+  contention_severity: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  pfs_wait_count: number;
+  gam_wait_count: number;
+  sgam_wait_count: number;
+  total_active_waiters: number;
+  recommended_action: string;
+  remediation_sql: string;
+  waiters: TempDBContentionWaiter[];
+  top_space_consumers: TempDBSessionSpaceUsage[];
   is_demo?: boolean;
   [key: string]: any;
 }

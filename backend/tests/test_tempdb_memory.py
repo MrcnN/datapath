@@ -79,3 +79,27 @@ def test_memory_grants_endpoint():
     assert "query_text" in first_grant
 
 
+def test_tempdb_contention_endpoint():
+    response = client.get("/api/tempdb-memory/contention")
+    assert response.status_code == 200
+    data = response.json()
+    assert "has_contention" in data
+    assert "contention_severity" in data
+    assert data["contention_severity"] in ("HEALTHY", "WARNING", "CRITICAL")
+    assert "pfs_wait_count" in data
+    assert "gam_wait_count" in data
+    assert "sgam_wait_count" in data
+    assert "total_active_waiters" in data
+    assert "recommended_action" in data
+    assert "remediation_sql" in data
+    assert "waiters" in data
+    assert "top_space_consumers" in data
+    if data["top_space_consumers"]:
+        c = data["top_space_consumers"][0]
+        assert "session_id" in c
+        assert "user_net_mb" in c
+        assert "internal_net_mb" in c
+        assert "remediation_sql" in c
+
+
+

@@ -40,6 +40,7 @@ class ExpensiveQuery(BaseModel):
 
 class RegressionResult(BaseModel):
     query_id: Optional[int] = None
+    database_name: Optional[str] = "master"
     query_text_snippet: Optional[str] = None
     old_avg_cpu_ms: Optional[float] = None
     new_avg_cpu_ms: Optional[float] = None
@@ -49,6 +50,11 @@ class RegressionResult(BaseModel):
     duration_delta_pct: Optional[float] = None
     old_execution_count: Optional[int] = None
     new_execution_count: Optional[int] = None
+    plan_id_good: Optional[int] = None
+    plan_id_bad: Optional[int] = None
+    severity: Optional[str] = "CRITICAL"
+    root_cause: Optional[str] = None
+    remediation_sql: Optional[str] = None
 
 
 class PlanWarningQuery(BaseModel):

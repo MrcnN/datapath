@@ -4,6 +4,15 @@
 
 - Tahmin etme; kararsız kaldığında doğrudan bana soru sor.
 
+### Temel Prensipler
+
+1. **Çalışan MVP Önceliğim:** Bitmemiş onlarca özellik yerine her zaman eksiksiz çalışan bir MVP'ye öncelik ver.
+2. **Sade ve Modüler Mimari:** Mimariyi daima basit, modüler ve sürdürülebilir tut.
+3. **Gerçek Veri ve Salt Okunurluk:** Mümkün olan her yerde gerçek SQL Server meta verilerini ve salt okunur (read-only) DMV sorgularını kullan.
+4. **Profesyonel Arayüz:** Geliştirdiğin arayüzün tutarlı, modern, responsive ve kurumsal seviyede olmasını bekliyorum.
+5. **Aşırı Mühendislikten Kaçınma:** Gereksiz üçüncü parti kütüphanelerden, karmaşık soyutlamalardan ve aşırı mühendislikten (overengineering) kesinlikle kaçın.
+6. **Eksiksiz Doğrulama:** Bana bir işi "tamamlandı" olarak bildirmeden önce testleri çalıştır ve varsa derleme/çalışma zamanı hatalarını gider.
+
 ---
 
 ## 1. Proje Genel Bakışı (Project Overview)
@@ -21,6 +30,20 @@ Datapath ise **bir kıdemli veritabanı yöneticisinin (Senior/Principal DBA) kr
 - *"X sorgusunda `CONVERT_IMPLICIT` örtük veri tipi dönüşümü var, bu yüzden indeks `Index Seek` yerine `Index Scan` yapıyor ve CPU'yu %94'e kilitliyor."*
 - *"SPID 74 oturumu `Orders` tablosunda `BEGIN TRAN` açıp commit etmeden askıda kalmış (`sleeping`), Transaction Log dosyasının kesilmesini (`log_reuse_wait: ACTIVE_TRANSACTION`) engelliyor ve arkasındaki 18 oturumu kilitliyor."*
 - *"msdb.dbo.suspect_pages tablosunda 824 hatasıyla işaretlenmiş bozuk 8KB sayfa var; tüm veritabanını kurtarmak yerine şu T-SQL ile tek bir Page Restore yapabilirsin."*
+
+### Platformun Yanıtladığı Kritik DBA Soruları
+Platformumun bir DBA olarak bana ve ekibime şu can alıcı soruların yanıtını saniyeler içinde vermesini hedefliyorum:
+- Şu anda bu SQL Server örneğinde tam olarak neler oluyor?
+- Hangi oturumlar (sessions) kilitlenmiş (blocked), onları kilitleyen kök bloklayıcı kim ve hangi sorguyu çalıştırıyor?
+- Hangi sorgular en çok CPU, süre veya mantıksal okuma (logical read) tüketiyor?
+- Sorgu performanslarında gerileme (plan regression) veya yürütme planı anti-deseni var mı?
+- Veritabanı yedeklemelerim sağlıklı mı, kurtarma hazırlığım (RPO) ne durumda?
+- Hangi SQL Server Agent işleri veya adımları başarısız oldu?
+- İki veritabanı şeması arasında hangi nesneler farklılaştı?
+- Yaşanan bir sorunu güvenle araştırıp çözmek için hangi T-SQL betiklerine ihtiyacım var?
+- Açık kalan (uncommitted) sahipsiz işlemler log dosyamı şişiriyor mu, log kesilmesini engelleyen sebep (`log_reuse_wait`) nedir?
+- TempDB üzerinde PFS/GAM/SGAM sayfa mandallanması (latch contention) veya oturum bazlı alan tüketim sızıntısı var mı?
+- Sanal Log Dosyaları (VLF) aşırı parçalanmış mı, log büyümesi acil müdahale gerektiriyor mu?
 
 ---
 
@@ -295,3 +318,34 @@ Platformun `.env` dosyasında yer alan temel değişkenler:
 | `DB_DRIVER` | `ODBC Driver 17 for SQL Server` | Kurulu Microsoft ODBC sürücüsü |
 | `DB_TIMEOUT` | `5` | Bağlantı zaman aşımı süresi (saniye) |
 | `VITE_API_URL` | `http://localhost:8000` | Frontend'in bağlandığı FastAPI backend adresi |
+
+---
+
+## 9. Test ve Kalite Standartlarım
+
+Geliştirdiğin her yeni modül için:
+1. Backend tarafında ilgili endpoint ve servisleri kapsayan **pytest testleri** yaz.
+2. Canlı veritabanı bağlantısı olmadığında testlerin taklit (mock) veya demo fallback verileriyle eksiksiz çalıştığından emin ol.
+3. Frontend tarafında `npm run build` komutunun **sıfır TypeScript ve derleme hatasıyla** bittiğini doğrula.
+4. Testleri gerçekten çalıştırmadan bana asla "testler başarılı" deme.
+
+---
+
+## 10. Dokümantasyon ve Canlı Görev Takibi İşleyişi
+
+Projemin kök dizininde bulunan `TODO.md` ve `TODOlist.md` dosyalarını sürecin doğal bir parçası olarak **otonom şekilde güncel tutmanı** istiyorum:
+- Tamamlanan her özelliği anında `[x]` olarak işaretle ve ilgili kategorilere işle.
+- Sıradaki somut hedefleri öncelik sırasına göre net tut.
+- Dosyanın karmaşık ve okunaksız hale gelmesine izin verme; daima kısa, net ve uygulanabilir eylemlerden oluşsun.
+
+---
+
+## 11. Senden Beklediğim Çalışma ve İletişim Akışı
+
+Benimle çalışırken her zaman şu 5 adımı izle:
+
+1. **Adım 1 — İncele:** Kod tabanını, mevcut modelleri ve testleri incele. Çalışan kodu gereksiz yere bozma veya silme.
+2. **Adım 2 — Kısaca Planla:** En sade ve doğrudan geliştirme yolunu belirle, uzun teorik metinlerle vakit kaybetme.
+3. **Adım 3 — Uygula:** Uçtan uca geliştir; backend şemasını, servisini, API endpoint'ini ve frontend arayüzünü birbiriyle tam uyumlu bağla.
+4. **Adım 4 — Doğrula:** `pytest` ile backend testlerini, `npm run build` ile frontend derlemesini çalıştır. Hata çıkarsa kendi kendine çöz.
+5. **Adım 5 — Raporla ve Commit'le:** Yapılanları özetle; commit mesajlarını net ve standartlara uygun oluştur (kullanıcı talimatı varsa commit mesajlarında özel kısıtlamalara kesinlikle uy).

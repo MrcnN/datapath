@@ -15,10 +15,14 @@ from app.schemas.tempdb_memory import (
     PlanCacheBloatAnalysis,
     QueryMemoryGrantDetail,
     MemoryGrantsSummary,
+    TempDBContentionWaiter,
+    TempDBSessionSpaceUsage,
+    TempDBContentionSummary,
 )
 from app.services.demo_data import (
     DEMO_TEMPDB_MEMORY_SUMMARY,
     DEMO_MEMORY_GRANTS_SUMMARY,
+    DEMO_TEMPDB_CONTENTION_SUMMARY,
 )
 
 logger = logging.getLogger(__name__)
@@ -510,4 +514,178 @@ def get_memory_grants_summary(params: Optional[ConnectionParams] = None) -> Memo
     except Exception as exc:
         logger.error("Failed to query memory grants: %s", exc)
         return DEMO_MEMORY_GRANTS_SUMMARY
+
+
+def get_tempdb_contention_summary(params: Optional[ConnectionParams] = None) -> TempDBContentionSummary:
+    """Detect active PAGELATCH waits on TempDB PFS/GAM/SGAM pages and track session space consumption."""
+    conn = get_db_connection(params)
+    if not conn:
+        logger.info("TempDBMemoryService: No connection, returning demo contention data.")
+        return DEMO_TEMPDB_CONTENTION_SUMMARY
+
+    try:
+        cursor = conn.cursor()
+
+        # 1. Query active waiting tasks for TempDB (database_id = 2) allocation latches
+        latch_query = """
+        SELECT 
+            wt.session_id,
+            wt.wait_type,
+            wt.wait_duration_ms,
+            wt.resource_description,
+            wt.blocking_session_id
+        FROM sys.dm_os_waiting_tasks wt
+        WHERE wt.wait_type IN ('PAGELATCH_UP', 'PAGELATCH_SH', 'PAGELATCH_EX')
+          AND wt.resource_description LIKE '2:%'
+        ORDER BY wt.wait_duration_ms DESC;
+        """
+        cursor.execute(latch_query)
+        latch_rows = rows_to_dicts(cursor)
+
+        waiters: List[TempDBContentionWaiter] = []
+        pfs_count = 0
+        gam_count = 0
+        sgam_count = 0
+
+        for lr in latch_rows:
+            res = str(lr.get("resource_description", ""))
+            # Format is db_id:file_id:page_id e.g. 2:1:1
+            parts = res.split(":")
+            page_id = 0
+            if len(parts) >= 3:
+                try:
+                    page_id = int(parts[2])
+                except ValueError:
+                    page_id = 0
+
+            # Determine page type
+            if page_id == 1 or (page_id > 0 and page_id % 8088 == 0):
+                ptype = "PFS"
+                pfs_count += 1
+                desc = "PFS (Page Free Space) Sayfa Mandallanması: 8 KB sayfaların doluluk oranı çekişmesi."
+            elif page_id == 2 or (page_id > 0 and page_id % 511232 == 0):
+                ptype = "GAM"
+                gam_count += 1
+                desc = "GAM (Global Allocation Map) Tahsis Çekişmesi: Extent tahsis haritasında kuyruk."
+            elif page_id == 3 or (page_id > 0 and page_id % 511232 == 1):
+                ptype = "SGAM"
+                sgam_count += 1
+                desc = "SGAM (Shared Global Allocation Map) Çekişmesi: Karışık (mixed) extent tahsis darboğazı."
+            else:
+                ptype = "DATA_PAGE"
+                desc = "TempDB Veri Sayfası Mandallanması."
+
+            waiters.append(
+                TempDBContentionWaiter(
+                    session_id=int(lr.get("session_id", 0)),
+                    wait_type=str(lr.get("wait_type", "")),
+                    wait_duration_ms=int(lr.get("wait_duration_ms", 0) or 0),
+                    wait_resource=res,
+                    page_type=ptype,
+                    blocking_session_id=int(lr["blocking_session_id"]) if lr.get("blocking_session_id") else None,
+                    status_desc=desc,
+                )
+            )
+
+        # 2. Top TempDB session space consumers (sys.dm_db_session_space_usage & sys.dm_exec_sessions)
+        space_query = """
+        SELECT TOP 15
+            ssu.session_id,
+            s.login_name,
+            s.program_name,
+            s.host_name,
+            s.status AS session_status,
+            s.open_transaction_count,
+            CAST(ROUND(ssu.user_objects_alloc_page_count * 8.0 / 1024.0, 2) AS FLOAT) AS user_alloc_mb,
+            CAST(ROUND(ssu.user_objects_dealloc_page_count * 8.0 / 1024.0, 2) AS FLOAT) AS user_dealloc_mb,
+            CAST(ROUND(ssu.internal_objects_alloc_page_count * 8.0 / 1024.0, 2) AS FLOAT) AS internal_alloc_mb,
+            CAST(ROUND(ssu.internal_objects_dealloc_page_count * 8.0 / 1024.0, 2) AS FLOAT) AS internal_dealloc_mb
+        FROM sys.dm_db_session_space_usage ssu
+        JOIN sys.dm_exec_sessions s ON ssu.session_id = s.session_id
+        WHERE ssu.session_id > 50
+          AND (ssu.user_objects_alloc_page_count > 0 OR ssu.internal_objects_alloc_page_count > 0)
+        ORDER BY (ssu.user_objects_alloc_page_count - ssu.user_objects_dealloc_page_count + 
+                  ssu.internal_objects_alloc_page_count - ssu.internal_objects_dealloc_page_count) DESC;
+        """
+        cursor.execute(space_query)
+        s_rows = rows_to_dicts(cursor)
+
+        space_consumers: List[TempDBSessionSpaceUsage] = []
+        for sr in s_rows:
+            spid = int(sr.get("session_id", 0))
+            u_alloc = float(sr.get("user_alloc_mb", 0.0) or 0.0)
+            u_dealloc = float(sr.get("user_dealloc_mb", 0.0) or 0.0)
+            i_alloc = float(sr.get("internal_alloc_mb", 0.0) or 0.0)
+            i_dealloc = float(sr.get("internal_dealloc_mb", 0.0) or 0.0)
+
+            u_net = max(0.0, round(u_alloc - u_dealloc, 2))
+            i_net = max(0.0, round(i_alloc - i_dealloc, 2))
+
+            status_str = str(sr.get("session_status", "")).lower()
+            open_tran = int(sr.get("open_transaction_count", 0) or 0)
+            is_sleeping_open = (status_str == "sleeping" and open_tran > 0)
+
+            remed_sql = (
+                f"-- SPID {spid} TempDB Alan ve Sorgu İnceleme:\n"
+                f"SELECT s.session_id, s.login_name, s.status, t.text\n"
+                f"FROM sys.dm_exec_sessions s\n"
+                f"LEFT JOIN sys.dm_exec_connections c ON s.session_id = c.session_id\n"
+                f"OUTER APPLY sys.dm_exec_sql_text(c.most_recent_sql_handle) t\n"
+                f"WHERE s.session_id = {spid};\n"
+            )
+            if is_sleeping_open or u_net > 500.0:
+                remed_sql += f"-- Dikkat: Oturum açık işlemde uyuyor veya aşırı alan tutuyor. Gerekirse:\n-- KILL {spid};"
+
+            space_consumers.append(
+                TempDBSessionSpaceUsage(
+                    session_id=spid,
+                    login_name=str(sr.get("login_name", "")),
+                    program_name=str(sr.get("program_name", "")),
+                    host_name=str(sr.get("host_name", "")),
+                    user_objects_alloc_mb=u_alloc,
+                    user_objects_dealloc_mb=u_dealloc,
+                    user_net_mb=u_net,
+                    internal_objects_alloc_mb=i_alloc,
+                    internal_objects_dealloc_mb=i_dealloc,
+                    internal_net_mb=i_net,
+                    is_sleeping_open_tran=is_sleeping_open,
+                    remediation_sql=remed_sql,
+                )
+            )
+
+        tot_waiters = len(waiters)
+        has_cont = tot_waiters > 0
+        severity = "HEALTHY"
+        if pfs_count > 0 or sgam_count > 0 or gam_count > 0:
+            severity = "CRITICAL" if tot_waiters > 5 else "WARNING"
+
+        rec_action = (
+            "TempDB tahsis sayfalarında aktif mandallanma bulunmuyor."
+            if not has_cont else
+            f"TempDB üzerinde {tot_waiters} aktif mandal beklemesi (PFS: {pfs_count}, SGAM: {sgam_count}, GAM: {gam_count}) tespit edildi. Eşit boyutlu veri dosyaları ve AUTOGROW_ALL_FILES yapılandırmasını kontrol edin."
+        )
+
+        remed_t_sql = (
+            "-- TempDB Çoklu Veri Dosyası ve Eşit Boyutlandırma Kontrolü:\n"
+            "ALTER DATABASE tempdb MODIFY FILEGROUP [PRIMARY] AUTOGROW_ALL_FILES;\n"
+            "-- Her veri dosyasının aynı boyuta ve sabit artışa (örn. 1024 MB) sahip olduğundan emin olun."
+        )
+
+        return TempDBContentionSummary(
+            has_contention=has_cont,
+            contention_severity=severity,
+            pfs_wait_count=pfs_count,
+            gam_wait_count=gam_count,
+            sgam_wait_count=sgam_count,
+            total_active_waiters=tot_waiters,
+            recommended_action=rec_action,
+            remediation_sql=remed_t_sql,
+            waiters=waiters,
+            top_space_consumers=space_consumers,
+            is_demo=False,
+        )
+    except Exception as exc:
+        logger.error("Failed to query tempdb contention summary: %s", exc)
+        return DEMO_TEMPDB_CONTENTION_SUMMARY
+
 

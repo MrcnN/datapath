@@ -71,8 +71,11 @@ from app.schemas.tempdb_memory import (
     PlanCacheBloatAnalysis,
     QueryMemoryGrantDetail,
     MemoryGrantsSummary,
+    TempDBContentionWaiter,
+    TempDBSessionSpaceUsage,
+    TempDBContentionSummary,
 )
-from app.schemas.query_performance import PlanWarningQuery, PlanAntiPatternsSummary
+from app.schemas.query_performance import PlanWarningQuery, PlanAntiPatternsSummary, RegressionResult
 from app.schemas.extended_events import (
     XESession,
     RingBufferEvent,
@@ -2216,6 +2219,130 @@ DEMO_MEMORY_GRANTS_SUMMARY = MemoryGrantsSummary(
     grants=DEMO_MEMORY_GRANTS,
     is_demo=True,
 )
+
+DEMO_TEMPDB_CONTENTION_WAITERS = [
+    TempDBContentionWaiter(
+        session_id=84,
+        wait_type="PAGELATCH_UP",
+        wait_duration_ms=480,
+        wait_resource="2:1:1",
+        page_type="PFS",
+        blocking_session_id=74,
+        status_desc="PFS (Page Free Space) Mandallanma Darboğazı: Çok sayıda iş parçacığı aynı anda 8 KB'lık sayfa boşluk haritasına yazmaya çalışıyor.",
+    ),
+    TempDBContentionWaiter(
+        session_id=92,
+        wait_type="PAGELATCH_EX",
+        wait_duration_ms=310,
+        wait_resource="2:1:3",
+        page_type="SGAM",
+        blocking_session_id=84,
+        status_desc="SGAM (Shared Global Allocation Map) Çekişmesi: Karışık boyutlu extent (mixed extent) tahsisinde mandal kuyruğu oluştu.",
+    ),
+]
+
+DEMO_TEMPDB_SPACE_LEAKERS = [
+    TempDBSessionSpaceUsage(
+        session_id=84,
+        login_name="app_batch_etl",
+        program_name="ETL_DataSyncService.exe",
+        host_name="SRV-WORKER-02",
+        user_objects_alloc_mb=8450.0,
+        user_objects_dealloc_mb=0.0,
+        user_net_mb=8450.0,
+        internal_objects_alloc_mb=120.0,
+        internal_objects_dealloc_mb=120.0,
+        internal_net_mb=0.0,
+        is_sleeping_open_tran=True,
+        remediation_sql="-- SPID 84 için TempDB sızıntı analizi:\nSELECT text FROM sys.dm_exec_sql_text((SELECT most_recent_sql_handle FROM sys.dm_exec_connections WHERE session_id = 84));\n-- Oturum açık işlemde uyuyor (sleeping); gerekirse sonlandırın:\n-- KILL 84;",
+    ),
+    TempDBSessionSpaceUsage(
+        session_id=71,
+        login_name="report_user",
+        program_name="PowerBI_DirectQuery",
+        host_name="BI-GATEWAY-01",
+        user_objects_alloc_mb=40.0,
+        user_objects_dealloc_mb=40.0,
+        user_net_mb=0.0,
+        internal_objects_alloc_mb=4200.0,
+        internal_objects_dealloc_mb=100.0,
+        internal_net_mb=4100.0,
+        is_sleeping_open_tran=False,
+        remediation_sql="-- SPID 71 devasa HASH/SORT spill gerçekleştiriyor. İlgili sorguya SORT/HASH optimizasyonu veya index uygulayın:\nSELECT r.session_id, t.text, qp.query_plan FROM sys.dm_exec_requests r CROSS APPLY sys.dm_exec_sql_text(r.sql_handle) t CROSS APPLY sys.dm_exec_query_plan(r.plan_handle) qp WHERE r.session_id = 71;",
+    ),
+]
+
+DEMO_TEMPDB_CONTENTION_SUMMARY = TempDBContentionSummary(
+    has_contention=True,
+    contention_severity="WARNING",
+    pfs_wait_count=1,
+    gam_wait_count=0,
+    sgam_wait_count=1,
+    total_active_waiters=2,
+    recommended_action="TempDB üzerinde PFS ve SGAM sayfa mandallanması (PAGELATCH_UP/EX) tespit edildi. Eşit boyutlu veri dosyası sayısını 8 adede tamamlayın ve AUTOGROW_ALL_FILES parametresini aktif hale getirin.",
+    remediation_sql="-- TempDB Çoklu Dosya ve Eşit Boyutlandırma Reçetesi:\nALTER DATABASE tempdb MODIFY FILEGROUP [PRIMARY] AUTOGROW_ALL_FILES;\n-- Eksik TempDB veri dosyalarını ekleyin (Eşit boyut ve sabit artış ile):\nALTER DATABASE tempdb ADD FILE (NAME = N'tempdev05', FILENAME = N'T:\\TempDB\\tempdev05.ndf', SIZE = 8192MB, FILEGROWTH = 1024MB);\nALTER DATABASE tempdb ADD FILE (NAME = N'tempdev06', FILENAME = N'T:\\TempDB\\tempdev06.ndf', SIZE = 8192MB, FILEGROWTH = 1024MB);",
+    waiters=DEMO_TEMPDB_CONTENTION_WAITERS,
+    top_space_consumers=DEMO_TEMPDB_SPACE_LEAKERS,
+    is_demo=True,
+)
+
+DEMO_REGRESSIONS = [
+    RegressionResult(
+        query_id=1420,
+        database_name="ECommerce_Production",
+        query_text_snippet="SELECT o.OrderId, o.OrderDate, c.CustomerName, SUM(oi.Quantity * oi.UnitPrice) AS TotalAmount FROM Orders o JOIN Customers c ON o.CustomerId = c.CustomerId JOIN OrderItems oi ON o.OrderId = oi.OrderId WHERE o.OrderDate >= DATEADD(DAY, -7, GETDATE()) GROUP BY o.OrderId, o.OrderDate, c.CustomerName ORDER BY TotalAmount DESC;",
+        old_avg_cpu_ms=45.2,
+        new_avg_cpu_ms=1240.0,
+        cpu_delta_pct=2643.36,
+        old_avg_duration_ms=58.1,
+        new_avg_duration_ms=1320.5,
+        duration_delta_pct=2172.8,
+        old_execution_count=12400,
+        new_execution_count=11800,
+        plan_id_good=108,
+        plan_id_bad=215,
+        severity="CRITICAL",
+        root_cause="Plan Regresyonu: Sorgu yürütme planı Nested Loops yerine Hash Match (Aggregate) ve Index Scan tercih etmeye başladı. Sürede %2172 artış.",
+        remediation_sql="-- Query Store Üzerinden Başarılı Eski Planı Zorlama (Plan Forcing):\nUSE [ECommerce_Production];\nGO\nEXEC sp_query_store_force_plan @query_id = 1420, @plan_id = 108;\nGO\n-- İstatistikleri Güncelleme:\nUPDATE STATISTICS dbo.Orders WITH FULLSCAN;\nGO",
+    ),
+    RegressionResult(
+        query_id=2884,
+        database_name="Billing_System",
+        query_text_snippet="SELECT i.InvoiceId, i.DueDate, i.BalanceDue, a.AccountRef FROM Invoices i WITH (NOLOCK) JOIN Accounts a ON i.AccountId = a.AccountId WHERE i.Status = 'PENDING' AND i.DueDate < GETUTCDATE();",
+        old_avg_cpu_ms=28.0,
+        new_avg_cpu_ms=480.0,
+        cpu_delta_pct=1614.28,
+        old_avg_duration_ms=35.0,
+        new_avg_duration_ms=510.0,
+        duration_delta_pct=1357.14,
+        old_execution_count=8500,
+        new_execution_count=7900,
+        plan_id_good=412,
+        plan_id_bad=603,
+        severity="CRITICAL",
+        root_cause="Parameter Sniffing Kaynaklı Plan Bozulması: Geliştirici parametre değişikliği sonrası indeks arama yerine tüm tablo taraması yapılıyor.",
+        remediation_sql="-- Query Store Üzerinden Başarılı Planı Zorlama:\nUSE [Billing_System];\nGO\nEXEC sp_query_store_force_plan @query_id = 2884, @plan_id = 412;\nGO",
+    ),
+    RegressionResult(
+        query_id=3190,
+        database_name="Inventory_DB",
+        query_text_snippet="SELECT s.Sku, s.WarehouseId, s.AvailableQuantity FROM StockInventory s WHERE s.WarehouseId = @p_warehouse AND s.IsQuarantined = 0;",
+        old_avg_cpu_ms=12.5,
+        new_avg_cpu_ms=95.0,
+        cpu_delta_pct=660.0,
+        old_avg_duration_ms=18.0,
+        new_avg_duration_ms=115.0,
+        duration_delta_pct=538.89,
+        old_execution_count=34000,
+        new_execution_count=32000,
+        plan_id_good=72,
+        plan_id_bad=144,
+        severity="WARNING",
+        root_cause="Plan Önbellek Regresyonu: Sorgu planı paralel yürütmeden seri yürütmeye geçti, CPU ve süre %600 arttı.",
+        remediation_sql="-- Plan Zorlama:\nUSE [Inventory_DB];\nGO\nEXEC sp_query_store_force_plan @query_id = 3190, @plan_id = 72;\nGO",
+    ),
+]
+
 
 
 
