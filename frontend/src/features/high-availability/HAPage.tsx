@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Activity, ShieldCheck, ShieldAlert } from 'lucide-react';
+import { Activity, ShieldCheck, ShieldAlert, Copy, Check } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -14,6 +14,7 @@ export default function HAPage() {
   const [status, setStatus] = useState<HAStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState<boolean>(false);
 
   useEffect(() => {
     async function loadData() {
@@ -120,10 +121,94 @@ export default function HAPage() {
       {error && <ErrorState message={error} onRetry={() => setLoading(true)} />}
 
       {!loading && status && !status.available && (
-        <EmptyState
-          title="Always On Aktif Değil"
-          message={status.reason || 'Bu SQL Server sunucusunda Always On High Availability özelliği yapılandırılmamış.'}
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '850px', margin: '20px auto' }}>
+          <div style={{
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-color)',
+            borderRadius: '12px',
+            padding: '24px',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+              <div style={{
+                background: 'rgba(234, 179, 8, 0.12)',
+                padding: '12px',
+                borderRadius: '10px',
+                color: 'var(--warning, #eab308)',
+                flexShrink: 0
+              }}>
+                <ShieldAlert size={28} />
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', color: 'var(--text-primary)' }}>
+                  Always On Availability Groups Aktif Değil
+                </h3>
+                <p style={{ margin: '0 0 16px 0', color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.5 }}>
+                  {status.reason || 'Bu SQL Server sunucusunda Always On High Availability özelliği yapılandırılmamış.'}
+                </p>
+
+                <div style={{
+                  background: 'rgba(0, 0, 0, 0.3)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '8px',
+                  padding: '16px',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ fontWeight: 600, fontSize: '13px', color: 'var(--text-primary)', marginBottom: '8px' }}>
+                    Neden Aktif Gözükmüyor? (DBA Teşhisi)
+                  </div>
+                  <ul style={{ margin: 0, paddingLeft: '20px', color: 'var(--text-secondary)', fontSize: '13px', lineHeight: 1.6 }}>
+                    <li>
+                      <strong>Tekil (Standalone) Kurulum:</strong> SQL Server tek bir fiziksel veya sanal makine üzerinde tekil (standalone) olarak kurulduysa Always On motoru varsayılan olarak kapalıdır (<code style={{ color: 'var(--accent)' }}>IsHadrEnabled = 0</code>). Bu bir hata değil, sunucunuzun kümelenmemiş tekil bir instance olduğunu doğrular.
+                    </li>
+                    <li>
+                      <strong>Windows Cluster (WSFC) veya Servis Ayarı:</strong> Always On kullanabilmek için sunucunun bir Windows Server Failover Cluster (WSFC) üyesi olması ve SQL Server Configuration Manager üzerinden <em>"Enable Always On Availability Groups"</em> seçeneğinin işaretlenerek servisin yeniden başlatılması gerekir.
+                    </li>
+                  </ul>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)' }}>
+                    Doğrulama T-SQL Sorgusu:
+                  </span>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText("SELECT SERVERPROPERTY('IsHadrEnabled') AS IsHadrEnabled, SERVERPROPERTY('HadrManagerStatus') AS HadrManagerStatus;");
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '4px 8px',
+                      borderRadius: '4px',
+                      background: 'rgba(0, 210, 255, 0.1)',
+                      border: '1px solid rgba(0, 210, 255, 0.3)',
+                      color: 'var(--accent, #00d2ff)',
+                      fontSize: '11px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {copied ? <Check size={13} /> : <Copy size={13} />}
+                    {copied ? 'Kopyalandı' : 'Kopyala'}
+                  </button>
+                </div>
+                <pre style={{
+                  background: 'rgba(0,0,0,0.4)',
+                  padding: '10px 14px',
+                  borderRadius: '6px',
+                  margin: 0,
+                  fontSize: '12px',
+                  fontFamily: 'monospace',
+                  color: '#38bdf8'
+                }}>
+                  SELECT SERVERPROPERTY('IsHadrEnabled') AS IsHadrEnabled, SERVERPROPERTY('HadrManagerStatus') AS HadrManagerStatus;
+                </pre>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {!loading && status && status.available && status.groups.length === 0 && (

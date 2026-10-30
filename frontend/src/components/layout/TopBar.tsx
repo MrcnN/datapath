@@ -48,6 +48,7 @@ const routeMap: Record<string, RouteInfo> = {
   '/tempdb': { label: 'TempDB & Bellek', category: 'Tanı & İzleme', icon: Cpu },
   '/backups': { label: 'Yedekleme & Kurtarma', category: 'Tanı & İzleme', icon: Database },
   '/high-availability': { label: 'Yüksek Erişilebilirlik', category: 'Tanı & İzleme', icon: Activity },
+  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Tanı & İzleme', icon: Sparkles },
   '/toolkit': { label: 'DBA Araç Seti', category: 'Yönetim & Araçlar', icon: Wrench },
   '/agent-jobs': { label: 'SQL Agent İşleri', category: 'Yönetim & Araçlar', icon: CalendarClock },
   '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim & Araçlar', icon: GitCompare },
@@ -80,13 +81,12 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const navigate = useNavigate();
   const currentRoute = routeMap[pathname] || {
     label: 'Sayfa',
-    category: 'Traceforge',
+    category: 'Genel',
     icon: Sparkles,
   };
 
   const [metadata, setMetadata] = useState<InstanceMetadata | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [currentTime, setCurrentTime] = useState<string>('');
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
     return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
   });
@@ -168,22 +168,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     };
   }, [pathname, activeServerId]);
 
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      setCurrentTime(
-        now.toLocaleTimeString('tr-TR', {
-          hour: '2-digit',
-          minute: '2-digit',
-          second: '2-digit',
-        })
-      );
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
   const handleSelectServer = async (server: ServerProfile) => {
     if (server.id === activeServerId) {
       setDropdownOpen(false);
@@ -234,16 +218,17 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
         </div>
       </div>
 
-      {/* Right: Theme Toggle, Clock & Global Server Switcher Dropdown */}
+      {/* Right: Dossier Button, Theme Toggle & Global Server Switcher Dropdown */}
       <div className={styles.rightSection}>
         <button
           type="button"
-          className={styles.themeToggleBtn}
+          className={styles.dossierBtn}
           onClick={() => setShowReportModal(true)}
-          title="Kapsamlı Mühendislik Teşhis Dosyası (Export Dossier)"
+          title="Kapsamlı Mühendislik Teşhis Dosyası İndir & Görüntüle"
           aria-label="Kapsamlı Mühendislik Teşhis Dosyası"
         >
-          <FileText size={14} />
+          <FileText size={14} className={styles.dossierBtnIcon} />
+          <span className={styles.dossierBtnText}>Mühendislik Teşhis Dosyası</span>
         </button>
 
         <button
@@ -255,11 +240,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
         >
           {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
         </button>
-
-        <div className={styles.clockPill} title="İstemci Saati">
-          <Clock size={12} className={styles.clockIcon} />
-          <span>{currentTime}</span>
-        </div>
 
         {/* Global Multi-Server Switcher Dropdown */}
         {activeServer ? (

@@ -457,7 +457,7 @@ def get_server_configurations(params: ConnectionParams) -> ServerConfigurationSu
             critical_count = 0
             remediation_lines: List[str] = [
                 "-- ================================================================",
-                "-- Traceforge - SQL Server Instance Best Practice Remediation Script",
+                "-- Datapath - SQL Server Instance Best Practice Remediation Script",
                 "-- NOT: Lütfen production ortamına uygulamadan önce gözden geçiriniz.",
                 "-- ================================================================",
                 "",

@@ -57,7 +57,7 @@ def read_instance_metadata(response: Response):
         return get_server_metadata(params)
     except Exception as exc:
         logger.debug("Live metadata unavailable (%s), returning demo data.", exc)
-        response.headers["X-Traceforge-Demo"] = "true"
+        response.headers["X-Datapath-Demo"] = "true"
         return DEMO_METADATA
 
 
@@ -73,7 +73,7 @@ def read_instance_databases(response: Response):
         return get_databases(params)
     except Exception as exc:
         logger.debug("Live databases unavailable (%s), returning demo data.", exc)
-        response.headers["X-Traceforge-Demo"] = "true"
+        response.headers["X-Datapath-Demo"] = "true"
         return DEMO_DATABASES
 
 
@@ -99,7 +99,7 @@ def read_sessions(
         )
     except Exception as exc:
         logger.debug("Live sessions unavailable (%s), returning demo data.", exc)
-        response.headers["X-Traceforge-Demo"] = "true"
+        response.headers["X-Datapath-Demo"] = "true"
         return DEMO_SESSIONS
 
 
@@ -127,7 +127,7 @@ def read_blocking_chains(response: Response):
         return get_blocking(params)
     except Exception as exc:
         logger.debug("Live blocking unavailable (%s), returning demo data.", exc)
-        response.headers["X-Traceforge-Demo"] = "true"
+        response.headers["X-Datapath-Demo"] = "true"
         return DEMO_BLOCKING
 
 
@@ -140,6 +140,6 @@ def read_server_configurations(response: Response):
         return get_server_configurations(params)
     except Exception as exc:
         logger.debug("Live configurations unavailable (%s), returning demo data.", exc)
-        response.headers["X-Traceforge-Demo"] = "true"
+        response.headers["X-Datapath-Demo"] = "true"
         return DEMO_SERVER_CONFIGURATIONS
 

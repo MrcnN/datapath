@@ -3,6 +3,7 @@
 ## Genel Kurallar
 
 - Tahmin etme; kararsız kaldığında doğrudan bana soru sor.
+- **Kesinlikle Hiçbir Şekilde Demo Gösterim Yapma:** Projeye özellikleri veya işlevleri göstermek amacıyla hiçbir uydurma, sahte veya örnek demo metni/verisi ekleme. Her şey doğrudan benim gerçek SQL Server veritabanı verilerim için olsun.
 
 ### Temel Prensipler
 

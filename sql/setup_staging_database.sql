@@ -1,23 +1,23 @@
 -- ============================================================================
--- Traceforge Platformu — Şema Karşılaştırması (Schema Diff) için Staging DB
--- Veritabanı Adı: Traceforge_TestDB_Staging
--- Amaç: Traceforge_TestDB ile bu veritabanını karşılaştırıp farkları görmek!
+-- Datapath Platformu — Şema Karşılaştırması (Schema Diff) için Staging DB
+-- Veritabanı Adı: Datapath_TestDB_Staging
+-- Amaç: Datapath_TestDB ile bu veritabanını karşılaştırıp farkları görmek!
 -- ============================================================================
 
 USE [master];
 GO
 
-IF DB_ID('Traceforge_TestDB_Staging') IS NOT NULL
+IF DB_ID('Datapath_TestDB_Staging') IS NOT NULL
 BEGIN
-    ALTER DATABASE [Traceforge_TestDB_Staging] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [Traceforge_TestDB_Staging];
+    ALTER DATABASE [Datapath_TestDB_Staging] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [Datapath_TestDB_Staging];
 END
 GO
 
-CREATE DATABASE [Traceforge_TestDB_Staging];
+CREATE DATABASE [Datapath_TestDB_Staging];
 GO
 
-USE [Traceforge_TestDB_Staging];
+USE [Datapath_TestDB_Staging];
 GO
 
 -- 1. Customers Tablosu (Fark: PhoneNumber ve LoyaltyTier sütunları eklendi!)
@@ -75,8 +75,8 @@ CREATE TABLE dbo.Suppliers (
 GO
 
 PRINT '===========================================================================';
-PRINT 'Traceforge_TestDB_Staging veritabanı başarıyla oluşturuldu!';
-PRINT 'Artık Traceforge arayüzünde "Şema Karşılaştırması" sayfasına gidip';
-PRINT 'Kaynak: Traceforge_TestDB, Hedef: Traceforge_TestDB_Staging seçip';
+PRINT 'Datapath_TestDB_Staging veritabanı başarıyla oluşturuldu!';
+PRINT 'Artık Datapath arayüzünde "Şema Karşılaştırması" sayfasına gidip';
+PRINT 'Kaynak: Datapath_TestDB, Hedef: Datapath_TestDB_Staging seçip';
 PRINT 'tablo, sütun ve tip farklarını tek tıkla test edebilirsiniz!';
 PRINT '===========================================================================';

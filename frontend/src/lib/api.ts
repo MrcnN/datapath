@@ -72,7 +72,7 @@ async function apiFetch<T>(
     });
   } catch (err) {
     throw new Error(
-      `Cannot reach the Traceforge API at ${BASE_URL}. Make sure the backend is running.`
+      `Cannot reach the Datapath API at ${BASE_URL}. Make sure the backend is running.`
     );
   }
 

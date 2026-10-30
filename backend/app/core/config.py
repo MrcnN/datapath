@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 class Settings(BaseSettings):
-    """Traceforge application settings.
+    """Datapath application settings.
 
     All credential fields are intentionally excluded from logging.
     """

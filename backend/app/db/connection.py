@@ -38,7 +38,7 @@ class ConnectionParams:
             f"SERVER={self.server}",
             f"DATABASE={self.database}",
             f"Connect Timeout={self.timeout}",
-            "APP=Traceforge",
+            "APP=Datapath",
         ]
         if self.trusted_connection:
             parts.append("Trusted_Connection=yes")

@@ -47,7 +47,7 @@ def test_sessions_list():
             "session_id": 55,
             "login_name": "db_user",
             "host_name": "DESKTOP-APP",
-            "program_name": "TraceforgeClient",
+            "program_name": "DatapathClient",
             "db_name": "master",
             "status": "running",
             "cpu_time": 120,

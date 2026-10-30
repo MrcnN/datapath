@@ -1,6 +1,6 @@
 -- ============================================================================
--- Traceforge Platformu — Test Veritabanı Kurulum Betiği (SSMS için)
--- Veritabanı Adı: Traceforge_TestDB
+-- Datapath Platformu — Test Veritabanı Kurulum Betiği (SSMS için)
+-- Veritabanı Adı: Datapath_TestDB
 -- Amaç: Dashboard, Query Store, Oturumlar, Yedekleme ve Şema Karşılaştırma
 --        modüllerini canlı olarak test etmek için zengin örnek veri ortamı.
 -- ============================================================================
@@ -9,23 +9,23 @@ USE [master];
 GO
 
 -- 1. Varsa eski test veritabanını temizle
-IF DB_ID('Traceforge_TestDB') IS NOT NULL
+IF DB_ID('Datapath_TestDB') IS NOT NULL
 BEGIN
-    ALTER DATABASE [Traceforge_TestDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-    DROP DATABASE [Traceforge_TestDB];
+    ALTER DATABASE [Datapath_TestDB] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [Datapath_TestDB];
 END
 GO
 
 -- 2. Yeni test veritabanını oluştur
-CREATE DATABASE [Traceforge_TestDB];
+CREATE DATABASE [Datapath_TestDB];
 GO
 
 -- 3. Kurtarma modelini FULL yap (Yedekleme ve Log analizi için zorunlu)
-ALTER DATABASE [Traceforge_TestDB] SET RECOVERY FULL;
+ALTER DATABASE [Datapath_TestDB] SET RECOVERY FULL;
 GO
 
 -- 4. Query Store'u (Sorgu Deposu) etkinleştir ve agresif istatistik toplamaya ayarla
-ALTER DATABASE [Traceforge_TestDB] SET QUERY_STORE = ON (
+ALTER DATABASE [Datapath_TestDB] SET QUERY_STORE = ON (
     OPERATION_MODE = READ_WRITE,
     CLEANUP_POLICY = (STALE_QUERY_THRESHOLD_DAYS = 30),
     DATA_FLUSH_INTERVAL_SECONDS = 60,
@@ -35,7 +35,7 @@ ALTER DATABASE [Traceforge_TestDB] SET QUERY_STORE = ON (
 );
 GO
 
-USE [Traceforge_TestDB];
+USE [Datapath_TestDB];
 GO
 
 -- ============================================================================
@@ -305,22 +305,22 @@ DECLARE @BackupDir NVARCHAR(260);
 -- Windows geçici dizinine güvenle yedek al
 SET @BackupDir = N'C:\Windows\Temp\';
 
-DECLARE @FullBackupPath NVARCHAR(500) = @BackupDir + N'Traceforge_TestDB_Full.bak';
-DECLARE @LogBackupPath NVARCHAR(500) = @BackupDir + N'Traceforge_TestDB_Log.trn';
+DECLARE @FullBackupPath NVARCHAR(500) = @BackupDir + N'Datapath_TestDB_Full.bak';
+DECLARE @LogBackupPath NVARCHAR(500) = @BackupDir + N'Datapath_TestDB_Log.trn';
 
 -- 1. Tam Yedek (Full Backup)
-BACKUP DATABASE [Traceforge_TestDB] 
+BACKUP DATABASE [Datapath_TestDB] 
 TO DISK = @FullBackupPath 
 WITH INIT, COMPRESSION, STATS = 10;
 
 -- 2. İşlem Günlüğü Yedeği (Transaction Log Backup)
-BACKUP LOG [Traceforge_TestDB] 
+BACKUP LOG [Datapath_TestDB] 
 TO DISK = @LogBackupPath 
 WITH INIT, COMPRESSION, STATS = 10;
 GO
 
 PRINT '===========================================================================';
-PRINT 'Traceforge_TestDB başarıyla kuruldu ve test verileriyle dolduruldu!';
+PRINT 'Datapath_TestDB başarıyla kuruldu ve test verileriyle dolduruldu!';
 PRINT '1. Tablolar, 15.000+ satır veri, ilişkiler ve indeksler eklendi.';
 PRINT '2. Parçalanmış GUID indeks (dbo.InventoryLogs) ve Unused İndeks oluşturuldu.';
 PRINT '3. Query Store ve Eksik İndeks (Missing Index) DMV verileri simüle edildi.';

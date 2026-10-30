@@ -26,7 +26,7 @@ def get_ha_status(params: ConnectionParams) -> HAStatusResponse:
             if row is None or row[0] is None or row[0] == 0:
                 return HAStatusResponse(
                     available=False,
-                    reason="Always On Availability Groups are not enabled on this SQL Server instance.",
+                    reason="Bu SQL Server örneğinde Always On Availability Groups (HADR) özelliği etkinleştirilmemiştir (SERVERPROPERTY('IsHadrEnabled') = 0). Tek sunuculu (standalone) ortamlarda bu durum olağandır.",
                 )
 
             # Fetch AG overview

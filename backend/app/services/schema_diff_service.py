@@ -254,7 +254,7 @@ def compare_schemas(params: ConnectionParams, req: SchemaDiffRequest) -> SchemaD
 
     # Build migration script (informational only — never executed)
     script_lines = [
-        f"-- Traceforge Schema Diff: [{src}] → [{tgt}]",
+        f"-- Datapath Schema Diff: [{src}] → [{tgt}]",
         f"-- Generated: {__import__('datetime').datetime.utcnow().isoformat()}Z",
         "-- WARNING: Review carefully before executing. This script is NOT automatically applied.",
         "",

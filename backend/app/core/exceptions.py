@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 logger = logging.getLogger(__name__)
 
 
-class TraceforgeError(Exception):
+class DatapathError(Exception):
     """Base application exception."""
 
     def __init__(self, message: str, detail: Optional[str] = None) -> None:
@@ -19,19 +19,23 @@ class TraceforgeError(Exception):
         super().__init__(message)
 
 
-class DatabaseConnectionError(TraceforgeError):
+# Backward-compatibility alias
+TraceforgeError = DatapathError
+
+
+class DatabaseConnectionError(DatapathError):
     """Raised when a SQL Server connection cannot be established."""
 
 
-class FeatureUnavailableError(TraceforgeError):
+class FeatureUnavailableError(DatapathError):
     """Raised when a SQL Server feature (e.g., Query Store, AG) is unavailable."""
 
 
-class PermissionDeniedError(TraceforgeError):
+class PermissionDeniedError(DatapathError):
     """Raised when the SQL Server login lacks required permissions."""
 
 
-class InvalidInputError(TraceforgeError):
+class InvalidInputError(DatapathError):
     """Raised for invalid user-supplied input that passed Pydantic but failed business logic."""
 
 

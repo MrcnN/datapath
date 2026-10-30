@@ -211,7 +211,7 @@ def get_security_audit(params: ConnectionParams) -> SecurityAuditSummary:
             passed_count = 0
             hardening_lines: List[str] = [
                 "-- ================================================================",
-                "-- Traceforge - SQL Server Security Hardening & Remediation Script",
+                "-- Datapath - SQL Server Security Hardening & Remediation Script",
                 "-- NOT: Lütfen production ortamına uygulamadan önce gözden geçiriniz.",
                 "-- ================================================================",
                 "",
