@@ -38,35 +38,36 @@
   to { transform: rotate(360deg); }
 }
 
-/* Underline Tab Bar */
+/* Modern Segmented Tab Bar */
 .tabsWrapper {
   overflow-x: auto;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-4);
+  padding-bottom: 2px;
 }
 
 .tabs {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-bottom: -1px;
+  display: inline-flex;
+  gap: 4px;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .tabBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 7px;
   background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
+  border: 1px solid transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  padding: 10px 14px;
+  padding: 7px 14px;
   cursor: pointer;
+  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
   white-space: nowrap;
-  outline: none;
 }
 
 .tabIcon {
@@ -75,18 +76,20 @@
 }
 
 .tabBtn:hover {
-  color: var(--text-primary);
-  border-bottom-color: var(--border-hover);
+  color: #ffffff;
+  background-color: var(--bg-hover);
 }
 
 .tabBtn:hover .tabIcon {
-  color: var(--text-primary);
+  color: var(--accent);
 }
 
 .tabBtnActive {
   color: #ffffff;
-  border-bottom-color: var(--accent);
+  background: linear-gradient(135deg, rgba(0, 210, 255, 0.18), rgba(2, 132, 199, 0.22));
+  border-color: rgba(0, 210, 255, 0.35);
   font-weight: 600;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
 }
 
 .tabBtnActive .tabIcon {

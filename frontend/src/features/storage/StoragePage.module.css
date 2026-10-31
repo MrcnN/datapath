@@ -66,40 +66,34 @@
 
 .tabBar {
   display: flex;
-  align-items: center;
-  gap: 2px;
+  gap: var(--space-2);
   border-bottom: 1px solid var(--border);
-  margin-bottom: var(--space-4);
-  overflow-x: auto;
+  padding-bottom: var(--space-2);
 }
 
 .tabBtn {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   gap: 8px;
   background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
-  padding: 10px 14px;
+  padding: 8px 16px;
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--text-secondary);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-  outline: none;
-  margin-bottom: -1px;
+  transition: all 0.2s ease;
 }
 
 .tabBtn:hover {
   color: var(--text-primary);
-  border-bottom-color: var(--border-hover);
+  background: var(--bg-surface);
 }
 
 .activeTab {
-  color: #ffffff !important;
-  border-bottom-color: var(--accent) !important;
-  font-weight: 600;
+  color: var(--accent-blue) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
 }
 
 .tableCard {

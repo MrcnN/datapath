@@ -331,41 +331,57 @@ export default function QueryPerformancePage() {
 
       {antiPatterns?.is_demo && <DemoDataBanner />}
 
-      {/* Underline Tabs */}
+      {/* Tabs */}
       <div className={styles.tabsContainer}>
-        <div className={styles.tabList}>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'PLAN_ANTI_PATTERNS' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('PLAN_ANTI_PATTERNS')}
-          >
-            <Flame size={15} />
-            <span>Plan Önbellek Tuzakları</span>
-            {antiPatterns && antiPatterns.total_flagged_plans > 0 && (
-              <span className={styles.tabBadge}>
-                {antiPatterns.total_flagged_plans}
-              </span>
-            )}
-          </button>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'QUERY_STORE' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('QUERY_STORE')}
-          >
-            <TrendingUp size={15} />
-            <span>Query Store & Maliyetli Sorgular</span>
-          </button>
-          <button
-            className={`${styles.tabButton} ${activeTab === 'REGRESSIONS' ? styles.tabActive : ''}`}
-            onClick={() => setActiveTab('REGRESSIONS')}
-          >
-            <Activity size={15} />
-            <span>Plan Gerileme Radarı</span>
-            {regressions.length > 0 && (
-              <span className={styles.tabBadge}>
-                {regressions.length}
-              </span>
-            )}
-          </button>
-        </div>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'PLAN_ANTI_PATTERNS' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('PLAN_ANTI_PATTERNS')}
+        >
+          <Flame size={16} />
+          Plan Önbellek Tuzakları (Anti-Patterns)
+          {antiPatterns && antiPatterns.total_flagged_plans > 0 && (
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                color: 'var(--status-danger)',
+                fontWeight: 700,
+              }}
+            >
+              {antiPatterns.total_flagged_plans}
+            </span>
+          )}
+        </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'QUERY_STORE' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('QUERY_STORE')}
+        >
+          <TrendingUp size={16} />
+          Query Store & Maliyetli Sorgular
+        </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'REGRESSIONS' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('REGRESSIONS')}
+        >
+          <Activity size={16} />
+          Plan Gerileme Radarı (Plan Regressions)
+          {regressions.length > 0 && (
+            <span
+              style={{
+                fontSize: '11px',
+                padding: '1px 6px',
+                borderRadius: '10px',
+                background: 'rgba(239, 68, 68, 0.2)',
+                color: 'var(--status-danger)',
+                fontWeight: 700,
+              }}
+            >
+              {regressions.length}
+            </span>
+          )}
+        </button>
       </div>
 
       {activeTab === 'PLAN_ANTI_PATTERNS' && (

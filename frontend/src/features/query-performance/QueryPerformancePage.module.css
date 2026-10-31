@@ -160,25 +160,16 @@
 /* Tabs & Plan Anti-Patterns Styles */
 .tabsContainer {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  gap: var(--space-3);
-  margin-bottom: var(--space-2);
-}
-
-.tabList {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  margin-bottom: -1px;
+  gap: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 4px;
 }
 
 .tabButton {
   background: transparent;
   border: none;
   border-bottom: 2px solid transparent;
-  padding: 10px 14px;
+  padding: 8px 16px;
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
@@ -186,35 +177,17 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all var(--transition-fast);
-  outline: none;
-  white-space: nowrap;
+  transition: all var(--transition-base);
 }
 
 .tabButton:hover {
   color: var(--text-primary);
-  border-bottom-color: var(--border-hover);
 }
 
 .tabActive {
-  color: #ffffff !important;
-  border-bottom-color: var(--accent) !important;
+  color: var(--accent-blue) !important;
+  border-bottom-color: var(--accent-blue) !important;
   font-weight: 600;
-}
-
-.tabBadge {
-  font-size: 11px;
-  font-family: var(--font-mono);
-  padding: 1px 6px;
-  border-radius: 10px;
-  background: rgba(255, 255, 255, 0.08);
-  color: var(--text-secondary);
-  font-weight: 600;
-}
-
-.tabActive .tabBadge {
-  background: rgba(56, 189, 248, 0.15);
-  color: var(--accent);
 }
 
 .antiPatternSummaryRow {
