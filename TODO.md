@@ -90,16 +90,18 @@
   - Baseline döneme kıyasla süresi ve CPU'su %500 ile %2500 arasında artan sorguları listeler.
   - Tek tıkla güvenli `sp_query_store_force_plan` T-SQL plan sabitleme reçetesi sağlar.
 
-- [ ] **[FEAT-12] Canlı Deadlock Grafiği İnteraktif SVG/Canvas Görselleştiricisi**
-  - XML metni yerine tarayıcıda düğüm ve kilit yönü çizimi.
+- [x] **[FEAT-12] Canlı Deadlock Grafiği İnteraktif SVG/Canvas Görselleştiricisi**
+  - Dosyalar: `frontend/src/features/incidents/components/DeadlockGraphVisualizer.tsx`
+  - XML metni yerine tarayıcıda düğüm, kilit yönü, kurban/kazanan ayrımı ve tıklanabilir T-SQL detay çizimi.
 
 ---
 
 ## 🟢 DÜŞÜK — Backlog (Kurumsal Ekosistem & Bildirimler)
 
 ### ENTEGRASYON & BİLDİRİMLER
-- [ ] **[FEAT-12] Webhook Bildirim Entegrasyonu (Discord, Slack, MS Teams)**
-  - Kritik alarm tespit edildiğinde (Örn: 30 saniyeyi aşan bloklama veya Error 824) webhook bildirim fırlatma.
+- [x] **[FEAT-13] Webhook Bildirim Entegrasyonu (Discord, Slack, MS Teams, Generic JSON)**
+  - Dosyalar: `backend/app/services/webhook_service.py`, `frontend/src/features/agent-jobs/components/WebhookSettingsView.tsx`
+  - Kritik alarm tespit edildiğinde (Deadlock, Error 823/824 bozuk sayfa, Severity 17-25) webhook bildirim fırlatma ve test altyapısı.
 
 - [ ] **[FEAT-13] Rol Tabanlı Erişim Denetimi (RBAC)**
   - Platform içi `Viewer` (Salt Okunur Gözlemci) ve `DBA` (T-SQL Betik Üretici) kullanıcı yetkilendirmesi.
