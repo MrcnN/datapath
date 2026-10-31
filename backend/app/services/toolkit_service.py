@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from app.schemas.toolkit import DBAScript, ScriptCategory
+from app.services.toolkit_extended_scripts import EXTENDED_SCRIPTS
 
 _SCRIPTS: List[DBAScript] = [
     # ── Oturumlar ───────────────────────────────────────────────────────────
@@ -957,7 +958,7 @@ FROM msdb.dbo.sysalerts
 ORDER BY severity DESC, message_id;
 """.strip(),
     ),
-]
+] + EXTENDED_SCRIPTS
 
 
 def get_all_scripts(search: str = "", category: str = "") -> List[DBAScript]:
@@ -994,6 +995,7 @@ def get_categories() -> List[ScriptCategory]:
         "Bekleme İstatistikleri": "Sunucu genelindeki en yüksek kaynak beklemelerini ve ring buffer deadlock grafiklerini analiz edin.",
         "Güvenlik": "Sysadmin yetkili hesapları, yetim kullanıcıları ve zayıf parola politikalarını denetleyin.",
         "SQL Agent": "Son 24 saatte hata alan SQL Agent adımlarını ve kritik sistem hata alarmlarını (sysalerts) izleyin.",
+        "Yüksek Erişilebilirlik": "Always On Availability Groups senkronizasyon gecikmesini, redo kuyruklarını ve failover hazırlığını denetleyin.",
     }
     return [
         ScriptCategory(name=cat, description=category_descs.get(cat, ""), script_count=cnt)
