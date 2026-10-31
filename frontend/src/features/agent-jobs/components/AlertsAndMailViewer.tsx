@@ -14,7 +14,9 @@ import {
   ShieldAlert,
   Inbox,
   UserCheck,
+  Send,
 } from 'lucide-react';
+import WebhookSettingsView from './WebhookSettingsView';
 import { getAlertsAndMailSummary } from '../../../lib/api';
 import type {
   AlertsAndMailSummary,
@@ -30,7 +32,7 @@ export default function AlertsAndMailViewer() {
   const [data, setData] = useState<AlertsAndMailSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [subTab, setSubTab] = useState<'alerts' | 'mail'>('alerts');
+  const [subTab, setSubTab] = useState<'alerts' | 'mail' | 'webhook'>('alerts');
 
   const [sqlModal, setSqlModal] = useState<{ title: string; sql: string } | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
@@ -259,6 +261,13 @@ export default function AlertsAndMailViewer() {
           <Mail size={15} />
           Database Mail Kuyruğu & Hataları ({data.mail_status.recent_failed_items.length})
         </button>
+        <button
+          className={`${styles.tabBtn} ${subTab === 'webhook' ? styles.activeTab : ''}`}
+          onClick={() => setSubTab('webhook')}
+        >
+          <Send size={14} />
+          Kriz Webhook Bildirimi (Slack / Teams / Discord)
+        </button>
       </div>
 
       {/* Tab 1: Alerts Table */}
@@ -319,6 +328,9 @@ export default function AlertsAndMailViewer() {
           />
         </div>
       )}
+
+      {/* Tab 3: Webhook Settings */}
+      {subTab === 'webhook' && <WebhookSettingsView />}
 
       {/* T-SQL Review Modal */}
       {sqlModal && (

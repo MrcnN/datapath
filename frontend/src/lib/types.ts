@@ -1253,6 +1253,26 @@ export interface HealthScoreResponse {
   is_live: boolean;
 }
 
+export type WebhookServiceType = 'slack' | 'teams' | 'discord' | 'generic';
+
+export interface WebhookConfig {
+  enabled: boolean;
+  url: string;
+  service_type: WebhookServiceType;
+  min_severity: number;
+  notify_on_deadlocks: boolean;
+  notify_on_suspect_pages: boolean;
+  notify_on_high_severity_errors: boolean;
+  channel_name?: string | null;
+}
+
+export interface WebhookTestResponse {
+  success: boolean;
+  status_code: number;
+  message: string;
+}
+
+
 
 
 

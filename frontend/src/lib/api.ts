@@ -50,6 +50,8 @@ import type {
   MemoryGrantsSummary,
   TempDBContentionSummary,
   HealthScoreResponse,
+  WebhookConfig,
+  WebhookTestResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -441,6 +443,26 @@ export async function getTempDBContentionSummary(): Promise<TempDBContentionSumm
 
 export async function getHealthScore(): Promise<HealthScoreResponse> {
   return apiFetch<HealthScoreResponse>('/api/health-score');
+}
+
+// ── Crisis Notification Webhooks (Slack, Teams, Discord) ─────────────────────
+
+export async function getWebhookConfig(): Promise<WebhookConfig> {
+  return apiFetch<WebhookConfig>('/api/alerts/webhook');
+}
+
+export async function updateWebhookConfig(config: WebhookConfig): Promise<WebhookConfig> {
+  return apiFetch<WebhookConfig>('/api/alerts/webhook', {
+    method: 'POST',
+    body: JSON.stringify(config),
+  });
+}
+
+export async function testWebhook(url: string, service_type: string): Promise<WebhookTestResponse> {
+  return apiFetch<WebhookTestResponse>('/api/alerts/webhook/test', {
+    method: 'POST',
+    body: JSON.stringify({ url, service_type }),
+  });
 }
 
 
