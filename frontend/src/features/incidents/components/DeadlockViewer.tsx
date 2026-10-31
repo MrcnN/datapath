@@ -5,6 +5,7 @@ import { parseDeadlock } from '../../../lib/api';
 import CodeBlock from '../../../components/ui/CodeBlock';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import ErrorState from '../../../components/ui/ErrorState';
+import DeadlockGraphVisualizer from './DeadlockGraphVisualizer';
 import styles from './DeadlockViewer.module.css';
 import { truncate } from '../../../lib/utils';
 
@@ -173,6 +174,9 @@ export default function DeadlockViewer({ result: initialResult }: DeadlockViewer
       {/* Results View */}
       {result && (
         <>
+          {/* Interactive SVG Deadlock Graph */}
+          <DeadlockGraphVisualizer result={result} />
+
           <div className={styles.section}>
             <div className={styles.sectionHeader}>
               Kilitlenme Özeti (Deadlock Summary)

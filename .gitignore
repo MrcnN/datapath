@@ -43,6 +43,10 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
+# Local Data & Secrets
+backend/data/*.json
+!backend/data/.gitkeep
+
 # IDE & OS
 .vscode/
 .idea/
