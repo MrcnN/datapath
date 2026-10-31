@@ -168,8 +168,8 @@ def get_regressions(
     """Compare last N hours vs previous N hours for regression detection."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("QueryPerformanceService: No connection, returning demo regressions.")
-        return DEMO_REGRESSIONS
+        logger.info("QueryPerformanceService: No connection.")
+        return []
 
     try:
         cursor = conn.cursor()
@@ -180,8 +180,8 @@ def get_regressions(
         )
         row = cursor.fetchone()
         if not row or not row[0]:
-            logger.info("Query Store is not enabled on database '%s', returning demo regressions.", db_name)
-            return DEMO_REGRESSIONS
+            logger.info("Query Store is not enabled on database '%s'.", db_name)
+            return []
 
         cursor.execute(
             f"""
@@ -246,7 +246,7 @@ def get_regressions(
         )
         rows = rows_to_dicts(cursor)
         if not rows:
-            return DEMO_REGRESSIONS
+            return []
 
         results: List[RegressionResult] = []
         for r in rows:
@@ -280,8 +280,8 @@ def get_regressions(
             )
         return results
     except Exception as exc:
-        logger.warning("Could not query regressions from '%s': %s, returning demo regressions.", db_name, exc)
-        return DEMO_REGRESSIONS
+        logger.warning("Could not query regressions from '%s': %s", db_name, exc)
+        return []
 
 
 def get_plan_anti_patterns(params: ConnectionParams) -> PlanAntiPatternsSummary:
@@ -394,10 +394,6 @@ def get_plan_anti_patterns(params: ConnectionParams) -> PlanAntiPatternsSummary:
                     )
                 )
 
-            if not queries:
-                from app.services.demo_data import DEMO_PLAN_ANTI_PATTERNS
-                return DEMO_PLAN_ANTI_PATTERNS
-
             return PlanAntiPatternsSummary(
                 is_demo=False,
                 total_flagged_plans=len(queries),
@@ -408,7 +404,14 @@ def get_plan_anti_patterns(params: ConnectionParams) -> PlanAntiPatternsSummary:
                 queries=queries,
             )
     except Exception as exc:
-        logger.warning("Could not fetch live plan anti-patterns, falling back to demo data: %s", exc)
-        from app.services.demo_data import DEMO_PLAN_ANTI_PATTERNS
-        return DEMO_PLAN_ANTI_PATTERNS
+        logger.warning("Could not fetch live plan anti-patterns: %s", exc)
+        return PlanAntiPatternsSummary(
+            is_demo=False,
+            total_flagged_plans=0,
+            spill_count=0,
+            implicit_conversion_count=0,
+            missing_index_count=0,
+            high_grant_count=0,
+            queries=[],
+        )
 

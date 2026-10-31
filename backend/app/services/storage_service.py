@@ -33,8 +33,14 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
     """Return storage metrics, database files, log usage, and autogrowth events."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("StorageService: No database connection, returning demo storage data.")
-        return DEMO_STORAGE_SUMMARY
+        return StorageSummary(
+            total_size_mb=0.0,
+            total_free_space_mb=0.0,
+            free_space_percent=0.0,
+            drives=[],
+            database_files=[],
+            is_demo=False,
+        )
 
     try:
         cursor = conn.cursor()
@@ -391,9 +397,6 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
         except Exception as e:
             logger.warning("Growth forecast query failed: %s", e)
 
-        if not growth_forecasts:
-            growth_forecasts = DEMO_GROWTH_FORECASTS
-
         # 6. VLF (Virtual Log File) Health via sys.dm_db_log_info
         vlf_infos: List[DatabaseVLFInfo] = []
         try:
@@ -455,11 +458,8 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
                     )
                 )
         except Exception as vlf_err:
-            logger.warning("Could not query sys.dm_db_log_info (%s), falling back to demo VLF data.", vlf_err)
-            vlf_infos = DEMO_VLF_INFOS
-
-        if not vlf_infos:
-            vlf_infos = DEMO_VLF_INFOS
+            logger.warning("Could not query sys.dm_db_log_info (%s).", vlf_err)
+            vlf_infos = []
 
         cursor.close()
         conn.close()
@@ -507,15 +507,30 @@ def get_storage_summary(params: Optional[ConnectionParams] = None) -> StorageSum
 
     except Exception as exc:
         logger.error("Failed to query storage summary: %s", exc)
-        return DEMO_STORAGE_SUMMARY
+        return StorageSummary(
+            total_size_mb=0.0,
+            total_free_space_mb=0.0,
+            free_space_percent=0.0,
+            drives=[],
+            database_files=[],
+            is_demo=False,
+        )
 
 
 def get_open_transactions_summary(params: Optional[ConnectionParams] = None) -> OpenTransactionsSummary:
     """Retrieve active open transactions and analyze log reuse wait blockers."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("StorageService: No database connection, returning demo open transactions.")
-        return DEMO_OPEN_TRANSACTIONS_SUMMARY
+        return OpenTransactionsSummary(
+            total_active_transactions=0,
+            dormant_open_transactions_count=0,
+            longest_running_duration_sec=0,
+            longest_running_spid=None,
+            total_log_space_held_mb=0.0,
+            transactions=[],
+            log_reuse_waits=[],
+            is_demo=False,
+        )
 
     try:
         cursor = conn.cursor()
@@ -732,5 +747,14 @@ def get_open_transactions_summary(params: Optional[ConnectionParams] = None) -> 
 
     except Exception as exc:
         logger.error("Failed to query open transactions: %s", exc)
-        return DEMO_OPEN_TRANSACTIONS_SUMMARY
+        return OpenTransactionsSummary(
+            total_active_transactions=0,
+            dormant_open_transactions_count=0,
+            longest_running_duration_sec=0,
+            longest_running_spid=None,
+            total_log_space_held_mb=0.0,
+            transactions=[],
+            log_reuse_waits=[],
+            is_demo=False,
+        )
 

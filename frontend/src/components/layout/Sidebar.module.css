@@ -1,243 +1,429 @@
-.sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: var(--sidebar-width);
+/* ========================================================
+   Datapath Two-Tier Navigation System (Supabase/Grafana style)
+   Tier 1: 58px Primary Slim Rail
+   Tier 2: 216px Context Drawer Module Explorer
+   ======================================================== */
+
+.twoTierSidebar {
+  position: relative;
+}
+
+/* ── Tier 1: Primary Slim Icon Rail ──────────────────────── */
+.primaryRail {
+  width: var(--rail-width, 58px);
   height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  background-color: #0b0f15;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  z-index: 120;
+  user-select: none;
+}
+
+.railBrand {
+  height: var(--topbar-height, 52px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  background-color: #090d12;
+}
+
+.brandEmblem {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(14, 165, 233, 0.05));
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.railBrand:hover .brandEmblem {
+  transform: scale(1.05);
+  border-color: var(--accent);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.3);
+}
+
+.brandIcon {
+  color: var(--accent);
+}
+
+.railNav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  width: 100%;
+}
+
+.railBtn {
+  width: 44px;
+  height: 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted);
+  cursor: pointer;
+  position: relative;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+  outline: none;
+}
+
+.railBtn:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+}
+
+.railBtnActive {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--accent);
+}
+
+.railBtnActive .railIcon {
+  color: var(--accent);
+}
+
+.railIcon {
+  color: inherit;
+  transition: transform var(--transition-fast);
+}
+
+.railBtn:hover .railIcon {
+  transform: translateY(-1px);
+}
+
+.railShortLabel {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  line-height: 1;
+}
+
+.railActiveIndicator {
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 3px 3px 0;
+  box-shadow: 0 0 8px var(--accent);
+}
+
+.railFooter {
+  padding-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.railActionBtn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.railActionBtn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--border-hover);
+  color: var(--text-primary);
+  transform: translateY(-1px);
+}
+
+.railStatusDotBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  cursor: help;
+}
+
+.railStatusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--status-success);
+  box-shadow: 0 0 8px rgba(16, 185, 129, 0.8);
+  animation: pulseGreen 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseGreen {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(0.85);
+  }
+}
+
+/* ── Tier 2: Context Module Drawer ───────────────────────── */
+.contextDrawer {
+  width: var(--drawer-width, 216px);
+  height: 100vh;
+  position: fixed;
+  left: var(--rail-width, 58px);
+  top: 0;
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  z-index: 100;
-  overflow-y: auto;
+  z-index: 110;
+  transition: transform var(--transition-base), opacity var(--transition-base);
   user-select: none;
-  transition: width var(--transition-base);
 }
 
-.sidebarCollapsed {
-  width: var(--sidebar-width-collapsed);
+.contextDrawerCollapsed {
+  transform: translateX(-100%);
+  opacity: 0;
+  pointer-events: none;
 }
 
-.logoHeader {
+.drawerHeader {
+  height: var(--topbar-height, 52px);
+  min-height: var(--topbar-height, 52px);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--border);
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-3);
-  border-bottom: 1px solid var(--border);
-  height: var(--topbar-height);
-  min-height: var(--topbar-height);
-  flex-shrink: 0;
+  justify-content: space-between;
   background-color: var(--bg-subtle);
 }
 
-.sidebarCollapsed .logoHeader {
-  justify-content: center;
-  padding: 0;
-}
-
-.collapseToggleBtn {
-  width: 32px;
-  height: 32px;
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
+.drawerTitleRow {
   display: flex;
   align-items: center;
-  justify-content: center;
-  color: var(--accent);
-  cursor: pointer;
-  flex-shrink: 0;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  justify-content: space-between;
+  width: 100%;
 }
 
-.collapseToggleBtn:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--border-hover);
-  color: #ffffff;
-}
-
-.toggleIcon {
-  stroke-width: 2;
-}
-
-.logoText {
+.drawerPillarInfo {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.logoName {
-  font-size: 14px;
+.drawerCategoryLabel {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.drawerPillarTitle {
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-primary);
-  letter-spacing: -0.3px;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -0.2px;
 }
 
-.versionBadge {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  background: var(--bg-elevated);
+.drawerCollapseBtn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-elevated);
   border: 1px solid var(--border);
-  padding: 1px 4px;
-  border-radius: var(--radius-xs);
-  font-weight: 500;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
 }
 
-.nav {
+.drawerCollapseBtn:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-hover);
+}
+
+.drawerSearchBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  margin: 10px 10px 0 10px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: border-color var(--transition-fast);
+}
+
+.drawerSearchBox:focus-within {
+  border-color: var(--accent);
+}
+
+.drawerSearchIcon {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.drawerSearchInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 11px;
+  color: var(--text-primary);
+  width: 100%;
+}
+
+.drawerSearchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.drawerNav {
   flex: 1;
-  padding: var(--space-3) var(--space-2);
+  padding: 10px 8px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 2px;
   overflow-y: auto;
   overflow-x: hidden;
 }
 
-.sidebarCollapsed .nav {
-  padding: var(--space-3) 6px;
-  align-items: center;
-}
-
-.sectionGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 100%;
-}
-
-.navSectionLabel {
-  font-size: 9.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
+.drawerEmptyNotice {
+  padding: 16px 8px;
+  text-align: center;
+  font-size: 11px;
   color: var(--text-muted);
-  padding: 4px 8px 3px 8px;
-  font-weight: 700;
 }
 
-.collapsedDivider {
-  height: 1px;
-  background-color: var(--border-subtle);
-  margin: 4px 2px;
-}
-
-.sectionItems {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  width: 100%;
-}
-
-.navItem {
+.drawerNavItem {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 7px 9px;
+  gap: 9px;
+  padding: 8px 10px;
+  border-radius: 6px;
   color: var(--text-secondary);
-  font-size: 12.5px;
+  font-size: 12px;
   font-weight: 500;
-  border-radius: var(--radius-sm);
   text-decoration: none;
   transition: background-color var(--transition-fast), color var(--transition-fast);
   outline: none;
-  width: 100%;
+  border: 1px solid transparent;
 }
 
-.sidebarCollapsed .navItem {
-  justify-content: center;
-  padding: 8px;
-  gap: 0;
-}
-
-.navItem:hover {
-  background-color: var(--bg-hover);
+.drawerNavItem:hover {
+  background-color: rgba(255, 255, 255, 0.04);
   color: var(--text-primary);
   text-decoration: none;
 }
 
-.navItem.active {
+.drawerNavItemActive {
   background-color: var(--bg-elevated);
-  color: var(--text-primary);
+  color: #ffffff;
   font-weight: 600;
+  border: 1px solid var(--border-subtle);
   border-left: 2px solid var(--accent);
 }
 
-.sidebarCollapsed .navItem.active {
-  border-left: none;
-  background-color: var(--bg-elevated);
-  box-shadow: inset 0 0 0 1px var(--border);
-}
-
-.navIconBox {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  flex-shrink: 0;
-}
-
-.navIcon {
+.drawerNavIcon {
   color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color var(--transition-fast);
 }
 
-.navItem:hover .navIcon {
+.drawerNavItem:hover .drawerNavIcon {
   color: var(--text-primary);
 }
 
-.navItem.active .navIcon {
+.drawerNavItemActive .drawerNavIcon {
   color: var(--accent);
 }
 
-.navLabel {
+.drawerNavLabel {
   flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.footer {
-  padding: var(--space-2) var(--space-3);
+.drawerNavBadge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.drawerFooter {
+  padding: 10px 12px;
   border-top: 1px solid var(--border);
-  background: var(--bg-subtle);
+  background-color: var(--bg-subtle);
 }
 
-.sidebarCollapsed .footer {
-  padding: var(--space-2) 6px;
-  display: flex;
-  justify-content: center;
-}
-
-.engineBadge {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.engineStatusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--status-success);
-  flex-shrink: 0;
-}
-
-.engineInfo {
+.instanceCard {
+  background-color: var(--bg-base);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 7px 9px;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  gap: 3px;
 }
 
-.engineTitle {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
+.instanceTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
-.engineSub {
-  font-size: 9.5px;
+.instanceTag {
+  font-size: 9px;
+  font-weight: 700;
   color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+
+.instanceStatusTag {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--status-success);
+  background: rgba(16, 185, 129, 0.12);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.instanceHost {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  color: var(--text-secondary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;

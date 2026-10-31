@@ -72,7 +72,9 @@
   --border-focus: #38bdf8;
 
   /* Layout Dimensions */
-  --sidebar-width: 230px;
+  --rail-width: 58px;
+  --drawer-width: 216px;
+  --sidebar-width: 274px;
   --sidebar-width-collapsed: 58px;
   --topbar-height: 52px;
 

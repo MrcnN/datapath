@@ -131,14 +131,34 @@ def get_wait_statistics(params: ConnectionParams) -> WaitStatsSummary:
             rows = rows_to_dicts(cursor)
 
             if not rows:
-                return DEMO_WAIT_STATS_SUMMARY
+                return WaitStatsSummary(
+                    total_wait_time_ms=0.0,
+                    total_signal_wait_ms=0.0,
+                    signal_wait_ratio_percent=0.0,
+                    has_cpu_pressure=False,
+                    top_category="Normal",
+                    total_waiting_tasks=0,
+                    categories=[],
+                    wait_stats=[],
+                    is_demo=False,
+                )
 
             total_wait_ms = sum(float(r.get("wait_time_ms") or 0) for r in rows)
             total_signal_ms = sum(float(r.get("signal_wait_time_ms") or 0) for r in rows)
             total_tasks = sum(int(r.get("waiting_tasks_count") or 0) for r in rows)
 
             if total_wait_ms == 0:
-                return DEMO_WAIT_STATS_SUMMARY
+                return WaitStatsSummary(
+                    total_wait_time_ms=0.0,
+                    total_signal_wait_ms=0.0,
+                    signal_wait_ratio_percent=0.0,
+                    has_cpu_pressure=False,
+                    top_category="Normal",
+                    total_waiting_tasks=0,
+                    categories=[],
+                    wait_stats=[],
+                    is_demo=False,
+                )
 
             signal_ratio = round((total_signal_ms / total_wait_ms) * 100, 2)
             has_cpu_pressure = signal_ratio > 15.0
@@ -208,5 +228,15 @@ def get_wait_statistics(params: ConnectionParams) -> WaitStatsSummary:
                 is_demo=False,
             )
     except Exception as exc:
-        logger.warning("Could not fetch live wait statistics, falling back to demo: %s", exc)
-        return DEMO_WAIT_STATS_SUMMARY
+        logger.warning("Could not fetch live wait statistics: %s", exc)
+        return WaitStatsSummary(
+            total_wait_time_ms=0.0,
+            total_signal_wait_ms=0.0,
+            signal_wait_ratio_percent=0.0,
+            has_cpu_pressure=False,
+            top_category="Normal",
+            total_waiting_tasks=0,
+            categories=[],
+            wait_stats=[],
+            is_demo=False,
+        )

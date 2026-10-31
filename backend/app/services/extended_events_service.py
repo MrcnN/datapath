@@ -40,7 +40,7 @@ def get_extended_events_summary(params: ConnectionParams) -> ExtendedEventsSumma
                 ISNULL(sess.dropped_buffer_count, 0) AS dropped_buffer_count,
                 ISNULL(sess.dropped_event_count, 0) AS dropped_event_count,
                 ISNULL(sess.largest_event_dropped_size, 0) AS largest_event_dropped_size,
-                STRING_AGG(t.target_name, ', ') AS target_types,
+                STRING_AGG(t.name, ', ') AS target_types,
                 ISNULL(CONVERT(VARCHAR(19), sess.create_time, 120), '') AS start_time
             FROM sys.server_event_sessions s
             LEFT JOIN sys.dm_xe_sessions sess ON s.name = sess.name
@@ -163,12 +163,6 @@ def get_extended_events_summary(params: ConnectionParams) -> ExtendedEventsSumma
             except Exception as xe_parse_err:
                 logger.warning("Could not parse system_health ring buffer XML: %s", xe_parse_err)
 
-            if not recent_events:
-                recent_events = DEMO_XE_EVENTS
-
-            if not sessions:
-                sessions = DEMO_XE_SESSIONS
-
             running_count = len([s for s in sessions if s.status == "RUNNING"])
             stopped_count = len([s for s in sessions if s.status == "STOPPED"])
             sys_health_active = any(s.name == "system_health" and s.status == "RUNNING" for s in sessions)
@@ -191,5 +185,17 @@ def get_extended_events_summary(params: ConnectionParams) -> ExtendedEventsSumma
             )
 
     except Exception as exc:
-        logger.warning("Could not fetch live Extended Events, falling back to demo data: %s", exc)
-        return DEMO_EXTENDED_EVENTS_SUMMARY
+        logger.warning("Could not fetch live Extended Events: %s", exc)
+        return ExtendedEventsSummary(
+            total_sessions=0,
+            running_sessions=0,
+            stopped_sessions=0,
+            system_health_running=False,
+            total_dropped_events=0,
+            severe_errors_count=0,
+            deadlocks_in_ring_count=0,
+            sessions=[],
+            recent_events=[],
+            templates=DEMO_XE_TEMPLATES,
+            is_demo=False,
+        )

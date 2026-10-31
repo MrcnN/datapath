@@ -14,7 +14,6 @@ from app.schemas.query_performance import (
     RegressionResult,
     PlanAntiPatternsSummary,
 )
-from app.services.demo_data import DEMO_REGRESSIONS
 from app.services.query_performance_service import (
     get_expensive_queries,
     get_query_store_overview,
@@ -91,7 +90,16 @@ def read_query_regressions(
 ):
     """Detect performance regressions comparing recent interval against prior baseline."""
     params = _get_connection_params()
-    target_db = database or "ECommerce_Production"
+    target_db = database
+    if not target_db:
+        try:
+            from app.services.instance_service import get_databases
+            dbs = [d.name for d in get_databases(params) if d.name not in ("master", "model", "msdb", "tempdb")]
+            target_db = dbs[0] if dbs else None
+        except Exception:
+            target_db = None
+    if not target_db:
+        return []
     try:
         results = get_regressions(
             params,
@@ -99,10 +107,10 @@ def read_query_regressions(
             window_hours=window_hours,
             min_exec_count=min_exec_count,
         )
-        return results if results else DEMO_REGRESSIONS
+        return results or []
     except Exception as exc:
-        logger.debug("Regressions query fallback to demo: %s", exc)
-        return DEMO_REGRESSIONS
+        logger.debug("Regressions query error: %s", exc)
+        return []
 
 
 @router.get("/query-performance/plan-anti-patterns", response_model=PlanAntiPatternsSummary)
@@ -113,6 +121,13 @@ def read_plan_anti_patterns():
         return get_plan_anti_patterns(params)
     except Exception as exc:
         logger.error("Plan anti-patterns retrieval failed: %s", exc)
-        from app.services.demo_data import DEMO_PLAN_ANTI_PATTERNS
-        return DEMO_PLAN_ANTI_PATTERNS
+        return PlanAntiPatternsSummary(
+            is_demo=False,
+            total_flagged_plans=0,
+            spill_count=0,
+            implicit_conversion_count=0,
+            missing_index_count=0,
+            high_grant_count=0,
+            queries=[],
+        )
 

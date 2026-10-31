@@ -249,9 +249,17 @@ def get_live_process_summary(
             is_demo=False,
         )
     except Exception as exc:
-        logger.warning("Could not fetch live process summary, falling back to demo data: %s", exc)
-        from app.services.demo_data import DEMO_LIVE_PROCESS_SUMMARY
-        return DEMO_LIVE_PROCESS_SUMMARY
+        logger.warning("Could not fetch live process summary: %s", exc)
+        return LiveProcessSummary(
+            total_active_sessions=0,
+            running_sessions=0,
+            blocked_sessions=0,
+            root_blockers_count=0,
+            total_tempdb_mb=0.0,
+            total_memory_grant_mb=0.0,
+            sessions=[],
+            is_demo=False,
+        )
 
 
 def get_blocking(params: ConnectionParams) -> BlockingResponse:
@@ -602,8 +610,16 @@ def get_server_configurations(params: ConnectionParams) -> ServerConfigurationSu
                 is_demo=False,
             )
     except Exception as exc:
-        logger.warning("Live server configurations unavailable (%s), returning demo data.", exc)
-        from app.services.demo_data import DEMO_SERVER_CONFIGURATIONS
-        return DEMO_SERVER_CONFIGURATIONS
+        logger.warning("Live server configurations unavailable: %s", exc)
+        return ServerConfigurationSummary(
+            compliance_score=100,
+            total_configurations=0,
+            optimal_count=0,
+            warning_count=0,
+            critical_count=0,
+            items=[],
+            remediation_script="",
+            is_demo=False,
+        )
 
 

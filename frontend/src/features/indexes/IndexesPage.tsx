@@ -541,16 +541,17 @@ export default function IndexesPage() {
         </div>
       )}
 
-      {/* Controls: Database selection & Tabs */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <div className={styles.tabs}>
+      {/* Controls: Underline Tabs Bar with right-side database filter */}
+      <div className={styles.tabsBar}>
+        <div className={styles.tabsList}>
           <button
             type="button"
             className={`${styles.tabBtn} ${activeTab === 'missing' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('missing')}
           >
             <AlertCircle size={15} />
-            Eksik İndeksler ({summary?.total_missing_indexes ?? 0})
+            <span>Eksik İndeksler</span>
+            <span className={styles.tabCountBadge}>{summary?.total_missing_indexes ?? 0}</span>
           </button>
           <button
             type="button"
@@ -558,7 +559,8 @@ export default function IndexesPage() {
             onClick={() => setActiveTab('unused')}
           >
             <Trash2 size={15} />
-            Kullanılmayan İndeksler ({summary?.total_unused_indexes ?? 0})
+            <span>Kullanılmayan İndeksler</span>
+            <span className={styles.tabCountBadge}>{summary?.total_unused_indexes ?? 0}</span>
           </button>
           <button
             type="button"
@@ -566,7 +568,7 @@ export default function IndexesPage() {
             onClick={() => setActiveTab('fragmentation')}
           >
             <Layers size={15} />
-            Parçalanma Analizi
+            <span>Parçalanma Analizi</span>
           </button>
           <button
             type="button"
@@ -574,7 +576,8 @@ export default function IndexesPage() {
             onClick={() => setActiveTab('statistics')}
           >
             <RefreshCw size={15} />
-            İstatistik Güncelliği ({statisticsList.length})
+            <span>İstatistik Güncelliği</span>
+            <span className={styles.tabCountBadge}>{statisticsList.length}</span>
           </button>
           <button
             type="button"
@@ -582,7 +585,8 @@ export default function IndexesPage() {
             onClick={() => setActiveTab('redundant')}
           >
             <CopyCheck size={15} />
-            Örtüşen & Fazlalık ({summary?.redundant_indexes_count ?? 0})
+            <span>Örtüşen & Fazlalık</span>
+            <span className={styles.tabCountBadge}>{summary?.redundant_indexes_count ?? 0}</span>
           </button>
         </div>
 

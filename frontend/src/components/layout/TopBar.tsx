@@ -40,19 +40,19 @@ interface RouteInfo {
 const routeMap: Record<string, RouteInfo> = {
   '/': { label: 'Gösterge Paneli', category: 'Genel Bakış', icon: LayoutDashboard },
   '/instances': { label: 'Sunucular & Bağlantı', category: 'Genel Bakış', icon: Server },
-  '/incidents': { label: 'Olay Merkezi', category: 'Tanı & İzleme', icon: AlertTriangle },
+  '/incidents': { label: 'Olay Merkezi & Kilitler', category: 'Tanı & İzleme', icon: AlertTriangle },
+  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Tanı & İzleme', icon: Sparkles },
   '/query-performance': { label: 'Sorgu Performansı', category: 'Tanı & İzleme', icon: TrendingUp },
   '/indexes': { label: 'İndeks Zekası', category: 'Tanı & İzleme', icon: Layers },
   '/waits': { label: 'Bekleme İstatistikleri', category: 'Tanı & İzleme', icon: Hourglass },
-  '/storage': { label: 'Depolama & Dosyalar', category: 'Tanı & İzleme', icon: HardDrive },
-  '/tempdb': { label: 'TempDB & Bellek', category: 'Tanı & İzleme', icon: Cpu },
-  '/backups': { label: 'Yedekleme & Kurtarma', category: 'Tanı & İzleme', icon: Database },
-  '/high-availability': { label: 'Yüksek Erişilebilirlik', category: 'Tanı & İzleme', icon: Activity },
-  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Tanı & İzleme', icon: Sparkles },
-  '/toolkit': { label: 'DBA Araç Seti', category: 'Yönetim & Araçlar', icon: Wrench },
-  '/agent-jobs': { label: 'SQL Agent İşleri', category: 'Yönetim & Araçlar', icon: CalendarClock },
-  '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim & Araçlar', icon: GitCompare },
-  '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim & Araçlar', icon: Shield },
+  '/storage': { label: 'Depolama & Dosyalar', category: 'Depolama & Altyapı', icon: HardDrive },
+  '/tempdb': { label: 'TempDB & Bellek', category: 'Depolama & Altyapı', icon: Cpu },
+  '/backups': { label: 'Yedekleme & Kurtarma', category: 'Depolama & Altyapı', icon: Database },
+  '/high-availability': { label: 'Yüksek Erişilebilirlik', category: 'Depolama & Altyapı', icon: Activity },
+  '/toolkit': { label: 'DBA Araç Seti', category: 'Yönetim & Güvenlik', icon: Wrench },
+  '/agent-jobs': { label: 'SQL Agent İşleri', category: 'Yönetim & Güvenlik', icon: CalendarClock },
+  '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim & Güvenlik', icon: GitCompare },
+  '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim & Güvenlik', icon: Shield },
 };
 
 const envBadgeClasses: Record<EnvironmentType, string> = {
@@ -80,8 +80,8 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const currentRoute = routeMap[pathname] || {
-    label: 'Sayfa',
-    category: 'Genel',
+    label: 'Genel Bakış',
+    category: 'Datapath',
     icon: Sparkles,
   };
 
@@ -224,11 +224,11 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
           type="button"
           className={styles.dossierBtn}
           onClick={() => setShowReportModal(true)}
-          title="Kapsamlı Mühendislik Teşhis Dosyası İndir & Görüntüle"
-          aria-label="Kapsamlı Mühendislik Teşhis Dosyası"
+          title="Genel Sistem Özeti ve Raporu İndir & Görüntüle"
+          aria-label="Genel Sistem Özeti"
         >
           <FileText size={14} className={styles.dossierBtnIcon} />
-          <span className={styles.dossierBtnText}>Mühendislik Teşhis Dosyası</span>
+          <span className={styles.dossierBtnText}>Genel Sistem Özeti</span>
         </button>
 
         <button

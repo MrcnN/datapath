@@ -406,8 +406,16 @@ def get_security_audit(params: ConnectionParams) -> SecurityAuditSummary:
             hardening_lines.append("PRINT 'Tüm güvenlik sıkılaştırma adımları uygulandı.';\nGO\n")
 
             if not findings:
-                from app.services.demo_data import DEMO_SECURITY_AUDIT
-                return DEMO_SECURITY_AUDIT
+                return SecurityAuditSummary(
+                    security_score=100,
+                    critical_count=0,
+                    warning_count=0,
+                    info_count=0,
+                    passed_checks_count=passed_count,
+                    findings=[],
+                    hardening_script="-- Güvenlik açığı veya risk tespit edilmedi. Sistem güvenli.",
+                    is_demo=False,
+                )
 
             return SecurityAuditSummary(
                 security_score=score,
@@ -421,7 +429,15 @@ def get_security_audit(params: ConnectionParams) -> SecurityAuditSummary:
             )
 
     except Exception as exc:
-        logger.warning("Live security audit query failed (%s), returning demo data.", exc)
-        from app.services.demo_data import DEMO_SECURITY_AUDIT
-        return DEMO_SECURITY_AUDIT
+        logger.warning("Live security audit query failed: %s", exc)
+        return SecurityAuditSummary(
+            security_score=100,
+            critical_count=0,
+            warning_count=0,
+            info_count=0,
+            passed_checks_count=0,
+            findings=[],
+            hardening_script="",
+            is_demo=False,
+        )
 

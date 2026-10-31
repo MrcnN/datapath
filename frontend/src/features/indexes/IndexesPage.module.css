@@ -41,43 +41,64 @@
   color: var(--text-secondary);
 }
 
-.tabs {
-  display: inline-flex;
-  gap: 4px;
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 4px;
-  width: fit-content;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+.tabsBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.tabsList {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-bottom: -1px;
 }
 
 .tabBtn {
   background: transparent;
-  border: 1px solid transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
   color: var(--text-secondary);
   font-size: 13px;
   font-weight: 500;
-  padding: 7px 16px;
+  padding: 10px 14px;
   cursor: pointer;
-  border-radius: var(--radius-md);
   transition: all var(--transition-fast);
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
+  outline: none;
+  white-space: nowrap;
 }
 
 .tabBtn:hover {
-  color: #ffffff;
-  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-bottom-color: var(--border-hover);
 }
 
 .tabBtnActive {
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(0, 210, 255, 0.18), rgba(2, 132, 199, 0.22));
-  border-color: rgba(0, 210, 255, 0.35);
+  border-bottom-color: var(--accent);
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+}
+
+.tabCountBadge {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+  font-weight: 600;
+}
+
+.tabBtnActive .tabCountBadge {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--accent);
 }
 
 .controls {

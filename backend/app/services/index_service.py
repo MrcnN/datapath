@@ -100,8 +100,8 @@ def get_missing_indexes(
                 )
             return results
     except Exception as exc:
-        logger.warning("Could not fetch live missing indexes, falling back to demo data: %s", exc)
-        return DEMO_MISSING_INDEXES
+        logger.warning("Could not fetch live missing indexes: %s", exc)
+        return []
 
 
 def get_unused_indexes(
@@ -175,8 +175,8 @@ def get_unused_indexes(
                 )
             return results
     except Exception as exc:
-        logger.warning("Could not fetch live unused indexes, falling back to demo data: %s", exc)
-        return DEMO_UNUSED_INDEXES
+        logger.warning("Could not fetch live unused indexes: %s", exc)
+        return []
 
 
 def get_index_fragmentation(
@@ -247,8 +247,8 @@ def get_index_fragmentation(
                 )
             return results
     except Exception as exc:
-        logger.warning("Could not fetch live index fragmentation, falling back to demo data: %s", exc)
-        return DEMO_INDEX_FRAGMENTATION
+        logger.warning("Could not fetch live index fragmentation: %s", exc)
+        return []
 
 
 def get_table_statistics(
@@ -317,8 +317,8 @@ def get_table_statistics(
                 )
             return results
     except Exception as exc:
-        logger.warning("Could not fetch live table statistics, falling back to demo data: %s", exc)
-        return DEMO_TABLE_STATISTICS
+        logger.warning("Could not fetch live table statistics: %s", exc)
+        return []
 
 
 def get_redundant_indexes(
@@ -340,8 +340,8 @@ def get_redundant_indexes(
                 i.name AS index_name,
                 i.type_desc,
                 CAST(ROUND(SUM(ps.used_page_count) * 8.0 / 1024.0, 2) AS FLOAT) AS size_mb,
-                STRING_AGG(CASE WHEN ic.is_included_column = 0 THEN c.name END, ', ') WITHIN GROUP (ORDER BY ic.key_ordinal) AS key_columns,
-                STRING_AGG(CASE WHEN ic.is_included_column = 1 THEN c.name END, ', ') WITHIN GROUP (ORDER BY c.name) AS included_columns
+                STRING_AGG(CASE WHEN ic.is_included_column = 0 THEN c.name END, ', ') WITHIN GROUP (ORDER BY ic.index_column_id) AS key_columns,
+                STRING_AGG(CASE WHEN ic.is_included_column = 1 THEN c.name END, ', ') WITHIN GROUP (ORDER BY ic.index_column_id) AS included_columns
             FROM sys.indexes i
             JOIN sys.tables t ON i.object_id = t.object_id
             JOIN sys.schemas s ON t.schema_id = s.schema_id
@@ -413,13 +413,10 @@ def get_redundant_indexes(
                                 )
                             )
 
-            if not redundant and (not database or database in ("master", "tempdb")):
-                return DEMO_REDUNDANT_INDEXES
-
             return redundant
     except Exception as exc:
-        logger.warning("Could not fetch live redundant indexes, falling back to demo data: %s", exc)
-        return DEMO_REDUNDANT_INDEXES
+        logger.warning("Could not fetch live redundant indexes: %s", exc)
+        return []
 
 
 def get_index_summary(
@@ -432,7 +429,7 @@ def get_index_summary(
     stats = get_table_statistics(params, database)
     redundant = get_redundant_indexes(params, database)
 
-    is_demo = missing == DEMO_MISSING_INDEXES
+    is_demo = False
 
     max_impact = max([m.impact_score for m in missing], default=0.0)
     wasted_mb = sum([u.size_mb for u in unused])

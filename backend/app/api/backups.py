@@ -87,7 +87,16 @@ def read_integrity_summary():
         return get_integrity_and_corruption_summary(params)
     except Exception as exc:
         logger.error("Database integrity summary error: %s", exc)
-        from app.services.demo_data import DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY
-        return DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY
+        return IntegrityAndCorruptionSummary(
+            total_databases=0,
+            healthy_checkdb_count=0,
+            stale_checkdb_count=0,
+            critical_checkdb_count=0,
+            suspect_pages_count=0,
+            has_active_corruption=False,
+            checkdb_list=[],
+            suspect_pages=[],
+            is_demo=False,
+        )
 
 

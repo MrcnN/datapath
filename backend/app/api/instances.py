@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, Query, Response
+from fastapi import APIRouter, Query, Response, HTTPException
 
 from app.core.config import settings
 from app.core.exceptions import DatabaseConnectionError, PermissionDeniedError
@@ -25,13 +25,6 @@ from app.services.instance_service import (
     get_server_configurations,
     get_live_process_summary,
 )
-from app.services.demo_data import (
-    DEMO_BLOCKING,
-    DEMO_DATABASES,
-    DEMO_METADATA,
-    DEMO_SESSIONS,
-    DEMO_SERVER_CONFIGURATIONS,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -48,33 +41,28 @@ def _get_connection_params(database: Optional[str] = None) -> ConnectionParams:
 @router.get("/instance/metadata", response_model=ServerMetadata)
 @router.get("/instances/metadata", response_model=ServerMetadata)
 def read_instance_metadata(response: Response):
-    """Retrieve SQL Server instance version, memory, CPU, and database overview.
-    
-    Falls back to clearly labeled demo data if no live instance is connected.
-    """
+    """Retrieve SQL Server instance version, memory, CPU, and database overview."""
     params = _get_connection_params()
     try:
         return get_server_metadata(params)
     except Exception as exc:
-        logger.debug("Live metadata unavailable (%s), returning demo data.", exc)
-        response.headers["X-Datapath-Demo"] = "true"
-        return DEMO_METADATA
+        logger.error("Live metadata unavailable: %s", exc)
+        raise HTTPException(
+            status_code=503,
+            detail=f"Sunucu meta verisi alınamadı: {str(exc)}",
+        )
 
 
 @router.get("/instance/databases", response_model=List[DatabaseInfo])
 @router.get("/instances/databases", response_model=List[DatabaseInfo])
 def read_instance_databases(response: Response):
-    """List databases with state, recovery model, and sizes.
-    
-    Falls back to demo databases if live connection is unavailable.
-    """
+    """List databases with state, recovery model, and sizes."""
     params = _get_connection_params()
     try:
         return get_databases(params)
     except Exception as exc:
-        logger.debug("Live databases unavailable (%s), returning demo data.", exc)
-        response.headers["X-Datapath-Demo"] = "true"
-        return DEMO_DATABASES
+        logger.warning("Live databases query failed: %s", exc)
+        return []
 
 
 @router.get("/sessions", response_model=List[SessionInfo])
@@ -86,10 +74,7 @@ def read_sessions(
     include_system: bool = Query(False, description="Include system sessions"),
     min_duration_ms: int = Query(0, ge=0, description="Minimum wait duration in ms"),
 ):
-    """Retrieve active SQL Server sessions with resource usage and SQL text.
-    
-    Falls back to demo sessions if no live SQL Server is connected.
-    """
+    """Retrieve active SQL Server sessions with resource usage and SQL text."""
     params = _get_connection_params()
     try:
         return get_sessions(
@@ -98,9 +83,8 @@ def read_sessions(
             min_duration_ms=min_duration_ms,
         )
     except Exception as exc:
-        logger.debug("Live sessions unavailable (%s), returning demo data.", exc)
-        response.headers["X-Datapath-Demo"] = "true"
-        return DEMO_SESSIONS
+        logger.warning("Live sessions query failed: %s", exc)
+        return []
 
 
 @router.get("/sessions/live", response_model=LiveProcessSummary)
@@ -113,22 +97,17 @@ def read_live_process_summary(
     return get_live_process_summary(params, active_only=active_only, min_duration_ms=min_duration_ms)
 
 
-
 @router.get("/blocking", response_model=BlockingResponse)
 @router.get("/instance/blocking", response_model=BlockingResponse)
 @router.get("/instances/blocking", response_model=BlockingResponse)
 def read_blocking_chains(response: Response):
-    """Identify active head blockers and blocked session chains.
-    
-    Falls back to demo blocking chain if no live SQL Server is connected.
-    """
+    """Identify active head blockers and blocked session chains."""
     params = _get_connection_params()
     try:
         return get_blocking(params)
     except Exception as exc:
-        logger.debug("Live blocking unavailable (%s), returning demo data.", exc)
-        response.headers["X-Datapath-Demo"] = "true"
-        return DEMO_BLOCKING
+        logger.warning("Live blocking query failed: %s", exc)
+        return BlockingResponse(root_blockers=[], blocked_sessions=[])
 
 
 @router.get("/instance/configurations", response_model=ServerConfigurationSummary)
@@ -139,7 +118,14 @@ def read_server_configurations(response: Response):
     try:
         return get_server_configurations(params)
     except Exception as exc:
-        logger.debug("Live configurations unavailable (%s), returning demo data.", exc)
-        response.headers["X-Datapath-Demo"] = "true"
-        return DEMO_SERVER_CONFIGURATIONS
-
+        logger.warning("Live configurations query failed: %s", exc)
+        return ServerConfigurationSummary(
+            compliance_score=100,
+            total_configurations=0,
+            optimal_count=0,
+            warning_count=0,
+            critical_count=0,
+            items=[],
+            remediation_script="",
+            is_demo=False,
+        )

@@ -55,8 +55,8 @@ def get_agent_jobs_summary(params: Optional[ConnectionParams] = None) -> AgentJo
     """Retrieve all SQL Server Agent jobs with last run status, execution duration, and next run date."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("AgentJobsService: No connection, returning demo jobs data.")
-        return DEMO_AGENT_JOBS_SUMMARY
+        logger.info("AgentJobsService: No connection, returning empty jobs summary.")
+        return AgentJobsSummary(total_jobs=0, running_jobs=0, failed_jobs=0, jobs=[], is_demo=False)
 
     try:
         cursor = conn.cursor()
@@ -173,17 +173,14 @@ def get_agent_jobs_summary(params: Optional[ConnectionParams] = None) -> AgentJo
 
     except Exception as exc:
         logger.error("Failed to fetch SQL Agent jobs summary: %s", exc)
-        return DEMO_AGENT_JOBS_SUMMARY
+        return AgentJobsSummary(total_jobs=0, running_jobs=0, failed_jobs=0, jobs=[], is_demo=False)
 
 
 def get_job_step_history(job_id: str, params: Optional[ConnectionParams] = None) -> List[JobStepHistory]:
     """Retrieve detailed execution history of steps for a given SQL Agent job."""
     conn = get_db_connection(params)
     if not conn:
-        for j in DEMO_AGENT_JOBS_SUMMARY.jobs:
-            if j.job_id == job_id:
-                return j.steps
-        return DEMO_AGENT_JOBS_SUMMARY.jobs[0].steps if DEMO_AGENT_JOBS_SUMMARY.jobs else []
+        return []
 
     try:
         cursor = conn.cursor()
@@ -230,8 +227,23 @@ def get_alerts_and_mail_summary(params: Optional[ConnectionParams] = None) -> Al
     and Database Mail queue status and delivery failures."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("AgentJobsService: No connection, returning demo alerts and mail data.")
-        return DEMO_ALERTS_AND_MAIL_SUMMARY
+        return AlertsAndMailSummary(
+            total_alerts_configured=0,
+            critical_alerts_count=0,
+            missing_recommended_alerts_count=0,
+            database_mail_status=DatabaseMailStatus(
+                is_installed=False,
+                is_enabled=False,
+                service_status="STOPPED",
+                unsent_items_count=0,
+                failed_items_count=0,
+                queue_empty=True,
+                failed_recipients=[],
+            ),
+            alerts=[],
+            create_missing_alerts_sql="",
+            is_demo=False,
+        )
 
     try:
         cursor = conn.cursor()
@@ -419,5 +431,21 @@ def get_alerts_and_mail_summary(params: Optional[ConnectionParams] = None) -> Al
         )
     except Exception as exc:
         logger.error("Failed to query alerts and mail status: %s", exc)
-        return DEMO_ALERTS_AND_MAIL_SUMMARY
+        return AlertsAndMailSummary(
+            total_alerts_configured=0,
+            critical_alerts_count=0,
+            missing_recommended_alerts_count=0,
+            database_mail_status=DatabaseMailStatus(
+                is_installed=False,
+                is_enabled=False,
+                service_status="STOPPED",
+                unsent_items_count=0,
+                failed_items_count=0,
+                queue_empty=True,
+                failed_recipients=[],
+            ),
+            alerts=[],
+            create_missing_alerts_sql="",
+            is_demo=False,
+        )
 

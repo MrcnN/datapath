@@ -262,8 +262,8 @@ def get_database_integrity_checks(params: ConnectionParams) -> List[DatabaseInte
                 )
             return results
     except Exception as exc:
-        logger.warning("Could not fetch live integrity checks, falling back to demo data: %s", exc)
-        return DEMO_INTEGRITY_CHECKS
+        logger.warning("Could not fetch live integrity checks: %s", exc)
+        return []
 
 
 def get_integrity_and_corruption_summary(params: ConnectionParams) -> IntegrityAndCorruptionSummary:
@@ -338,7 +338,17 @@ def get_integrity_and_corruption_summary(params: ConnectionParams) -> IntegrityA
             is_demo=False,
         )
     except Exception as exc:
-        logger.warning("Could not build integrity summary, falling back to demo: %s", exc)
-        return DEMO_INTEGRITY_AND_CORRUPTION_SUMMARY
+        logger.warning("Could not build integrity summary: %s", exc)
+        return IntegrityAndCorruptionSummary(
+            total_databases=0,
+            healthy_checkdb_count=0,
+            stale_checkdb_count=0,
+            critical_checkdb_count=0,
+            suspect_pages_count=0,
+            has_active_corruption=False,
+            checkdb_list=[],
+            suspect_pages=[],
+            is_demo=False,
+        )
 
 

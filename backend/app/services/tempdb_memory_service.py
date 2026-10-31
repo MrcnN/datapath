@@ -47,8 +47,27 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
     """Analyze TempDB allocation, contention, Page Life Expectancy (PLE), and memory consumption."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("TempDBMemoryService: No connection, returning demo data.")
-        return DEMO_TEMPDB_MEMORY_SUMMARY
+        logger.info("TempDBMemoryService: No connection, returning empty data.")
+        return TempDBMemorySummary(
+            total_tempdb_size_mb=0.0,
+            total_tempdb_free_mb=0.0,
+            tempdb_free_percent=0.0,
+            tempdb_files=[],
+            space_breakdown=TempDBSpaceBreakdown(
+                user_objects_mb=0.0,
+                internal_objects_mb=0.0,
+                version_store_mb=0.0,
+                unallocated_mb=0.0,
+            ),
+            page_life_expectancy_sec=0,
+            ple_status="HEALTHY",
+            buffer_cache_hit_ratio=100.0,
+            memory_clerks=[],
+            buffer_pool_top_databases=[],
+            buffer_pool_top_objects=[],
+            plan_cache_bloat=[],
+            is_demo=False,
+        )
 
     try:
         cursor = conn.cursor()
@@ -165,7 +184,7 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
         SELECT COUNT(*) AS contention_count
         FROM sys.dm_os_waiting_tasks wt
         WHERE wt.wait_type LIKE 'PAGELATCH_%'
-          AND wt.wait_resource LIKE '2:%';
+          AND wt.resource_description LIKE '2:%';
         """
         cursor.execute(contention_query)
         crow = cursor.fetchone()
@@ -270,7 +289,7 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
                 )
         except Exception as bp_err:
             logger.warning("Could not query sys.dm_os_buffer_descriptors: %s", bp_err)
-            buffer_pool_dbs = DEMO_TEMPDB_MEMORY_SUMMARY.buffer_pool_db_distribution
+            buffer_pool_dbs = []
 
         # 8. Buffer Pool Top In-Memory Cached Objects
         buffer_pool_objects: List[BufferPoolTopObject] = []
@@ -310,7 +329,7 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
                 )
         except Exception as obj_err:
             logger.warning("Could not query top buffer pool objects: %s", obj_err)
-            buffer_pool_objects = DEMO_TEMPDB_MEMORY_SUMMARY.buffer_pool_top_objects
+            buffer_pool_objects = []
 
         # 9. Ad-Hoc Plan Cache Bloat Analysis (sys.dm_exec_cached_plans)
         plan_cache_bloat: Optional[PlanCacheBloatAnalysis] = None
@@ -380,7 +399,7 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
             )
         except Exception as bl_err:
             logger.warning("Could not query plan cache bloat: %s", bl_err)
-            plan_cache_bloat = DEMO_TEMPDB_MEMORY_SUMMARY.plan_cache_bloat
+            plan_cache_bloat = None
 
         cursor.close()
         conn.close()
@@ -411,7 +430,26 @@ def get_tempdb_memory_summary(params: Optional[ConnectionParams] = None) -> Temp
 
     except Exception as exc:
         logger.error("Failed to query TempDB and memory summary: %s", exc)
-        return DEMO_TEMPDB_MEMORY_SUMMARY
+        return TempDBMemorySummary(
+            total_tempdb_size_mb=0.0,
+            total_tempdb_free_mb=0.0,
+            tempdb_free_percent=0.0,
+            tempdb_files=[],
+            space_breakdown=TempDBSpaceBreakdown(
+                user_objects_mb=0.0,
+                internal_objects_mb=0.0,
+                version_store_mb=0.0,
+                unallocated_mb=0.0,
+            ),
+            page_life_expectancy_sec=0,
+            ple_status="HEALTHY",
+            buffer_cache_hit_ratio=100.0,
+            memory_clerks=[],
+            buffer_pool_top_databases=[],
+            buffer_pool_top_objects=[],
+            plan_cache_bloat=[],
+            is_demo=False,
+        )
 
 
 def get_memory_grants_summary(params: Optional[ConnectionParams] = None) -> MemoryGrantsSummary:
@@ -420,8 +458,17 @@ def get_memory_grants_summary(params: Optional[ConnectionParams] = None) -> Memo
     and detect RESOURCE_SEMAPHORE wait pressure and memory over-grant waste."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("TempDBMemoryService: No connection, returning demo memory grants.")
-        return DEMO_MEMORY_GRANTS_SUMMARY
+        return MemoryGrantsSummary(
+            active_grants_count=0,
+            waiting_grants_count=0,
+            total_granted_mb=0.0,
+            total_used_mb=0.0,
+            wasted_grant_mb=0.0,
+            max_wait_time_ms=0,
+            semaphore_pressure=False,
+            grants=[],
+            is_demo=False,
+        )
 
     try:
         cursor = conn.cursor()
@@ -513,15 +560,36 @@ def get_memory_grants_summary(params: Optional[ConnectionParams] = None) -> Memo
         )
     except Exception as exc:
         logger.error("Failed to query memory grants: %s", exc)
-        return DEMO_MEMORY_GRANTS_SUMMARY
+        return MemoryGrantsSummary(
+            active_grants_count=0,
+            waiting_grants_count=0,
+            total_granted_mb=0.0,
+            total_used_mb=0.0,
+            wasted_grant_mb=0.0,
+            max_wait_time_ms=0,
+            semaphore_pressure=False,
+            grants=[],
+            is_demo=False,
+        )
 
 
 def get_tempdb_contention_summary(params: Optional[ConnectionParams] = None) -> TempDBContentionSummary:
     """Detect active PAGELATCH waits on TempDB PFS/GAM/SGAM pages and track session space consumption."""
     conn = get_db_connection(params)
     if not conn:
-        logger.info("TempDBMemoryService: No connection, returning demo contention data.")
-        return DEMO_TEMPDB_CONTENTION_SUMMARY
+        return TempDBContentionSummary(
+            has_contention=False,
+            contention_severity="HEALTHY",
+            pfs_wait_count=0,
+            gam_wait_count=0,
+            sgam_wait_count=0,
+            total_active_waiters=0,
+            recommended_action="TempDB tahsis performansı sağlıklı durumda.",
+            remediation_sql="",
+            waiters=[],
+            top_space_consumers=[],
+            is_demo=False,
+        )
 
     try:
         cursor = conn.cursor()
@@ -686,6 +754,18 @@ def get_tempdb_contention_summary(params: Optional[ConnectionParams] = None) -> 
         )
     except Exception as exc:
         logger.error("Failed to query tempdb contention summary: %s", exc)
-        return DEMO_TEMPDB_CONTENTION_SUMMARY
+        return TempDBContentionSummary(
+            has_contention=False,
+            contention_severity="HEALTHY",
+            pfs_wait_count=0,
+            gam_wait_count=0,
+            sgam_wait_count=0,
+            total_active_waiters=0,
+            recommended_action="TempDB tahsis performansı sağlıklı durumda.",
+            remediation_sql="",
+            waiters=[],
+            top_space_consumers=[],
+            is_demo=False,
+        )
 
 

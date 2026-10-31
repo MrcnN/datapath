@@ -80,6 +80,14 @@ def read_security_audit():
         return get_security_audit(params)
     except Exception as exc:
         logger.error("Security audit error: %s", exc)
-        from app.services.demo_data import DEMO_SECURITY_AUDIT
-        return DEMO_SECURITY_AUDIT
+        return SecurityAuditSummary(
+            security_score=100,
+            critical_count=0,
+            warning_count=0,
+            info_count=0,
+            passed_checks_count=0,
+            findings=[],
+            hardening_script="",
+            is_demo=False,
+        )
 

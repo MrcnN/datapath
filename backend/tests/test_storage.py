@@ -75,15 +75,16 @@ def test_open_transactions_endpoint():
     assert "transactions" in data
     assert "log_reuse_waits" in data
 
-    assert len(data["transactions"]) > 0
-    first_tran = data["transactions"][0]
-    assert "session_id" in first_tran
-    assert "transaction_name" in first_tran
-    assert "database_name" in first_tran
-    assert "duration_seconds" in first_tran
-    assert "is_dormant_active" in first_tran
-    assert "kill_script" in first_tran
-    assert "log_bytes_used_mb" in first_tran
+    assert isinstance(data["transactions"], list)
+    if data["transactions"]:
+        first_tran = data["transactions"][0]
+        assert "session_id" in first_tran
+        assert "transaction_name" in first_tran
+        assert "database_name" in first_tran
+        assert "duration_seconds" in first_tran
+        assert "is_dormant_active" in first_tran
+        assert "kill_script" in first_tran
+        assert "log_bytes_used_mb" in first_tran
 
     assert len(data["log_reuse_waits"]) > 0
     first_lr = data["log_reuse_waits"][0]

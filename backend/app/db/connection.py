@@ -48,12 +48,19 @@ class ConnectionParams:
         return ";".join(parts)
 
 
-def get_connection(params: ConnectionParams) -> pyodbc.Connection:
+def get_connection(params: Optional[ConnectionParams] = None) -> pyodbc.Connection:
     """Open and return a pyodbc connection.
 
     Raises DatabaseConnectionError on failure.
     Never logs credentials.
     """
+    if params is None:
+        try:
+            from app.services.server_registry import server_registry
+            params = server_registry.get_connection_params_for_active_server()
+        except Exception:
+            params = params_from_settings()
+
     conn_str = params.build_connection_string()
     try:
         conn = pyodbc.connect(conn_str, timeout=params.timeout)
@@ -74,17 +81,38 @@ def get_connection(params: ConnectionParams) -> pyodbc.Connection:
         raise DatabaseConnectionError(safe_msg, detail=str(exc.args)) from exc
 
 
-@contextmanager
-def get_db_connection(params: ConnectionParams) -> Generator[pyodbc.Connection, None, None]:
-    """Context manager that opens a pyodbc connection and ensures it is closed."""
-    conn = get_connection(params)
-    try:
-        yield conn
-    finally:
+class DatabaseConnectionContext:
+    """Connection wrapper that works seamlessly both as a context manager ('with')
+    and as a direct connection object ('conn.cursor()').
+    """
+
+    def __init__(self, params: Optional[ConnectionParams] = None) -> None:
+        self._conn = get_connection(params)
+
+    def __enter__(self) -> pyodbc.Connection:
+        return self._conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
         try:
-            conn.close()
+            self._conn.close()
         except Exception:
             pass
+
+    def __getattr__(self, name: str):
+        return getattr(self._conn, name)
+
+    def close(self) -> None:
+        try:
+            self._conn.close()
+        except Exception:
+            pass
+
+
+def get_db_connection(params: Optional[ConnectionParams] = None) -> DatabaseConnectionContext:
+    """Opens a pyodbc connection usable as a context manager ('with get_db_connection()...')
+    or directly ('conn = get_db_connection(); cursor = conn.cursor()').
+    """
+    return DatabaseConnectionContext(params)
 
 
 def params_from_settings() -> ConnectionParams:

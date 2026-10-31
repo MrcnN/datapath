@@ -130,34 +130,38 @@
 
 .tabBar {
   display: flex;
-  gap: var(--space-2);
+  align-items: center;
+  gap: 2px;
   border-bottom: 1px solid var(--border);
-  padding-bottom: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 
 .tabBtn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   background: transparent;
   border: none;
-  padding: 8px 16px;
+  border-bottom: 2px solid transparent;
+  padding: 10px 14px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 500;
   color: var(--text-secondary);
-  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-fast);
+  outline: none;
+  margin-bottom: -1px;
 }
 
 .tabBtn:hover {
   color: var(--text-primary);
-  background: var(--bg-surface);
+  border-bottom-color: var(--border-hover);
 }
 
 .activeTab {
-  color: var(--accent-blue) !important;
-  background: rgba(59, 130, 246, 0.12) !important;
+  color: #ffffff !important;
+  border-bottom-color: var(--accent) !important;
+  font-weight: 600;
 }
 
 .actionBtn {

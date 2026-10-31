@@ -27,11 +27,12 @@ def test_extended_events_summary_endpoint():
     assert "target_types" in first_sess
     assert "alter_state_script" in first_sess
 
-    assert len(data["recent_events"]) > 0
-    first_event = data["recent_events"][0]
-    assert "event_type" in first_event
-    assert "timestamp" in first_event
-    assert "message" in first_event
+    assert isinstance(data["recent_events"], list)
+    if data["recent_events"]:
+        first_event = data["recent_events"][0]
+        assert "event_type" in first_event
+        assert "timestamp" in first_event
+        assert "message" in first_event
 
     assert len(data["templates"]) > 0
     first_tmpl = data["templates"][0]
