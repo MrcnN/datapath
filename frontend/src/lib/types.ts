@@ -1230,6 +1230,31 @@ export interface TempDBContentionSummary {
   [key: string]: any;
 }
 
+export interface HealthPillar {
+  id: string;
+  name: string;
+  weight: number;
+  score: number;
+  status: 'healthy' | 'warning' | 'critical';
+  findings: string[];
+  recommendations: string[];
+}
+
+export interface HealthScoreResponse {
+  overall_score: number;
+  grade: 'A' | 'B' | 'C' | 'F';
+  status: 'healthy' | 'warning' | 'critical';
+  summary: string;
+  pillars: HealthPillar[];
+  critical_issues_count: number;
+  warning_issues_count: number;
+  server_name: string;
+  calculated_at: string;
+  is_live: boolean;
+}
+
+
+
 
 
 

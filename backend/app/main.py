@@ -12,6 +12,7 @@ from app.api import (
     connections,
     extended_events,
     health,
+    health_score,
     high_availability,
     incidents,
     indexes,
@@ -59,6 +60,7 @@ app.add_middleware(
 
 # Include all API Routers under /api
 app.include_router(health.router, prefix="/api")
+app.include_router(health_score.router, prefix="/api")
 app.include_router(servers.router, prefix="/api")
 app.include_router(connections.router, prefix="/api")
 app.include_router(instances.router, prefix="/api")

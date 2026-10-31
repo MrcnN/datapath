@@ -49,6 +49,7 @@ import type {
   IntegrityAndCorruptionSummary,
   MemoryGrantsSummary,
   TempDBContentionSummary,
+  HealthScoreResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -434,6 +435,12 @@ export async function getMemoryGrantsSummary(): Promise<MemoryGrantsSummary> {
 
 export async function getTempDBContentionSummary(): Promise<TempDBContentionSummary> {
   return apiFetch<TempDBContentionSummary>('/api/tempdb-memory/contention');
+}
+
+// ── Cumulative Database Health Score ─────────────────────────────────────────
+
+export async function getHealthScore(): Promise<HealthScoreResponse> {
+  return apiFetch<HealthScoreResponse>('/api/health-score');
 }
 
 

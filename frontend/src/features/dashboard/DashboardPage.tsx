@@ -45,6 +45,7 @@ import type {
   BlockingResult,
   RecoveryReadiness,
 } from '../../lib/types';
+import HealthScoreCard from './components/HealthScoreCard';
 import styles from './DashboardPage.module.css';
 
 type DbFilterType = 'all' | 'user' | 'system';
@@ -317,6 +318,9 @@ export default function DashboardPage() {
           </button>
         </div>
       )}
+
+      {/* 2.5 Cumulative Database Health Scorecard */}
+      <HealthScoreCard />
 
       {/* 3. Executive KPI Cards Grid */}
       <div className={styles.kpiGrid}>
