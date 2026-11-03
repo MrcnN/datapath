@@ -130,7 +130,19 @@
 ## 🔵 ALTYAPI & KALİTE (CI/CD, Test Kapsamı & Doğrulama)
 
 - [x] **[INFRA-01] Backend Birim ve Entegrasyon Testleri (pytest)**
-  - 61 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
+  - 70 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
+
+- [x] **[FEAT-07] Akıllı T-SQL Sorgu Yeniden Yazıcı (Query Rewriter Studio)**
+  - Anti-pattern tespiti, SARGable dönüşümler ve yan yana T-SQL diff editörü.
+
+- [x] **[FEAT-08] "What-If" Hipotetik İndeks Simülatörü**
+  - Zero-disk WITH STATISTICS_ONLY = -1 ile tahmini maliyet kazanım simülasyonu.
+
+- [x] **[FEAT-09] Otomatik Olay Kök Neden (RCA) Raporlayıcısı**
+  - Kilitlenme olayları için executive summary, timeline, CAPA matrisi ve Markdown export.
+
+- [x] **[FEAT-10] Buffer Pool Tomografisi ve Kirli Sayfa Denetleyicisi**
+  - Veritabanı bazlı nesne RAM dökümü, dirty page oranı ve kontrollü CHECKPOINT yönergesi.
 
 - [x] **[INFRA-02] Frontend Sıfır-Hata Derleme Kapısı (TypeScript & Vite)**
   - `tsc && vite build` komutunun sıfır hata ve temiz bundle ile tamamlanması.

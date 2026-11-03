@@ -100,6 +100,10 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.13** Kurumsal Best Practice & Üretime Hazırlık Karnesi (Configuration & Best Practice Advisor): 16 kritik mimarî kural, ağırlıklı hazırlık puanı ve tek tıkla kopyalanabilir T-SQL düzeltme reçeteleri
 - [x] **5.14** Akıllı Bakım & İndeks İyileştirme Planlayıcısı (Smart Maintenance & Index Defrag Planner): Sayfa eşikli seçici REORGANIZE/REBUILD, istatistik tazeleme, toplu bakım scripti ve SQL Server Agent Job üretimi
 - [x] **5.15** Grafiksel Yürütme Planı Görselleştiricisi (Graphical Execution Plan Viewer): SSMS gerektirmeyen .sqlplan/ShowPlanXML interaktif operatör ağacı, maliyet %, uyarı rozetleri ve eksik indeks tespiti
+- [x] **5.16** Akıllı T-SQL Sorgu İyileştirici & Anti-Pattern Yeniden Yazıcı (Query Rewriter & Optimizer Studio): SARGable dönüşümler (YEAR, LEFT, COUNT(*), SELECT *, leading wildcard, scalar UDF), canlı T-SQL diff editörü ve etki analizi
+- [x] **5.17** "What-If" Hipotetik (Sanal) İndeks Simülatörü (Hypothetical Index Simulator): SQL Server WITH STATISTICS_ONLY = -1 mimarisiyle diske 1 bayt yazmadan tahmini yürütme planı ve maliyet iyileştirme testi
+- [x] **5.18** Olay Kök Neden (RCA Post-Mortem) Raporlayıcısı (Incident Root-Cause Analysis Generator): Deadlock ve kilitlenme fırtınaları için yönetici özeti, zaman çizgisi, CAPA aksiyon planı ve Markdown dışa aktarım
+- [x] **5.19** Buffer Pool & Tablo RAM Tomografisi (Memory Tomography & Dirty Page Explorer): Veritabanı bazında interaktif bellek röntgeni, kirli/temiz sayfa oranı ve kontrollü CHECKPOINT iyileştirme yönergeleri
 
 ---
 
@@ -138,7 +142,7 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 61 Test (Tamamı Başarılı)
+- **Mevcut pytest Test Sayısı:** 70 Test (Tamamı Başarılı)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
   - `GET /api/agent-jobs/alerts-and-mail` ✅
