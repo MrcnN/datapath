@@ -1459,3 +1459,42 @@ export interface HypotheticalSimulationResult {
   real_create_index_tsql: string;
   is_live: boolean;
 }
+
+// ── Incident Root-Cause Analysis (RCA) Post-Mortem ──────────────────────────
+
+export interface RCATimelineEntry {
+  timestamp: string;
+  event: string;
+  severity: 'INFO' | 'WARNING' | 'CRITICAL';
+}
+
+export interface RCACorrectiveAction {
+  priority: 'P0' | 'P1' | 'P2';
+  action: string;
+  owner: string;
+  status: string;
+}
+
+export interface RCARequest {
+  incident_type: 'DEADLOCK' | 'BLOCKING_STORM' | 'TEMPDB_EXHAUSTION' | 'MEMORY_GRANT_TIMEOUT' | 'CUSTOM';
+  database?: string;
+  incident_title?: string;
+  root_query_text?: string;
+  victim_query_text?: string;
+  spids?: number[];
+}
+
+export interface RCAReport {
+  report_id: string;
+  generated_at: string;
+  incident_title: string;
+  severity: string;
+  database: string;
+  executive_summary: string;
+  root_cause_analysis: string;
+  impact_assessment: string;
+  timeline: RCATimelineEntry[];
+  corrective_actions: RCACorrectiveAction[];
+  remediation_tsql: string;
+  markdown_content: string;
+}

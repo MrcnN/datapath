@@ -7,6 +7,7 @@ import {
   FileText,
   GitCommit,
   RefreshCw,
+  AlertOctagon,
   type LucideIcon,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -32,6 +33,7 @@ import type {
   ErrorLogEntry,
   TimelineEvent,
 } from '../../lib/types';
+import RCAReportModal from './components/RCAReportModal';
 import styles from './IncidentCenterPage.module.css';
 
 type TabType = 'sessions' | 'blocking' | 'deadlocks' | 'agent-jobs' | 'error-log' | 'timeline';
@@ -53,6 +55,7 @@ const tabs: TabItem[] = [
 
 export default function IncidentCenterPage() {
   const [activeTab, setActiveTab] = useState<TabType>('sessions');
+  const [showRcaModal, setShowRcaModal] = useState<boolean>(false);
 
   // Tab data states
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -102,15 +105,28 @@ export default function IncidentCenterPage() {
         title="Olay Merkezi (Incident Center)"
         subtitle="Canlı oturumlar, engelleme zincirleri, kilitlenmeler, başarısız işler ve olay zaman çizelgesi"
         actions={
-          <button
-            className={styles.refreshBtn}
-            onClick={() => fetchTabData(activeTab)}
-            disabled={loading}
-            title="Sekme verilerini yenile"
-          >
-            <RefreshCw size={13} className={loading ? styles.spinning : ''} />
-            <span>Yenile</span>
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              type="button"
+              className={styles.refreshBtn}
+              onClick={() => setShowRcaModal(true)}
+              title="Olay Kök Neden Analizi (RCA Post-Mortem) Raporu Üret"
+              style={{ background: 'rgba(239, 68, 68, 0.15)', borderColor: 'rgba(239, 68, 68, 0.3)', color: '#ef4444' }}
+            >
+              <AlertOctagon size={13} />
+              <span>RCA Raporu Üret</span>
+            </button>
+            <button
+              type="button"
+              className={styles.refreshBtn}
+              onClick={() => fetchTabData(activeTab)}
+              disabled={loading}
+              title="Sekme verilerini yenile"
+            >
+              <RefreshCw size={13} className={loading ? styles.spinning : ''} />
+              <span>Yenile</span>
+            </button>
+          </div>
         }
       />
 
@@ -153,6 +169,12 @@ export default function IncidentCenterPage() {
           </>
         )}
       </div>
+      {showRcaModal && (
+        <RCAReportModal
+          onClose={() => setShowRcaModal(false)}
+          incidentType={activeTab === 'deadlocks' ? 'DEADLOCK' : activeTab === 'blocking' ? 'BLOCKING_STORM' : 'CUSTOM'}
+        />
+      )}
     </div>
   );
 }

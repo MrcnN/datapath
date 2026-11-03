@@ -8,6 +8,8 @@ from fastapi import APIRouter, Query, HTTPException
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
+from app.schemas.rca_report import RCAReport, RCARequest
+from app.services.rca_service import generate_rca_post_mortem
 from app.schemas.incidents import (
     AgentJobResponse,
     DeadlockInfo,
@@ -98,3 +100,9 @@ def read_incident_timeline(
     except Exception as exc:
         logger.error("Timeline fetch error: %s", exc)
         return []
+
+
+@router.post("/incidents/generate-rca", response_model=RCAReport)
+def generate_rca_endpoint(req: RCARequest):
+    """Generate executive post-mortem Incident Root-Cause Analysis (RCA) report."""
+    return generate_rca_post_mortem(req)

@@ -60,6 +60,8 @@ import type {
   RewriteQueryResponse,
   HypotheticalSimulationRequest,
   HypotheticalSimulationResult,
+  RCARequest,
+  RCAReport,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -529,6 +531,15 @@ export async function simulateHypotheticalIndex(
   payload: HypotheticalSimulationRequest
 ): Promise<HypotheticalSimulationResult> {
   return apiFetch<HypotheticalSimulationResult>('/api/indexes/simulate-hypothetical', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+// ── Incident Root-Cause Analysis (RCA) Post-Mortem ──────────────────────────
+
+export async function generateRCAReport(payload: RCARequest): Promise<RCAReport> {
+  return apiFetch<RCAReport>('/api/incidents/generate-rca', {
     method: 'POST',
     body: JSON.stringify(payload),
   });
