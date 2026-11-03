@@ -1272,6 +1272,31 @@ export interface WebhookTestResponse {
   message: string;
 }
 
+// ── Emergency Incident Triage ───────────────────────────────────────────────
+
+export interface TriageFinding {
+  category: string;
+  severity: 'CRITICAL' | 'WARNING' | 'HEALTHY';
+  title: string;
+  metric_value: string;
+  evidence: string[];
+  affected_spids: number[];
+}
+
+export interface TriageResponse {
+  overall_status: 'CRITICAL' | 'WARNING' | 'HEALTHY';
+  verdict_title: string;
+  verdict_summary: string;
+  primary_bottleneck: string;
+  remediation_sql: string;
+  findings: TriageFinding[];
+  server_name: string;
+  analyzed_at: string;
+  duration_ms: number;
+  is_live: boolean;
+}
+
+
 
 
 

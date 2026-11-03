@@ -24,9 +24,11 @@ import {
   Search,
   ExternalLink,
   FileText,
+  Zap,
   type LucideIcon,
 } from 'lucide-react';
 import DossierReportModal from '../report/DossierReportModal';
+import EmergencyTriageModal from '../triage/EmergencyTriageModal';
 import { getInstanceMetadata, getServerProfiles, activateServer } from '../../lib/api';
 import type { InstanceMetadata, ServerProfile, EnvironmentType } from '../../lib/types';
 import styles from './TopBar.module.css';
@@ -91,6 +93,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
   });
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
+  const [showTriageModal, setShowTriageModal] = useState<boolean>(false);
 
   // Multi-Server Profile State
   const [servers, setServers] = useState<ServerProfile[]>([]);
@@ -220,6 +223,16 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
 
       {/* Right: Dossier Button, Theme Toggle & Global Server Switcher Dropdown */}
       <div className={styles.rightSection}>
+        <button
+          type="button"
+          className={styles.triageBtn}
+          onClick={() => setShowTriageModal(true)}
+          title="Acil Durum Kriz Triyajı (1-Tıkla Teşhis)"
+          aria-label="Acil Durum Kriz Triyajı"
+        >
+          <Zap size={14} className={styles.triageBtnIcon} />
+          <span className={styles.triageBtnText}>Kriz Triyajı</span>
+        </button>
         <button
           type="button"
           className={styles.dossierBtn}
@@ -373,6 +386,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
       </div>
 
       {showReportModal && <DossierReportModal onClose={() => setShowReportModal(false)} />}
+      {showTriageModal && <EmergencyTriageModal onClose={() => setShowTriageModal(false)} />}
     </header>
   );
 }

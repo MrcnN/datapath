@@ -52,6 +52,7 @@ import type {
   HealthScoreResponse,
   WebhookConfig,
   WebhookTestResponse,
+  TriageResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -463,6 +464,12 @@ export async function testWebhook(url: string, service_type: string): Promise<We
     method: 'POST',
     body: JSON.stringify({ url, service_type }),
   });
+}
+
+// ── 1-Click Emergency Incident Triage ───────────────────────────────────────
+
+export async function getEmergencyTriage(): Promise<TriageResponse> {
+  return apiFetch<TriageResponse>('/api/incidents/triage');
 }
 
 

@@ -24,6 +24,7 @@ from app.api import (
     storage,
     tempdb_memory,
     toolkit,
+    triage,
     wait_stats,
     webhooks,
 )
@@ -79,6 +80,7 @@ app.include_router(tempdb_memory.router, prefix="/api")
 app.include_router(agent_jobs.router, prefix="/api")
 app.include_router(extended_events.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
+app.include_router(triage.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---
