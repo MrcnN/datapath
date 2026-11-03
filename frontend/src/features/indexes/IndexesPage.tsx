@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck, Wrench } from 'lucide-react';
+import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck, Wrench, FlaskConical } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -28,9 +28,10 @@ import type {
   Database,
 } from '../../lib/types';
 import SmartMaintenancePlanner from './components/SmartMaintenancePlanner';
+import HypotheticalIndexSimulator from './components/HypotheticalIndexSimulator';
 import styles from './IndexesPage.module.css';
 
-type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant' | 'maintenance';
+type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant' | 'maintenance' | 'hypothetical';
 
 export default function IndexesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('missing');
@@ -587,6 +588,14 @@ export default function IndexesPage() {
           </button>
           <button
             type="button"
+            className={`${styles.tabBtn} ${activeTab === 'hypothetical' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('hypothetical')}
+          >
+            <FlaskConical size={15} />
+            Sanal İndeks Simülatörü (What-If)
+          </button>
+          <button
+            type="button"
             className={`${styles.tabBtn} ${activeTab === 'redundant' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('redundant')}
           >
@@ -647,6 +656,10 @@ export default function IndexesPage() {
         <ErrorState message={error} onRetry={() => setActiveTab(activeTab)} />
       ) : (
         <>
+                    {activeTab === 'hypothetical' && (
+            <HypotheticalIndexSimulator initialDb={selectedDb} />
+          )}
+
           {activeTab === 'maintenance' && (
             <SmartMaintenancePlanner database={selectedDb} />
           )}

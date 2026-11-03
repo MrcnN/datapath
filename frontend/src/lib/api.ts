@@ -58,6 +58,8 @@ import type {
   ParsedExecutionPlan,
   RewriteQueryRequest,
   RewriteQueryResponse,
+  HypotheticalSimulationRequest,
+  HypotheticalSimulationResult,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -516,6 +518,17 @@ export async function parseExecutionPlan(payload: {
 
 export async function rewriteQuery(payload: RewriteQueryRequest): Promise<RewriteQueryResponse> {
   return apiFetch<RewriteQueryResponse>('/api/query-performance/rewrite', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+// ── What-If Hypothetical Index Simulator ───────────────────────────────────
+
+export async function simulateHypotheticalIndex(
+  payload: HypotheticalSimulationRequest
+): Promise<HypotheticalSimulationResult> {
+  return apiFetch<HypotheticalSimulationResult>('/api/indexes/simulate-hypothetical', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

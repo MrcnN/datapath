@@ -9,6 +9,8 @@ from app.core.config import settings
 from app.db.connection import ConnectionParams
 from app.schemas.maintenance import MaintenancePlanSummary
 from app.services.maintenance_service import generate_maintenance_plan
+from app.schemas.hypothetical_index import HypotheticalSimulationRequest, HypotheticalSimulationResult
+from app.services.hypothetical_index_service import simulate_hypothetical_index
 from app.schemas.indexes import (
     IndexFragmentation,
     IndexSummary,
@@ -113,3 +115,10 @@ def read_maintenance_plan(
         max_frag_reorg=max_frag_reorg,
         min_frag_rebuild=min_frag_rebuild,
     )
+
+
+@router.post("/indexes/simulate-hypothetical", response_model=HypotheticalSimulationResult)
+def simulate_hypothetical_index_endpoint(req: HypotheticalSimulationRequest):
+    """Simulate Query Optimizer cost reduction with a zero-disk hypothetical index."""
+    params = _get_connection_params()
+    return simulate_hypothetical_index(params, req)

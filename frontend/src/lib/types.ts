@@ -1434,3 +1434,28 @@ export interface RewriteQueryResponse {
   detected_patterns: DetectedAntiPattern[];
   explanation_summary: string;
 }
+
+// ── What-If Hypothetical Index Simulator ───────────────────────────────────
+
+export interface HypotheticalSimulationRequest {
+  database: string;
+  table_name: string;
+  key_columns: string[];
+  include_columns?: string[];
+  test_query: string;
+}
+
+export interface HypotheticalSimulationResult {
+  database: string;
+  table_name: string;
+  simulated_index_name: string;
+  baseline_cost: number;
+  simulated_cost: number;
+  cost_reduction_pct: number;
+  index_used_by_optimizer: boolean;
+  operator_before: string;
+  operator_after: string;
+  verdict: string;
+  real_create_index_tsql: string;
+  is_live: boolean;
+}
