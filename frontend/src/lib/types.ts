@@ -1306,3 +1306,29 @@ export interface TriageResponse {
 
 
 
+
+// ── Best Practice & Production Readiness Advisor ───────────────────────────
+
+export interface BestPracticeItem {
+  id: string;
+  category: string;
+  title: string;
+  description: string;
+  status: 'PASS' | 'WARN' | 'FAIL';
+  impact: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  current_value: string;
+  recommended_value: string;
+  remediation_sql?: string | null;
+}
+
+export interface BestPracticeReport {
+  total_rules: number;
+  passed: number;
+  warnings: number;
+  failed: number;
+  readiness_score: number;
+  server_name: string;
+  evaluated_at: string;
+  is_live: boolean;
+  items: BestPracticeItem[];
+}

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Wrench } from 'lucide-react';
+import { Search, Wrench, ShieldCheck, Terminal } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import CodeBlock from '../../components/ui/CodeBlock';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
+import BestPracticeBenchmarkView from './components/BestPracticeBenchmarkView';
 import { getToolkitScripts, getToolkitCategories } from '../../lib/api';
 import type { Script } from '../../lib/types';
 import styles from './ToolkitPage.module.css';
 
 export default function ToolkitPage() {
+  const [activeTab, setActiveTab] = useState<'scripts' | 'benchmark'>('benchmark');
   const [scripts, setScripts] = useState<Script[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -36,8 +38,10 @@ export default function ToolkitPage() {
         setLoading(false);
       }
     }
-    loadData();
-  }, [selectedCategory, search]);
+    if (activeTab === 'scripts') {
+      loadData();
+    }
+  }, [activeTab, selectedCategory, search]);
 
   const getRiskBadge = (risk: string) => {
     switch (risk?.toLowerCase()) {
@@ -55,81 +59,107 @@ export default function ToolkitPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="DBA Araç Seti (Toolkit)"
-        subtitle="Kategorize edilmiş, aranabilir ve tek tıkla kopyalanabilir profesyonel T-SQL teşhis betikleri"
+        title="DBA Araç Seti & Mimarî Danışman"
+        subtitle="Kurumsal Best Practice denetimi, üretime hazırlık karnesi ve profesyonel T-SQL teşhis kütüphanesi"
       />
 
-      <div className={styles.controls}>
-        <div className={styles.searchBox}>
-          <Search size={16} color="var(--text-muted)" />
-          <input
-            type="text"
-            placeholder="Betik adı, açıklama, SQL veya etiketlerde ara..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div className={styles.categories}>
-          <button
-            type="button"
-            className={`${styles.categoryPill} ${!selectedCategory ? styles.categoryPillActive : ''}`}
-            onClick={() => setSelectedCategory('')}
-          >
-            Tümü
-          </button>
-          {categories.map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              className={`${styles.categoryPill} ${selectedCategory === cat ? styles.categoryPillActive : ''}`}
-              onClick={() => setSelectedCategory(cat)}
-            >
-              {cat}
-            </button>
-          ))}
-        </div>
+      {/* Tabs */}
+      <div className={styles.tabNav}>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${activeTab === 'benchmark' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('benchmark')}
+        >
+          <ShieldCheck size={15} />
+          <span>Best Practice & Üretime Hazırlık Karnesi</span>
+        </button>
+        <button
+          type="button"
+          className={`${styles.tabBtn} ${activeTab === 'scripts' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('scripts')}
+        >
+          <Terminal size={15} />
+          <span>T-SQL Skript Kütüphanesi (50 Betik)</span>
+        </button>
       </div>
 
-      {loading && <LoadingSpinner message="Betikler yükleniyor..." />}
-      {error && <ErrorState message={error} onRetry={() => setSearch(search)} />}
-
-      {!loading && !error && scripts.length === 0 && (
-        <EmptyState
-          title="Betik bulunamadı"
-          message="Arama filtrenize uygun bir T-SQL betiği bulunamadı. Lütfen arama teriminizi değiştirin."
-        />
-      )}
-
-      {!loading && !error && scripts.length > 0 && (
-        <div className={styles.grid}>
-          {scripts.map((script) => (
-            <div key={script.id} className={styles.card}>
-              <div className={styles.cardHeader}>
-                <h3 className={styles.cardTitle}>{script.name}</h3>
-                <div className={styles.badges}>
-                  {getRiskBadge(script.risk_level)}
-                </div>
-              </div>
-
-              <p className={styles.cardDesc}>{script.description}</p>
-
-              {script.tags && script.tags.length > 0 && (
-                <div className={styles.tags}>
-                  {script.tags.map((tag) => (
-                    <span key={tag} className={styles.tag}>
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              <div className={styles.codeArea}>
-                <CodeBlock code={script.sql} language="sql" maxLines={8} />
-              </div>
+      {activeTab === 'benchmark' ? (
+        <BestPracticeBenchmarkView />
+      ) : (
+        <>
+          <div className={styles.controls}>
+            <div className={styles.searchBox}>
+              <Search size={16} color="var(--text-muted)" />
+              <input
+                type="text"
+                placeholder="Betik adı, açıklama, SQL veya etiketlerde ara..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </div>
-          ))}
-        </div>
+
+            <div className={styles.categories}>
+              <button
+                type="button"
+                className={`${styles.categoryPill} ${!selectedCategory ? styles.categoryPillActive : ''}`}
+                onClick={() => setSelectedCategory('')}
+              >
+                Tümü
+              </button>
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  className={`${styles.categoryPill} ${selectedCategory === cat ? styles.categoryPillActive : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {loading && <LoadingSpinner message="Betikler yükleniyor..." />}
+          {error && <ErrorState message={error} onRetry={() => setSearch(search)} />}
+
+          {!loading && !error && scripts.length === 0 && (
+            <EmptyState
+              title="Betik bulunamadı"
+              message="Arama filtrenize uygun bir T-SQL betiği bulunamadı. Lütfen arama teriminizi değiştirin."
+            />
+          )}
+
+          {!loading && !error && scripts.length > 0 && (
+            <div className={styles.grid}>
+              {scripts.map((script) => (
+                <div key={script.id} className={styles.card}>
+                  <div className={styles.cardHeader}>
+                    <h3 className={styles.cardTitle}>{script.name}</h3>
+                    <div className={styles.badges}>
+                      {getRiskBadge(script.risk_level)}
+                    </div>
+                  </div>
+
+                  <p className={styles.cardDesc}>{script.description}</p>
+
+                  {script.tags && script.tags.length > 0 && (
+                    <div className={styles.tags}>
+                      {script.tags.map((tag) => (
+                        <span key={tag} className={styles.tag}>
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className={styles.codeArea}>
+                    <CodeBlock code={script.sql} language="sql" maxLines={8} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

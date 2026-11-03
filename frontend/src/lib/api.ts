@@ -53,6 +53,7 @@ import type {
   WebhookConfig,
   WebhookTestResponse,
   TriageResponse,
+  BestPracticeReport,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -472,9 +473,9 @@ export async function getEmergencyTriage(): Promise<TriageResponse> {
   return apiFetch<TriageResponse>('/api/incidents/triage');
 }
 
+// ── Best Practice & Production Readiness Advisor ───────────────────────────
 
-
-
-
-
+export async function getBestPractices(): Promise<BestPracticeReport> {
+  return apiFetch<BestPracticeReport>('/api/toolkit/best-practices');
+}
 

@@ -1,11 +1,13 @@
-"""api/toolkit.py — DBA script library endpoints."""
+"""api/toolkit.py — DBA script library and best practice advisor endpoints."""
 from __future__ import annotations
 
-from typing import List, Optional, Union
+from typing import List, Optional
 from fastapi import APIRouter, Query
 
 from app.schemas.toolkit import DBAScript
+from app.schemas.best_practices import BestPracticeReport
 from app.services.toolkit_service import get_all_scripts, get_categories
+from app.services.best_practice_service import evaluate_best_practices
 
 router = APIRouter(tags=["DBA Toolkit"])
 
@@ -24,3 +26,9 @@ def read_toolkit_categories():
     """Retrieve list of distinct DBA script categories."""
     cats = get_categories()
     return [c.name for c in cats]
+
+
+@router.get("/toolkit/best-practices", response_model=BestPracticeReport)
+def read_best_practices():
+    """Evaluate 16 enterprise production readiness and best practice checks on SQL Server."""
+    return evaluate_best_practices()
