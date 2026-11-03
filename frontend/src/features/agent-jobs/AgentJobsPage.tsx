@@ -236,8 +236,8 @@ export default function AgentJobsPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="SQL Server Agent & İş Zekası (Jobs)"
-        subtitle="Zamanlanmış yedekleme, bakım ve ETL işleri, adım çalışma geçmişi ve başarısız iş teşhisleri."
+        title="SQL Agent & Sistem Alarmları"
+        subtitle="Zamanlanmış SQL Server Agent işleri, başarısız adımlar, sysalerts (Severity 17-25, Error 823-825) alarmları, Database Mail ve Webhook bildirimleri."
       />
 
       {summary?.is_demo && <DemoDataBanner />}

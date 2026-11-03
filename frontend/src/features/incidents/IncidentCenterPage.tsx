@@ -102,8 +102,8 @@ export default function IncidentCenterPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Olay Merkezi (Incident Center)"
-        subtitle="Canlı oturumlar, engelleme zincirleri, kilitlenmeler, başarısız işler ve olay zaman çizelgesi"
+        title="Kilitlenmeler & Deadlock"
+        subtitle="Canlı kilitlenme olayları, interaktif SVG Deadlock grafiği, SQL Server hata günlükleri ve kurumsal RCA Post-Mortem raporlayıcısı."
         actions={
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             <button

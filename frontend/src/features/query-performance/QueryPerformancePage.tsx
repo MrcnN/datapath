@@ -52,7 +52,7 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     if (initialTab) return initialTab;
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
     if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
-    return 'PLAN_ANTI_PATTERNS';
+    return 'QUERY_STORE';
   };
 
   const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO'>(resolveInitialTab);
@@ -347,8 +347,8 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Sorgu & Yürütme Planı Zekası"
-        subtitle="Önbellekteki tehlikeli yürütme planı tuzakları (TempDB Spill, CONVERT_IMPLICIT), bellek israfları ve Query Store metrikleri"
+        title="Ağır Sorgular & Query Store"
+        subtitle="En çok CPU, süre ve mantıksal I/O tüketen ağır sorgular, Query Store çalışma istatistikleri ve plan gerilemeleri."
       />
 
       {antiPatterns?.is_demo && <DemoDataBanner />}

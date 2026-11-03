@@ -504,8 +504,8 @@ export default function IndexesPage({ initialTab }: { initialTab?: TabType } = {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="İndeks Zekası & Sağlığı"
-        subtitle="Eksik indeks tespiti, kullanılmayan indekslerin maliyeti ve parçalanma (fragmentation) optimizasyonu"
+        title="İndeks Analizi"
+        subtitle="Eksik indeks fırsatları, hiç okunmayan gereksiz indeksler, mükerrer indeksler ve parçalanma oranlarını raporlar."
       />
 
       {summary?.is_demo && <DemoDataBanner />}

@@ -104,7 +104,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.17** "What-If" Hipotetik (Sanal) İndeks Simülatörü (Hypothetical Index Simulator): SQL Server WITH STATISTICS_ONLY = -1 mimarisiyle diske 1 bayt yazmadan tahmini yürütme planı ve maliyet iyileştirme testi
 - [x] **5.18** Olay Kök Neden (RCA Post-Mortem) Raporlayıcısı (Incident Root-Cause Analysis Generator): Deadlock ve kilitlenme fırtınaları için yönetici özeti, zaman çizgisi, CAPA aksiyon planı ve Markdown dışa aktarım
 - [x] **5.19** Buffer Pool & Tablo RAM Tomografisi (Memory Tomography & Dirty Page Explorer): Veritabanı bazında interaktif bellek röntgeni, kirli/temiz sayfa oranı ve kontrollü CHECKPOINT iyileştirme yönergeleri
-- [x] **5.20** 6 Kategorili Kurumsal Bilgi Mimarisi & Modül Kataloğu (Information Architecture & Feature Directory Hub): Tüm yeteneklerin 6 ana etki alanı altında toplanması, doğrudan alt rotalar (/catalog, /query-rewriter, /execution-plan, /hypothetical-indexes, /maintenance-planner, /buffer-pool, /best-practices) ve canlı arama haritası
+- [x] **5.20** Bağımsız Sayfa Mimarisi & Başlık Altı Canlı Açıklamalar (Dedicated Views & Informative Subtitles): Her menü elemanı için bağımsız özel sayfaların oluşturulması (/query-rewriter, /execution-plan, /hypothetical-indexes, /maintenance-planner, /buffer-pool, /best-practices), sekmeler arası çakışmanın tamamen giderilmesi ve her sayfa başlığının altına ne işe yaradığını anlatan net Türkçe kılavuz açıklamalarının yerleştirilmesi
 
 ---
 

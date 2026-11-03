@@ -114,8 +114,8 @@ export default function HAPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Yüksek Erişilebilirlik (Always On High Availability)"
-        subtitle="Always On kullanılabilirlik grupları, birincil/ikincil replikalar ve senkronizasyon sağlığı"
+        title="AlwaysOn & Replikalar"
+        subtitle="AlwaysOn Availability Groups replika durumları, senkronizasyon kuyruğu (redo/log queue) ve failover hazırlık izleyicisi."
       />
 
       {loading && <LoadingSpinner message="Always On AG durumu denetleniyor..." />}

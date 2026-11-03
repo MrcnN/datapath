@@ -77,8 +77,8 @@ export default function ToolkitPage({ initialTab }: { initialTab?: 'scripts' | '
   return (
     <div className={styles.container}>
       <PageHeader
-        title="DBA Araç Seti & Mimarî Danışman"
-        subtitle="Kurumsal Best Practice denetimi, üretime hazırlık karnesi ve profesyonel T-SQL teşhis kütüphanesi"
+        title="T-SQL Betik Kütüphanesi"
+        subtitle="Kategorize edilmiş, salt-okunur güvenli acil durum müdahale ve performans teşhis T-SQL betik kütüphanesi."
       />
 
       {/* Tabs */}

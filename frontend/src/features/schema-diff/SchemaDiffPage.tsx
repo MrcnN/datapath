@@ -114,8 +114,8 @@ export default function SchemaDiffPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Şema Karşılaştırması (Schema Diff)"
-        subtitle="İki veritabanı veya anlık görüntü arasındaki tablo, sütun, görünüm ve indeks farklarını inceleyin"
+        title="Şema Karşılaştırma"
+        subtitle="İki veritabanı arasındaki tablo, kolon, veri tipi ve indeks farklılıklarını karşılaştırır; güvenli DDL senkronizasyon betiği üretir."
       />
 
       <div className={styles.controls}>

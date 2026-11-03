@@ -139,8 +139,8 @@ export default function WaitStatsPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Bekleme İstatistikleri (Wait Statistics)"
-        subtitle="SQL Server'ın beklediği darboğazları, kaynak tüketim türlerini ve CPU kuyruk baskısını analiz edin"
+        title="Bekleme İstatistikleri"
+        subtitle="SQL Server'ı yavaşlatan bekleme türlerini, kaynak darboğazlarını ve CPU baskısını (Signal Wait) analiz eder."
       />
 
       {summary?.is_demo && <DemoDataBanner />}

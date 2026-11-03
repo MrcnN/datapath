@@ -12,8 +12,8 @@ export default function InstancesPage() {
   return (
     <div className={styles.page}>
       <PageHeader
-        title="Sunucular & Bağlantı Yönetimi"
-        subtitle="Birden fazla SQL Server ortamı (Prod, AlwaysOn Replica, Staging, Dev) arasında geçiş yapın, bağlantı profillerini yönetin ve sunucu kaynaklarını denetleyin"
+        title="Canlı Oturumlar & Sunucular"
+        subtitle="Canlı sp_whoisactive seviyesinde çalışan sorgular, kök kilit bloklayıcıları ve çoklu sunucu profilleri."
       />
 
       {/* Kayıtlı Sunucu Profilleri & Ortamlar */}

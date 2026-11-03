@@ -283,8 +283,8 @@ GO`,
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Genişletilmiş Olaylar (Extended Events - XE)"
-        subtitle="Hafif olay izleme mimarisi, system_health ring buffer hata analizi ve üretime hazır DBA tanı şablonları"
+        title="Genişletilmiş Olaylar (XE)"
+        subtitle="SQL Server Extended Events oturum yönetimi, ring_buffer ve event_file hedef ayrıştırıcısı ile derin kernel düzeyinde izleme."
       />
 
       {summary?.is_demo && <DemoDataBanner />}

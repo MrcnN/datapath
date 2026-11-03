@@ -240,8 +240,8 @@ export default function BackupRecoveryPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Yedekleme ve Bütünlük (Backup & Integrity)"
-        subtitle="Veritabanı yedekleme geçmişi, RPO kurtarma hazırlığı ve DBCC CHECKDB bütünlük doğrulaması"
+        title="Yedekleme & Disk Sağlığı"
+        subtitle="Son Full/Diff/Log yedekleme geçmişi, RPO veri kaybı riski, DBCC CHECKDB tarihleri ve suspect_pages bozuk sayfa radarı."
       />
 
       {/* Tabs */}

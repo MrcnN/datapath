@@ -51,7 +51,6 @@ const routeMap: Record<string, RouteInfo> = {
   // 1. Genel Bakış
   '/': { label: 'Gösterge Paneli', category: 'Genel Bakış', icon: LayoutDashboard },
   '/instances': { label: 'Canlı Oturumlar & Sunucular', category: 'Genel Bakış', icon: Server },
-  '/catalog': { label: 'Tüm Özellikler Kataloğu', category: 'Genel Bakış', icon: Compass },
 
   // 2. Sorgu & Performans
   '/query-performance': { label: 'Ağır Sorgular & Query Store', category: 'Sorgu & Performans', icon: TrendingUp },

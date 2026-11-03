@@ -677,8 +677,8 @@ export default function StoragePage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Depolama & Dosyalar"
-        subtitle="Veritabanı dosyaları (MDF/NDF/LDF), disk doluluk oranları, yüzdesel büyüme uyarıları ve Default Trace büyüme olayları."
+        title="Disk & Log Dosyaları (VLF)"
+        subtitle="MDF/LDF disk alanı, okuma/yazma disk gecikmeleri (stall ms), Virtual Log File (VLF) şişmesi ve açık kalan işlemler."
       />
 
       {summary?.is_demo && <DemoDataBanner />}

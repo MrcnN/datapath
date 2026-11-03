@@ -273,8 +273,8 @@ export default function TempDBPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="TempDB & Bellek Zekası"
-        subtitle="TempDB alan dağılımı (User/Internal/Version Store), PAGELATCH tahsis çekişmesi, Page Life Expectancy (PLE) ve Memory Clerk analizi."
+        title="TempDB & RAM Durumu"
+        subtitle="TempDB GAM/SGAM/PFS sayfa tahsis çekişmesi, Page Life Expectancy (PLE), bellek dağılımı ve Plan Cache şişmesi analizi."
       />
 
       {summary?.is_demo && <DemoDataBanner />}

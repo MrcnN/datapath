@@ -202,8 +202,8 @@ export default function PermissionsPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="İzinler, Güvenlik & Zafiyet Denetimi"
-        subtitle="Sunucu loginleri, yetim kullanıcılar (orphan users), TRUSTWORTHY yetki yükseltme riskleri ve güvenlik sıkılaştırma"
+        title="Kullanıcılar & Yetkiler"
+        subtitle="Sunucu oturumları (logins), sysadmin rol üyeleri, yetim kullanıcılar (orphaned users) ve veri tabanı rol izin matrisi denetimi."
       />
 
       {auditData?.is_demo && <DemoDataBanner />}

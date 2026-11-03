@@ -4,52 +4,55 @@ import DashboardPage from '../features/dashboard/DashboardPage';
 import InstancesPage from '../features/instances/InstancesPage';
 import IncidentCenterPage from '../features/incidents/IncidentCenterPage';
 import QueryPerformancePage from '../features/query-performance/QueryPerformancePage';
+import QueryRewriterPage from '../features/query-performance/QueryRewriterPage';
+import ExecutionPlanPage from '../features/query-performance/ExecutionPlanPage';
 import BackupRecoveryPage from '../features/backups/BackupRecoveryPage';
 import SchemaDiffPage from '../features/schema-diff/SchemaDiffPage';
 import ToolkitPage from '../features/toolkit/ToolkitPage';
+import BestPracticesPage from '../features/toolkit/BestPracticesPage';
 import PermissionsPage from '../features/permissions/PermissionsPage';
 import HAPage from '../features/high-availability/HAPage';
 import IndexesPage from '../features/indexes/IndexesPage';
+import HypotheticalIndexPage from '../features/indexes/HypotheticalIndexPage';
+import MaintenancePlannerPage from '../features/indexes/MaintenancePlannerPage';
 import WaitStatsPage from '../features/wait-stats/WaitStatsPage';
 import StoragePage from '../features/storage/StoragePage';
 import TempDBPage from '../features/tempdb/TempDBPage';
 import BufferPoolPage from '../features/tempdb/BufferPoolPage';
 import AgentJobsPage from '../features/agent-jobs/AgentJobsPage';
 import ExtendedEventsPage from '../features/extended-events/ExtendedEventsPage';
-import CatalogPage from '../features/catalog/CatalogPage';
 
 export default function Router() {
   return (
     <Routes>
-      {/* 1. Genel Bakış & Filo */}
+      {/* 1. Genel Bakış */}
       <Route path="/" element={<DashboardPage />} />
       <Route path="/instances" element={<InstancesPage />} />
-      <Route path="/catalog" element={<CatalogPage />} />
 
-      {/* 2. Sorgu & Performans Zekası */}
+      {/* 2. Sorgu & Performans */}
       <Route path="/query-performance" element={<QueryPerformancePage />} />
-      <Route path="/query-rewriter" element={<QueryPerformancePage initialTab="REWRITER_STUDIO" />} />
-      <Route path="/execution-plan" element={<QueryPerformancePage initialTab="PLAN_VIEWER" />} />
+      <Route path="/query-rewriter" element={<QueryRewriterPage />} />
+      <Route path="/execution-plan" element={<ExecutionPlanPage />} />
       <Route path="/waits" element={<WaitStatsPage />} />
 
-      {/* 3. İndeksler & Akıllı Bakım */}
+      {/* 3. İndeks & Bakım */}
       <Route path="/indexes" element={<IndexesPage />} />
-      <Route path="/hypothetical-indexes" element={<IndexesPage initialTab="hypothetical" />} />
-      <Route path="/maintenance-planner" element={<IndexesPage initialTab="maintenance" />} />
+      <Route path="/hypothetical-indexes" element={<HypotheticalIndexPage />} />
+      <Route path="/maintenance-planner" element={<MaintenancePlannerPage />} />
 
-      {/* 4. Bellek, TempDB & Depolama */}
+      {/* 4. Bellek & Depolama */}
       <Route path="/tempdb" element={<TempDBPage />} />
       <Route path="/buffer-pool" element={<BufferPoolPage />} />
       <Route path="/storage" element={<StoragePage />} />
 
-      {/* 5. Kriz, Güvenilirlik & Yedekleme */}
+      {/* 5. Kilitlenme & Güvenilirlik */}
       <Route path="/incidents" element={<IncidentCenterPage />} />
       <Route path="/extended-events" element={<ExtendedEventsPage />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
       <Route path="/high-availability" element={<HAPage />} />
 
-      {/* 6. Yönetim, Güvenlik & Denetim */}
-      <Route path="/best-practices" element={<ToolkitPage initialTab="benchmark" />} />
+      {/* 6. Güvenlik & Yönetim */}
+      <Route path="/best-practices" element={<BestPracticesPage />} />
       <Route path="/permissions" element={<PermissionsPage />} />
       <Route path="/agent-jobs" element={<AgentJobsPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />

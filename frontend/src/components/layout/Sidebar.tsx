@@ -22,7 +22,6 @@ import {
   CalendarClock,
   GitCompare,
   Terminal,
-  Compass,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -48,7 +47,6 @@ const navSections: NavSection[] = [
     items: [
       { path: '/', label: 'Gösterge Paneli', icon: LayoutDashboard, exact: true },
       { path: '/instances', label: 'Canlı Oturumlar & Sunucular', icon: Server },
-      { path: '/catalog', label: 'Tüm Özellikler Kataloğu', icon: Compass },
     ],
   },
   {
