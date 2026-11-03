@@ -272,3 +272,39 @@
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.floatingTooltip {
+  background-color: var(--bg-elevated, #1a2234);
+  border: 1px solid var(--border-hover, #3b82f6);
+  border-radius: var(--radius-sm, 6px);
+  padding: 8px 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  max-width: 290px;
+  min-width: 200px;
+  animation: tooltipFadeIn 120ms ease-out forwards;
+  backdrop-filter: blur(8px);
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-50%) translateX(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+  }
+}
+
+.tooltipTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary, #ffffff);
+  margin-bottom: 4px;
+}
+
+.tooltipDesc {
+  font-size: 11px;
+  color: var(--text-secondary, #94a3b8);
+  line-height: 1.45;
+}
