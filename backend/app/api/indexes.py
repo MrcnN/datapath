@@ -7,6 +7,8 @@ from fastapi import APIRouter, Query
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
+from app.schemas.maintenance import MaintenancePlanSummary
+from app.services.maintenance_service import generate_maintenance_plan
 from app.schemas.indexes import (
     IndexFragmentation,
     IndexSummary,
@@ -94,3 +96,20 @@ def read_redundant_indexes(
     params = _get_connection_params()
     return get_redundant_indexes(params, database)
 
+
+@router.get("/indexes/maintenance-plan", response_model=MaintenancePlanSummary)
+def read_maintenance_plan(
+    database: Optional[str] = Query(None, description="Database name filter"),
+    min_pages: int = Query(1000, description="Minimum pages to consider for defrag (default 1000 / ~8MB)"),
+    max_frag_reorg: float = Query(10.0, description="Fragmentation threshold to reorganize"),
+    min_frag_rebuild: float = Query(30.0, description="Fragmentation threshold to rebuild"),
+):
+    """Generate smart, selective index rebuild/reorg and statistics update plan."""
+    params = _get_connection_params()
+    return generate_maintenance_plan(
+        params=params,
+        database=database,
+        min_pages=min_pages,
+        max_frag_reorg=max_frag_reorg,
+        min_frag_rebuild=min_frag_rebuild,
+    )

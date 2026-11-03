@@ -54,6 +54,7 @@ import type {
   WebhookTestResponse,
   TriageResponse,
   BestPracticeReport,
+  MaintenancePlanSummary,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -477,5 +478,22 @@ export async function getEmergencyTriage(): Promise<TriageResponse> {
 
 export async function getBestPractices(): Promise<BestPracticeReport> {
   return apiFetch<BestPracticeReport>('/api/toolkit/best-practices');
+}
+
+// ── Smart Index Maintenance & Statistics Planner ───────────────────────────
+
+export async function getMaintenancePlan(params?: {
+  database?: string;
+  min_pages?: number;
+  max_frag_reorg?: number;
+  min_frag_rebuild?: number;
+}): Promise<MaintenancePlanSummary> {
+  const query = new URLSearchParams();
+  if (params?.database) query.append('database', params.database);
+  if (params?.min_pages !== undefined) query.append('min_pages', String(params.min_pages));
+  if (params?.max_frag_reorg !== undefined) query.append('max_frag_reorg', String(params.max_frag_reorg));
+  if (params?.min_frag_rebuild !== undefined) query.append('min_frag_rebuild', String(params.min_frag_rebuild));
+  const qs = query.toString();
+  return apiFetch<MaintenancePlanSummary>(`/api/indexes/maintenance-plan${qs ? `?${qs}` : ''}`);
 }
 

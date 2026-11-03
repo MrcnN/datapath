@@ -1332,3 +1332,35 @@ export interface BestPracticeReport {
   is_live: boolean;
   items: BestPracticeItem[];
 }
+
+// ── Smart Index Maintenance & Statistics Planner ───────────────────────────
+
+export interface MaintenanceActionItem {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  index_name: string;
+  index_type: string;
+  avg_fragmentation_percent: number;
+  page_count: number;
+  size_mb: number;
+  action_type: 'REBUILD_ONLINE' | 'REBUILD_OFFLINE' | 'REORGANIZE' | 'UPDATE_STATS' | 'NO_ACTION';
+  urgency: 'HIGH' | 'MEDIUM' | 'LOW' | 'NONE';
+  reason: string;
+  estimated_duration_sec: number;
+  command_tsql: string;
+}
+
+export interface MaintenancePlanSummary {
+  database_name: string;
+  total_indexes_evaluated: number;
+  rebuild_count: number;
+  reorganize_count: number;
+  stats_update_count: number;
+  no_action_count: number;
+  total_size_mb: number;
+  estimated_total_minutes: number;
+  generated_batch_script: string;
+  generated_agent_job_tsql: string;
+  items: MaintenanceActionItem[];
+}

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck } from 'lucide-react';
+import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck, Wrench } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -27,9 +27,10 @@ import type {
   RedundantIndex,
   Database,
 } from '../../lib/types';
+import SmartMaintenancePlanner from './components/SmartMaintenancePlanner';
 import styles from './IndexesPage.module.css';
 
-type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant';
+type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant' | 'maintenance';
 
 export default function IndexesPage() {
   const [activeTab, setActiveTab] = useState<TabType>('missing');
@@ -578,6 +579,14 @@ export default function IndexesPage() {
           </button>
           <button
             type="button"
+            className={`${styles.tabBtn} ${activeTab === 'maintenance' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('maintenance')}
+          >
+            <Wrench size={15} />
+            Akıllı Bakım Planlayıcısı
+          </button>
+          <button
+            type="button"
             className={`${styles.tabBtn} ${activeTab === 'redundant' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('redundant')}
           >
@@ -638,6 +647,10 @@ export default function IndexesPage() {
         <ErrorState message={error} onRetry={() => setActiveTab(activeTab)} />
       ) : (
         <>
+          {activeTab === 'maintenance' && (
+            <SmartMaintenancePlanner database={selectedDb} />
+          )}
+
           {activeTab === 'missing' && (
             missingIndexes.length === 0 ? (
               <EmptyState title="Eksik İndeks Bulunamadı" message="SQL Server sorgu iyileştiricisi henüz kritik bir eksik indeks önerisi kaydetmedi." />
