@@ -96,6 +96,10 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.9** Webhook tabanlı canlı kriz uyarı fırlatıcı (Slack, Teams, Discord ve Generic JSON)
 - [x] **5.10** Kümülatif Veritabanı Sağlık Skoru motoru (0-100 puan, Grade A-F, 5 ağırlıklı sütun ve dashboard göstergesi)
 - [x] **5.11** İnteraktif SVG Deadlock bağımlılık ve kilit döngüsü grafiği (`DeadlockGraphVisualizer`)
+- [x] **5.12** Acil Durum Kriz Triyajı (1-Click Emergency Incident Triage): 7 alt sistem eşzamanlı tanı motoru, TopBar butonu ve modal arayüzü
+- [x] **5.13** Kurumsal Best Practice & Üretime Hazırlık Karnesi (Configuration & Best Practice Advisor): 16 kritik mimarî kural, ağırlıklı hazırlık puanı ve tek tıkla kopyalanabilir T-SQL düzeltme reçeteleri
+- [x] **5.14** Akıllı Bakım & İndeks İyileştirme Planlayıcısı (Smart Maintenance & Index Defrag Planner): Sayfa eşikli seçici REORGANIZE/REBUILD, istatistik tazeleme, toplu bakım scripti ve SQL Server Agent Job üretimi
+- [x] **5.15** Grafiksel Yürütme Planı Görselleştiricisi (Graphical Execution Plan Viewer): SSMS gerektirmeyen .sqlplan/ShowPlanXML interaktif operatör ağacı, maliyet %, uyarı rozetleri ve eksik indeks tespiti
 
 ---
 
@@ -134,7 +138,7 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 49 Test (Tamamı Başarılı)
+- **Mevcut pytest Test Sayısı:** 61 Test (Tamamı Başarılı)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
   - `GET /api/agent-jobs/alerts-and-mail` ✅

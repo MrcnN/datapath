@@ -94,6 +94,22 @@
   - Dosyalar: `frontend/src/features/incidents/components/DeadlockGraphVisualizer.tsx`
   - XML metni yerine tarayıcıda düğüm, kilit yönü, kurban/kazanan ayrımı ve tıklanabilir T-SQL detay çizimi.
 
+- [x] **[FEAT-15] Acil Durum Kriz Triyajı (1-Click Emergency Incident Triage)**
+  - Dosyalar: `backend/app/services/triage_service.py`, `frontend/src/components/triage/EmergencyTriageModal.tsx`
+  - Tek tıkla Kilitlenme, Askıda Kalan İşlemler, Bellek Hibeleri (RESOURCE_SEMAPHORE), CPU, TempDB mandalları, Disk I/O ve Bozuk Sayfa kontrolü yapan teşhis motoru.
+
+- [x] **[FEAT-16] Kurumsal Best Practice & Üretime Hazırlık Karnesi (Configuration Advisor)**
+  - Dosyalar: `backend/app/services/best_practice_service.py`, `frontend/src/features/toolkit/components/BestPracticeBenchmarkView.tsx`
+  - Max Server Memory, Cost Threshold for Parallelism, MAXDOP, Optimize for Ad-Hoc, TempDB mimarisi, IFI ve CHECKSUM dahil 16 kurumsal kural denetimi ve remediation scriptleri.
+
+- [x] **[FEAT-17] Akıllı Bakım & İndeks İyileştirme Planlayıcısı (Smart Maintenance Planner)**
+  - Dosyalar: `backend/app/services/maintenance_service.py`, `frontend/src/features/indexes/components/SmartMaintenancePlanner.tsx`
+  - Sayfa sayısı eşiğine (min 1000 sayfa) ve parçalanma oranına göre seçici REORG/REBUILD, istatistik güncellemesi ve SQL Agent Job üretimi.
+
+- [x] **[FEAT-18] Grafiksel Yürütme Planı Görselleştiricisi (Execution Plan Viewer)**
+  - Dosyalar: `backend/app/services/execution_plan_service.py`, `frontend/src/features/query-performance/components/ExecutionPlanViewer.tsx`
+  - ShowPlanXML / .sqlplan dosya ve metinlerini interaktif operatör ağacına dönüştüren, maliyet oranlarını, uyarıları ve eksik indeksleri analiz eden görselleştirici.
+
 ---
 
 ## 🟢 DÜŞÜK — Backlog (Kurumsal Ekosistem & Bildirimler)
@@ -114,7 +130,7 @@
 ## 🔵 ALTYAPI & KALİTE (CI/CD, Test Kapsamı & Doğrulama)
 
 - [x] **[INFRA-01] Backend Birim ve Entegrasyon Testleri (pytest)**
-  - 49 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
+  - 61 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
 
 - [x] **[INFRA-02] Frontend Sıfır-Hata Derleme Kapısı (TypeScript & Vite)**
   - `tsc && vite build` komutunun sıfır hata ve temiz bundle ile tamamlanması.
@@ -133,10 +149,10 @@
 | :--- | :--- | :---: | :---: | :---: |
 | 🔴 **Kritik** | Güvenlik & Veri Bütünlüğü | 6 | 0 | **6** |
 | 🟠 **Yüksek** | Temel DBA Zekası & Tanılama | 6 | 0 | **6** |
-| 🟡 **Orta** | Performans & Derin Analitik | 3 | 2 | **5** |
+| 🟡 **Orta** | Performans & Derin Analitik | 7 | 2 | **9** |
 | 🟢 **Düşük** | Entegrasyon & Backlog | 0 | 3 | **3** |
 | 🔵 **Altyapı** | Kalite & CI/CD | 2 | 2 | **4** |
-| **GENEL TOPLAM** | | **17** | **7** | **24** |
+| **GENEL TOPLAM** | | **21** | **7** | **28** |
 
 ---
 
