@@ -191,6 +191,16 @@ export interface DeadlockResult {
   [key: string]: any;
 }
 
+export interface DeadlockHistoryItem {
+  id: string;
+  timestamp: string | null;
+  database_name: string | null;
+  victim_id: string | null;
+  process_count: number;
+  victim_sql: string | null;
+  deadlock_xml: string;
+}
+
 // ── Agent Jobs ────────────────────────────────────────────────
 export interface AgentJob {
   job_name: string;

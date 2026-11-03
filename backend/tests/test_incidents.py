@@ -44,3 +44,16 @@ def test_parse_deadlock_invalid_xml():
     payload = {"xml_content": "<invalid>XML</invalid>"}
     res = client.post("/api/deadlocks/parse", json=payload)
     assert res.status_code == 400
+
+
+def test_read_deadlock_history():
+    res = client.get("/api/incidents/deadlocks/history?limit=5")
+    assert res.status_code == 200
+    data = res.json()
+    assert isinstance(data, list)
+    assert len(data) > 0
+    first = data[0]
+    assert "id" in first
+    assert "victim_id" in first
+    assert "deadlock_xml" in first
+    assert "<deadlock" in first["deadlock_xml"]

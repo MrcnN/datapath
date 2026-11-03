@@ -15,6 +15,7 @@ import HAPage from '../features/high-availability/HAPage';
 import IndexesPage from '../features/indexes/IndexesPage';
 import HypotheticalIndexPage from '../features/indexes/HypotheticalIndexPage';
 import MaintenancePlannerPage from '../features/indexes/MaintenancePlannerPage';
+import StatisticsPage from '../features/indexes/StatisticsPage';
 import WaitStatsPage from '../features/wait-stats/WaitStatsPage';
 import StoragePage from '../features/storage/StoragePage';
 import TempDBPage from '../features/tempdb/TempDBPage';
@@ -37,6 +38,7 @@ export default function Router() {
 
       {/* 3. İndeks & Bakım */}
       <Route path="/indexes" element={<IndexesPage />} />
+      <Route path="/statistics" element={<StatisticsPage />} />
       <Route path="/hypothetical-indexes" element={<HypotheticalIndexPage />} />
       <Route path="/maintenance-planner" element={<MaintenancePlannerPage />} />
 

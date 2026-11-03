@@ -105,6 +105,8 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.18** Olay Kök Neden (RCA Post-Mortem) Raporlayıcısı (Incident Root-Cause Analysis Generator): Deadlock ve kilitlenme fırtınaları için yönetici özeti, zaman çizgisi, CAPA aksiyon planı ve Markdown dışa aktarım
 - [x] **5.19** Buffer Pool & Tablo RAM Tomografisi (Memory Tomography & Dirty Page Explorer): Veritabanı bazında interaktif bellek röntgeni, kirli/temiz sayfa oranı ve kontrollü CHECKPOINT iyileştirme yönergeleri
 - [x] **5.20** Bağımsız Sayfa Mimarisi & Başlık Altı Canlı Açıklamalar (Dedicated Views & Informative Subtitles): Her menü elemanı için bağımsız özel sayfaların oluşturulması (/query-rewriter, /execution-plan, /hypothetical-indexes, /maintenance-planner, /buffer-pool, /best-practices), sekmeler arası çakışmanın tamamen giderilmesi ve her sayfa başlığının altına ne işe yaradığını anlatan net Türkçe kılavuz açıklamalarının yerleştirilmesi
+- [x] **5.21** İstatistik Sağlığı & Kardinalite Tahmin Radarı (Statistics Health & Cardinality Estimation Radar): sys.dm_db_stats_properties histogram bayatlık takibi, modifikasyon sayacı / satır oranı, örnekleme tutarsızlığı, tek tıkla ve toplu UPDATE STATISTICS T-SQL reçete üretimi (/statistics).
+- [x] **5.22** Canlı Deadlock Radarı & system_health Forensics (Live system_health Deadlock Forensics): Extended Events ring buffer hedefini otomatik sorgulayan, sunucuda gerçekleşen kilitlenme döngülerini tek tıkla interaktif SVG grafiğine aktaran ve RCA post-mortem oluşturan otomatik kaza tespit motoru.
 
 ---
 
@@ -126,6 +128,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 | **Şema Karşılaştırması** | `/schema-diff` | İki veritabanı arası nesne farklılıkları ve güvenli DDL üretimi | ✅ Tamamlandı |
 | **İzinler & Güvenlik** | `/permissions` | Login denetimi, sysadmin hesapları, yetim kullanıcılar | ✅ Tamamlandı |
 | **DBA Araç Seti** | `/toolkit` | Kategorize, aranabilir, kopyalanabilir T-SQL teşhis betikleri | ✅ Tamamlandı |
+| **İstatistik Sağlığı** | `/statistics` | Bayat istatistikler, kardinalite sapması ve otomatik T-SQL reçeteleri | ✅ Tamamlandı |
 | **Teşhis Dosyası Modalı** | `TopBar` | Tek tıkla tüm sağlık ve olay verilerini derleyip dışa aktarma (Export) | ✅ Tamamlandı |
 
 ---
@@ -143,7 +146,7 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 70 Test (Tamamı Başarılı)
+- **Mevcut pytest Test Sayısı:** 71 Test (Tamamı Başarılı)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
   - `GET /api/agent-jobs/alerts-and-mail` ✅

@@ -38,6 +38,16 @@ class DeadlockInfo(BaseModel):
     resources: List[DeadlockResource] = []
 
 
+class DeadlockHistoryItem(BaseModel):
+    id: str
+    timestamp: Optional[datetime] = None
+    database_name: Optional[str] = None
+    victim_id: Optional[str] = None
+    process_count: int = 2
+    victim_sql: Optional[str] = None
+    deadlock_xml: str
+
+
 class AgentJobResult(BaseModel):
     job_name: str
     job_id: str

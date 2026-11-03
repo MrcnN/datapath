@@ -12,12 +12,14 @@ from app.schemas.rca_report import RCAReport, RCARequest
 from app.services.rca_service import generate_rca_post_mortem
 from app.schemas.incidents import (
     AgentJobResponse,
+    DeadlockHistoryItem,
     DeadlockInfo,
     ErrorLogEntry,
     TimelineEvent,
 )
 from app.services.incident_service import (
     get_agent_jobs,
+    get_deadlock_history,
     get_error_log,
     get_incident_timeline,
     parse_deadlock_xml,
@@ -43,6 +45,20 @@ def _get_connection_params() -> ConnectionParams:
         timeout=settings.DB_TIMEOUT,
     )
 
+
+
+@router.get("/deadlocks/history", response_model=List[DeadlockHistoryItem])
+@router.get("/incidents/deadlocks/history", response_model=List[DeadlockHistoryItem])
+def read_deadlock_history(
+    limit: int = Query(15, ge=1, le=100, description="Max deadlock reports to retrieve"),
+):
+    """Retrieve historical deadlock events extracted from system_health Extended Event session."""
+    params = _get_connection_params()
+    try:
+        return get_deadlock_history(params, limit=limit)
+    except Exception as exc:
+        logger.error("Deadlock history fetch error: %s", exc)
+        return []
 
 @router.post("/deadlocks/parse", response_model=DeadlockInfo)
 @router.post("/incidents/deadlock", response_model=DeadlockInfo)

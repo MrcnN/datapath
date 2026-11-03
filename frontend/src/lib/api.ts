@@ -7,6 +7,7 @@ import type {
   LiveProcessSummary,
   BlockingResult,
   DeadlockResult,
+  DeadlockHistoryItem,
   AgentJobResult,
   ErrorLogEntry,
   TimelineEvent,
@@ -167,6 +168,10 @@ export async function getBlocking(): Promise<BlockingResult> {
 }
 
 // ── Deadlocks ─────────────────────────────────────────────────
+
+export async function getDeadlockHistory(limit: number = 15): Promise<DeadlockHistoryItem[]> {
+  return apiFetch<DeadlockHistoryItem[]>(`/api/incidents/deadlocks/history?limit=${limit}`);
+}
 
 export async function parseDeadlock(xmlContent: string): Promise<DeadlockResult> {
   return apiFetch<DeadlockResult>('/api/deadlocks/parse', {
