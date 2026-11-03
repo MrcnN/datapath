@@ -56,6 +56,8 @@ import type {
   BestPracticeReport,
   MaintenancePlanSummary,
   ParsedExecutionPlan,
+  RewriteQueryRequest,
+  RewriteQueryResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -505,6 +507,15 @@ export async function parseExecutionPlan(payload: {
   plan_handle?: string;
 }): Promise<ParsedExecutionPlan> {
   return apiFetch<ParsedExecutionPlan>('/api/query-performance/plan-parse', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+// ── Smart T-SQL Query Rewriter & Optimizer Studio ──────────────────────────
+
+export async function rewriteQuery(payload: RewriteQueryRequest): Promise<RewriteQueryResponse> {
+  return apiFetch<RewriteQueryResponse>('/api/query-performance/rewrite', {
     method: 'POST',
     body: JSON.stringify(payload),
   });

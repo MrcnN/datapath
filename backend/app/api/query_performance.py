@@ -9,6 +9,8 @@ from app.core.config import settings
 from app.core.exceptions import FeatureUnavailableError
 from app.db.connection import ConnectionParams
 from app.schemas.execution_plan import ParsedExecutionPlan, ParsePlanRequest
+from app.schemas.query_rewriter import RewriteQueryRequest, RewriteQueryResponse
+from app.services.query_rewriter_service import rewrite_tsql_query
 from app.services.execution_plan_service import parse_execution_plan
 from app.schemas.query_performance import (
     ExpensiveQuery,
@@ -143,3 +145,9 @@ def parse_plan_endpoint(req: ParsePlanRequest):
         plan_handle=req.plan_handle,
         params=params,
     )
+
+
+@router.post("/query-performance/rewrite", response_model=RewriteQueryResponse)
+def rewrite_query_endpoint(req: RewriteQueryRequest):
+    """Analyze T-SQL query for anti-patterns and return optimized rewritten T-SQL."""
+    return rewrite_tsql_query(query_text=req.query_text, database=req.database)

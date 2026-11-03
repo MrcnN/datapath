@@ -16,6 +16,7 @@ import {
   Check,
   Clock,
   ArrowUpRight,
+  Wand2,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -40,10 +41,11 @@ import type {
   QueryRegression,
 } from '../../lib/types';
 import ExecutionPlanViewer from './components/ExecutionPlanViewer';
+import QueryRewriterStudio from './components/QueryRewriterStudio';
 import styles from './QueryPerformancePage.module.css';
 
 export default function QueryPerformancePage() {
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER'>('PLAN_ANTI_PATTERNS');
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO'>('PLAN_ANTI_PATTERNS');
   const [selectedPlanHandle, setSelectedPlanHandle] = useState<string | undefined>(undefined);
 
   // Plan Anti-Patterns State
@@ -391,9 +393,21 @@ export default function QueryPerformancePage() {
           <Layers size={16} />
           Grafiksel Yürütme Planı Görselleştiricisi
         </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'REWRITER_STUDIO' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('REWRITER_STUDIO')}
+        >
+          <Wand2 size={16} />
+          Akıllı T-SQL İyileştirici (Query Rewriter)
+        </button>
+
       </div>
 
-            {activeTab === 'PLAN_VIEWER' && (
+                  {activeTab === 'REWRITER_STUDIO' && (
+        <QueryRewriterStudio />
+      )}
+
+      {activeTab === 'PLAN_VIEWER' && (
         <ExecutionPlanViewer initialPlanHandle={selectedPlanHandle} />
       )}
 

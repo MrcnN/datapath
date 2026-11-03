@@ -1408,3 +1408,29 @@ export interface ParsedExecutionPlan {
   root_operator?: PlanOperatorNode | null;
   is_live: boolean;
 }
+
+// ── Smart T-SQL Query Rewriter & Optimizer Studio ──────────────────────────
+
+export interface DetectedAntiPattern {
+  rule_id: string;
+  category: string;
+  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  title: string;
+  original_fragment: string;
+  suggested_fragment: string;
+  explanation: string;
+}
+
+export interface RewriteQueryRequest {
+  query_text: string;
+  database?: string;
+}
+
+export interface RewriteQueryResponse {
+  original_query: string;
+  rewritten_query: string;
+  anti_patterns_found: number;
+  estimated_improvement_pct: number;
+  detected_patterns: DetectedAntiPattern[];
+  explanation_summary: string;
+}
