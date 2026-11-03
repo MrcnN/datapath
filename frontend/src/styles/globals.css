@@ -26,6 +26,10 @@ body {
   line-height: 1.5;
   color: var(--text-primary);
   background-color: var(--bg-base);
+  background-image: 
+    radial-gradient(circle at 12% 15%, rgba(56, 189, 248, 0.04) 0%, transparent 45%),
+    radial-gradient(circle at 88% 85%, rgba(59, 130, 246, 0.04) 0%, transparent 45%);
+  background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

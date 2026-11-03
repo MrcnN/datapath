@@ -4,8 +4,10 @@
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background-color: var(--bg-surface);
-  border-right: 1px solid var(--border);
+  background-color: rgba(10, 16, 31, 0.88);
+  backdrop-filter: blur(18px);
+  border-right: 1px solid rgba(56, 189, 248, 0.1);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
   display: flex;
   flex-direction: column;
   z-index: 100;
@@ -23,11 +25,12 @@
   align-items: center;
   gap: var(--space-3);
   padding: 0 var(--space-3);
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.1);
   height: var(--topbar-height);
   min-height: var(--topbar-height);
   flex-shrink: 0;
-  background-color: var(--bg-subtle);
+  background-color: rgba(13, 21, 39, 0.65);
+  backdrop-filter: blur(12px);
 }
 
 .sidebarCollapsed .logoHeader {
@@ -36,10 +39,10 @@
 }
 
 .collapseToggleBtn {
-  width: 32px;
-  height: 32px;
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
+  width: 30px;
+  height: 30px;
+  background-color: rgba(26, 38, 65, 0.6);
+  border: 1px solid rgba(56, 189, 248, 0.18);
   border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
@@ -47,13 +50,14 @@
   color: var(--accent);
   cursor: pointer;
   flex-shrink: 0;
-  transition: background-color var(--transition-fast), border-color var(--transition-fast);
+  transition: all var(--transition-fast);
 }
 
 .collapseToggleBtn:hover {
-  background-color: var(--bg-hover);
-  border-color: var(--border-hover);
+  background-color: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent);
   color: #ffffff;
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
 }
 
 .toggleIcon {
@@ -68,10 +72,13 @@
 }
 
 .logoName {
-  font-size: 14px;
+  font-size: 14.5px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #ffffff;
   letter-spacing: -0.3px;
+  background: linear-gradient(135deg, #ffffff 60%, #38bdf8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .versionBadge {
@@ -90,7 +97,7 @@
   padding: var(--space-3) var(--space-2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: 6px;
   overflow-y: auto;
   overflow-x: hidden;
 }
@@ -103,70 +110,77 @@
 .sectionGroup {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   width: 100%;
 }
 
 .navSectionLabel {
   font-size: 9.5px;
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
-  padding: 4px 8px 3px 8px;
+  letter-spacing: 0.8px;
+  color: #64748b;
+  padding: 6px 10px 3px 10px;
   font-weight: 700;
 }
 
 .collapsedDivider {
   height: 1px;
-  background-color: var(--border-subtle);
-  margin: 4px 2px;
+  background-color: rgba(56, 189, 248, 0.1);
+  margin: 6px 4px;
 }
 
 .sectionItems {
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   width: 100%;
 }
 
 .navItem {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 7px 9px;
-  color: var(--text-secondary);
-  font-size: 12.5px;
+  gap: 9px;
+  padding: 7px 10px;
+  color: #94a3b8;
+  font-size: 12px;
   font-weight: 500;
   border-radius: var(--radius-sm);
   text-decoration: none;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  transition: all var(--transition-fast);
   outline: none;
   width: 100%;
+  border-left: 3px solid transparent;
 }
 
 .sidebarCollapsed .navItem {
   justify-content: center;
   padding: 8px;
   gap: 0;
+  border-left: none;
 }
 
 .navItem:hover {
-  background-color: var(--bg-hover);
-  color: var(--text-primary);
+  background-color: rgba(56, 189, 248, 0.06);
+  color: #ffffff;
   text-decoration: none;
 }
 
+.navItem:hover .navIcon {
+  color: var(--accent);
+}
+
 .navItem.active {
-  background-color: var(--bg-elevated);
-  color: var(--text-primary);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, rgba(56, 189, 248, 0.02) 100%);
+  color: #ffffff;
   font-weight: 600;
-  border-left: 2px solid var(--accent);
+  border-left-color: var(--accent);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 .sidebarCollapsed .navItem.active {
   border-left: none;
-  background-color: var(--bg-elevated);
-  box-shadow: inset 0 0 0 1px var(--border);
+  background: rgba(56, 189, 248, 0.15);
+  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
 }
 
 .navIconBox {
@@ -179,15 +193,13 @@
 }
 
 .navIcon {
-  color: var(--text-muted);
-}
-
-.navItem:hover .navIcon {
-  color: var(--text-primary);
+  color: #64748b;
+  transition: color var(--transition-fast), filter var(--transition-fast);
 }
 
 .navItem.active .navIcon {
   color: var(--accent);
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5));
 }
 
 .navLabel {
@@ -197,40 +209,10 @@
   text-overflow: ellipsis;
 }
 
-.itemBadge {
-  font-size: 9px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 4px;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  line-height: 1.2;
-  margin-left: auto;
-  flex-shrink: 0;
-}
-
-.itemBadgeNew {
-  background: rgba(59, 130, 246, 0.15);
-  color: #60a5fa;
-  border: 1px solid rgba(59, 130, 246, 0.3);
-}
-
-.itemBadgeWarning {
-  background: rgba(245, 158, 11, 0.15);
-  color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
-}
-
-.itemBadgeSuccess {
-  background: rgba(34, 197, 94, 0.15);
-  color: #4ade80;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-}
-
 .footer {
   padding: var(--space-2) var(--space-3);
-  border-top: 1px solid var(--border);
-  background: var(--bg-subtle);
+  border-top: 1px solid rgba(56, 189, 248, 0.1);
+  background: rgba(13, 21, 39, 0.65);
 }
 
 .sidebarCollapsed .footer {
@@ -239,50 +221,16 @@
   justify-content: center;
 }
 
-.engineBadge {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-.engineStatusDot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--status-success);
-  flex-shrink: 0;
-}
-
-.engineInfo {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.engineTitle {
-  font-size: 10.5px;
-  font-weight: 600;
-  color: var(--text-secondary);
-}
-
-.engineSub {
-  font-size: 9.5px;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .floatingTooltip {
-  background-color: var(--bg-elevated, #1a2234);
-  border: 1px solid var(--border-hover, #3b82f6);
-  border-radius: var(--radius-sm, 6px);
+  background-color: rgba(14, 22, 41, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  border-radius: var(--radius-sm);
   padding: 8px 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45), 0 2px 8px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 16px rgba(56, 189, 248, 0.15);
   max-width: 290px;
   min-width: 200px;
   animation: tooltipFadeIn 120ms ease-out forwards;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(16px);
 }
 
 @keyframes tooltipFadeIn {
@@ -299,12 +247,12 @@
 .tooltipTitle {
   font-size: 12px;
   font-weight: 700;
-  color: var(--text-primary, #ffffff);
+  color: #ffffff;
   margin-bottom: 4px;
 }
 
 .tooltipDesc {
   font-size: 11px;
-  color: var(--text-secondary, #94a3b8);
+  color: #94a3b8;
   line-height: 1.45;
 }

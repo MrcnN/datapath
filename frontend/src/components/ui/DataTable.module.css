@@ -1,9 +1,10 @@
 .wrapper {
   overflow-x: auto;
-  border: 1px solid var(--border-card);
+  border: 1px solid rgba(56, 189, 248, 0.12);
   border-radius: var(--radius-lg);
-  background-color: var(--bg-surface);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  background-color: rgba(13, 21, 39, 0.72);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
 }
 
 .table {
@@ -16,8 +17,9 @@
   position: sticky;
   top: 0;
   z-index: 2;
-  background-color: rgba(14, 21, 38, 0.95);
-  backdrop-filter: blur(8px);
+  background-color: rgba(10, 16, 31, 0.96);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(56, 189, 248, 0.12);
 }
 
 .th {
@@ -66,7 +68,7 @@
 }
 
 .tbody tr:hover {
-  background-color: rgba(255, 255, 255, 0.025);
+  background-color: rgba(56, 189, 248, 0.04);
 }
 
 .td {
