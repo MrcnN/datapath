@@ -1498,3 +1498,26 @@ export interface RCAReport {
   remediation_tsql: string;
   markdown_content: string;
 }
+
+// ── Buffer Pool Tomography & Memory Explorer ───────────────────────────────
+
+export interface BufferPoolDrilldownItem {
+  schema_name: string;
+  table_name: string;
+  index_name?: string | null;
+  index_type: string;
+  buffer_mb: number;
+  clean_pages_mb: number;
+  dirty_pages_mb: number;
+  page_count: number;
+  pct_of_database_cache: number;
+}
+
+export interface BufferPoolDrilldownResponse {
+  database: string;
+  total_cached_mb: number;
+  dirty_pages_mb: number;
+  clean_pages_mb: number;
+  checkpoint_urgency: 'HEALTHY' | 'MODERATE' | 'URGENT';
+  items: BufferPoolDrilldownItem[];
+}

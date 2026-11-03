@@ -18,6 +18,8 @@ from app.schemas.tempdb_memory import (
     TempDBContentionWaiter,
     TempDBSessionSpaceUsage,
     TempDBContentionSummary,
+    BufferPoolDrilldownItem,
+    BufferPoolDrilldownResponse,
 )
 from app.services.demo_data import (
     DEMO_TEMPDB_MEMORY_SUMMARY,
@@ -769,3 +771,80 @@ def get_tempdb_contention_summary(params: Optional[ConnectionParams] = None) -> 
         )
 
 
+def get_buffer_pool_drilldown(
+    params: Optional[ConnectionParams] = None, database: Optional[str] = None
+) -> BufferPoolDrilldownResponse:
+    """Query sys.dm_os_buffer_descriptors specifically for target database to get in-memory table and dirty page breakdown."""
+    target_db = database or "master"
+    try:
+        with get_db_connection(params) as conn:
+            cursor = conn.cursor()
+            if target_db:
+                cursor.execute(f"USE [{target_db}];")
+
+            query = """
+            SELECT TOP 25
+                s.name AS schema_name,
+                o.name AS table_name,
+                ISNULL(i.name, 'HEAP') AS index_name,
+                ISNULL(i.type_desc, 'HEAP') AS index_type,
+                CAST(ROUND(COUNT(*) * 8.0 / 1024.0, 2) AS FLOAT) AS buffer_mb,
+                CAST(ROUND(SUM(CASE WHEN b.is_modified = 1 THEN 1 ELSE 0 END) * 8.0 / 1024.0, 2) AS FLOAT) AS dirty_pages_mb,
+                CAST(ROUND(SUM(CASE WHEN b.is_modified = 0 THEN 1 ELSE 0 END) * 8.0 / 1024.0, 2) AS FLOAT) AS clean_pages_mb,
+                COUNT(*) AS page_count
+            FROM sys.dm_os_buffer_descriptors b
+            INNER JOIN sys.allocation_units a ON b.allocation_unit_id = a.allocation_unit_id
+            INNER JOIN sys.partitions p ON (a.container_id = p.hobt_id AND a.type IN (1, 3)) OR (a.container_id = p.partition_id AND a.type = 2)
+            INNER JOIN sys.objects o ON p.object_id = o.object_id
+            INNER JOIN sys.schemas s ON o.schema_id = s.schema_id
+            LEFT JOIN sys.indexes i ON p.object_id = i.object_id AND p.index_id = i.index_id
+            WHERE b.database_id = DB_ID()
+              AND o.is_ms_shipped = 0
+            GROUP BY s.name, o.name, i.name, i.type_desc
+            ORDER BY page_count DESC;
+            """
+            cursor.execute(query)
+            rows = rows_to_dicts(cursor)
+
+            total_cached_mb = sum(float(r.get("buffer_mb") or 0.0) for r in rows) or 1.0
+            tot_dirty_mb = sum(float(r.get("dirty_pages_mb") or 0.0) for r in rows)
+            tot_clean_mb = sum(float(r.get("clean_pages_mb") or 0.0) for r in rows)
+
+            items = []
+            for r in rows:
+                mb = float(r.get("buffer_mb") or 0.0)
+                pct = round((mb / total_cached_mb) * 100.0, 1) if total_cached_mb > 0 else 0.0
+                items.append(
+                    BufferPoolDrilldownItem(
+                        schema_name=str(r.get("schema_name") or "dbo"),
+                        table_name=str(r.get("table_name") or "Unknown"),
+                        index_name=r.get("index_name"),
+                        index_type=str(r.get("index_type") or "HEAP"),
+                        buffer_mb=mb,
+                        clean_pages_mb=float(r.get("clean_pages_mb") or 0.0),
+                        dirty_pages_mb=float(r.get("dirty_pages_mb") or 0.0),
+                        page_count=int(r.get("page_count") or 0),
+                        pct_of_database_cache=pct,
+                    )
+                )
+
+            urgency = "URGENT" if tot_dirty_mb > 1024 else "MODERATE" if tot_dirty_mb > 256 else "HEALTHY"
+
+            return BufferPoolDrilldownResponse(
+                database=target_db,
+                total_cached_mb=round(total_cached_mb, 2),
+                dirty_pages_mb=round(tot_dirty_mb, 2),
+                clean_pages_mb=round(tot_clean_mb, 2),
+                checkpoint_urgency=urgency,
+                items=items,
+            )
+    except Exception as exc:
+        logger.warning("Could not execute buffer pool drilldown for %s: %s", target_db, exc)
+        return BufferPoolDrilldownResponse(
+            database=target_db,
+            total_cached_mb=0.0,
+            dirty_pages_mb=0.0,
+            clean_pages_mb=0.0,
+            checkpoint_urgency="HEALTHY",
+            items=[],
+        )

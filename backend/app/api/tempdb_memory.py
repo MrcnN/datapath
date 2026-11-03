@@ -2,7 +2,8 @@
 from __future__ import annotations
 
 import logging
-from fastapi import APIRouter
+from typing import Optional
+from fastapi import APIRouter, Query
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
@@ -10,11 +11,13 @@ from app.schemas.tempdb_memory import (
     TempDBMemorySummary,
     MemoryGrantsSummary,
     TempDBContentionSummary,
+    BufferPoolDrilldownResponse,
 )
 from app.services.tempdb_memory_service import (
     get_tempdb_memory_summary,
     get_memory_grants_summary,
     get_tempdb_contention_summary,
+    get_buffer_pool_drilldown,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,3 +58,11 @@ def read_tempdb_contention():
     params = _get_connection_params()
     return get_tempdb_contention_summary(params)
 
+
+@router.get("/tempdb-memory/buffer-pool-drilldown", response_model=BufferPoolDrilldownResponse)
+def read_buffer_pool_drilldown(
+    database: Optional[str] = Query(None, description="Database name to inspect in Buffer Pool"),
+):
+    """Retrieve detailed Buffer Pool cache breakdown for specific database down to table and index level."""
+    params = _get_connection_params()
+    return get_buffer_pool_drilldown(params, database)

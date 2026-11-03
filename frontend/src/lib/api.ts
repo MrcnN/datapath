@@ -62,6 +62,7 @@ import type {
   HypotheticalSimulationResult,
   RCARequest,
   RCAReport,
+  BufferPoolDrilldownResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -543,5 +544,12 @@ export async function generateRCAReport(payload: RCARequest): Promise<RCAReport>
     method: 'POST',
     body: JSON.stringify(payload),
   });
+}
+
+// ── Buffer Pool Tomography & Memory Explorer ───────────────────────────────
+
+export async function getBufferPoolDrilldown(database?: string): Promise<BufferPoolDrilldownResponse> {
+  const query = database ? `?database=${encodeURIComponent(database)}` : '';
+  return apiFetch<BufferPoolDrilldownResponse>(`/api/tempdb-memory/buffer-pool-drilldown${query}`);
 }
 

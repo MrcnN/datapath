@@ -166,3 +166,24 @@ class TempDBContentionSummary(BaseModel):
     is_demo: bool = False
 
 
+
+
+class BufferPoolDrilldownItem(BaseModel):
+    schema_name: str
+    table_name: str
+    index_name: Optional[str] = None
+    index_type: str
+    buffer_mb: float
+    clean_pages_mb: float
+    dirty_pages_mb: float
+    page_count: int
+    pct_of_database_cache: float
+
+
+class BufferPoolDrilldownResponse(BaseModel):
+    database: str
+    total_cached_mb: float
+    dirty_pages_mb: float
+    clean_pages_mb: float
+    checkpoint_urgency: str
+    items: List[BufferPoolDrilldownItem]

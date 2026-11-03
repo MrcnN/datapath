@@ -21,6 +21,7 @@ import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import MemoryGrantsViewer from './components/MemoryGrantsViewer';
 import TempDBContentionViewer from './components/TempDBContentionViewer';
+import BufferPoolTomographyViewer from './components/BufferPoolTomographyViewer';
 import { getTempDBMemorySummary } from '../../lib/api';
 import type {
   TempDBMemorySummary,
@@ -619,6 +620,9 @@ export default function TempDBPage() {
 
       {/* Section: Query Memory Grants & RESOURCE_SEMAPHORE Contention */}
       <MemoryGrantsViewer />
+
+      {/* Section: Interactive Buffer Pool Tomography & Dirty Page Explorer */}
+      <BufferPoolTomographyViewer />
 
       {/* Section: Buffer Pool Deep Breakdown (Databases & Top Objects) */}
       <div className={styles.twoColGrid}>
