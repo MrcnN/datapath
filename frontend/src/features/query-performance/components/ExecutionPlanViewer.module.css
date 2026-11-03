@@ -1,0 +1,431 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Header & Controls */
+.topBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-surface, var(--bg-card));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 10px);
+  padding: 14px 20px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.statsLeft {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.statItem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.statLabel {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.statVal {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  background: var(--bg-hover, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover {
+  background: var(--accent-primary, #3b82f6);
+  border-color: var(--accent-primary, #3b82f6);
+  color: #ffffff;
+}
+
+.actionBtnActive {
+  background: var(--accent-primary, #3b82f6);
+  border-color: var(--accent-primary, #3b82f6);
+  color: #ffffff;
+}
+
+/* Missing Index Alert Banner */
+.missingIndexBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-lg, 10px);
+  padding: 14px 18px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.missingIndexLeft {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.impactBadge {
+  background: #10b981;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+.missingIndexInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.missingIndexTitle {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.missingIndexDesc {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono, monospace);
+}
+
+/* XML Input Drawer / Accordion */
+.xmlInputBox {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--bg-surface, var(--bg-card));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 10px);
+  padding: 16px;
+}
+
+.xmlTextarea {
+  width: 100%;
+  height: 120px;
+  background: var(--bg-input, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: 12px;
+  padding: 10px;
+  outline: none;
+  resize: vertical;
+}
+
+.xmlTextarea:focus {
+  border-color: var(--accent-primary, #3b82f6);
+}
+
+/* Main Visualizer Area */
+.visualizerLayout {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+@media (max-width: 1080px) {
+  .visualizerLayout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.treeCanvas {
+  background: var(--bg-card, #121217);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 12px);
+  padding: 28px;
+  overflow-x: auto;
+  min-height: 440px;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Operator Tree Rendering */
+.treeNodeWrapper {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+}
+
+.operatorCard {
+  width: 210px;
+  background: var(--bg-surface, #1e1e24);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md, 8px);
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  user-select: none;
+}
+
+.operatorCard:hover {
+  border-color: var(--accent-primary, #3b82f6);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+}
+
+.operatorCardSelected {
+  border-color: var(--accent-primary, #3b82f6);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.operatorCardExpensive {
+  border-left: 4px solid #ef4444;
+}
+
+.operatorTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.opIconTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.opIcon {
+  color: var(--accent-primary, #3b82f6);
+}
+
+.opTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 130px;
+}
+
+.warningBadge {
+  color: #f59e0b;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.objectTarget {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.costBarBox {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.costMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.costVal {
+  color: var(--text-primary);
+}
+
+.costValHigh {
+  color: #ef4444;
+  font-weight: 800;
+}
+
+.costBar {
+  width: 100%;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.costFill {
+  height: 100%;
+  border-radius: 2px;
+}
+
+/* Branch Children Container */
+.childrenBranches {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  position: relative;
+  padding-left: 20px;
+  border-left: 2px dashed rgba(255, 255, 255, 0.12);
+}
+
+/* Inspector Panel */
+.inspectorPanel {
+  background: var(--bg-surface, var(--bg-card));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg, 12px);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.inspectorHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 10px;
+}
+
+.inspectorTitle {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.nodeIdBadge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  font-family: var(--font-mono, monospace);
+}
+
+.inspectorPropGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.propCard {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.propLabel {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.propValue {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.predicateBox {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.predicateText {
+  background: var(--bg-input, rgba(0, 0, 0, 0.25));
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px;
+  font-family: var(--font-mono, monospace);
+  font-size: 11px;
+  color: #38bdf8;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+.outputColumns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.colPill {
+  font-size: 10px;
+  font-family: var(--font-mono, monospace);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.06));
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--text-secondary);
+}
+
+.warningsBox {
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 6px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.warningItem {
+  font-size: 11px;
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}

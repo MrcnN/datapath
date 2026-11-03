@@ -39,10 +39,12 @@ import type {
   PlanWarningQuery,
   QueryRegression,
 } from '../../lib/types';
+import ExecutionPlanViewer from './components/ExecutionPlanViewer';
 import styles from './QueryPerformancePage.module.css';
 
 export default function QueryPerformancePage() {
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS'>('PLAN_ANTI_PATTERNS');
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER'>('PLAN_ANTI_PATTERNS');
+  const [selectedPlanHandle, setSelectedPlanHandle] = useState<string | undefined>(undefined);
 
   // Plan Anti-Patterns State
   const [antiPatterns, setAntiPatterns] = useState<PlanAntiPatternsSummary | null>(null);
@@ -382,9 +384,20 @@ export default function QueryPerformancePage() {
             </span>
           )}
         </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'PLAN_VIEWER' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('PLAN_VIEWER')}
+        >
+          <Layers size={16} />
+          Grafiksel Yürütme Planı Görselleştiricisi
+        </button>
       </div>
 
-      {activeTab === 'PLAN_ANTI_PATTERNS' && (
+            {activeTab === 'PLAN_VIEWER' && (
+        <ExecutionPlanViewer initialPlanHandle={selectedPlanHandle} />
+      )}
+
+{activeTab === 'PLAN_ANTI_PATTERNS' && (
         <>
           {antiPatternLoading ? (
             <LoadingSpinner message="Plan önbelleği taranıyor ve optimizasyon tuzakları çözümleniyor..." />

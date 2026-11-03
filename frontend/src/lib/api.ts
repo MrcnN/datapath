@@ -55,6 +55,7 @@ import type {
   TriageResponse,
   BestPracticeReport,
   MaintenancePlanSummary,
+  ParsedExecutionPlan,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -495,5 +496,17 @@ export async function getMaintenancePlan(params?: {
   if (params?.min_frag_rebuild !== undefined) query.append('min_frag_rebuild', String(params.min_frag_rebuild));
   const qs = query.toString();
   return apiFetch<MaintenancePlanSummary>(`/api/indexes/maintenance-plan${qs ? `?${qs}` : ''}`);
+}
+
+// ── Graphical Execution Plan Viewer ─────────────────────────────────────────
+
+export async function parseExecutionPlan(payload: {
+  plan_xml?: string;
+  plan_handle?: string;
+}): Promise<ParsedExecutionPlan> {
+  return apiFetch<ParsedExecutionPlan>('/api/query-performance/plan-parse', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
 }
 

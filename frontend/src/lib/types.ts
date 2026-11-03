@@ -1364,3 +1364,47 @@ export interface MaintenancePlanSummary {
   generated_agent_job_tsql: string;
   items: MaintenanceActionItem[];
 }
+
+// ── Graphical Execution Plan Viewer ─────────────────────────────────────────
+
+export interface PlanOperatorNode {
+  node_id: number;
+  physical_op: string;
+  logical_op: string;
+  estimated_cost: number;
+  estimated_cost_percent: number;
+  estimated_cpu_cost: number;
+  estimated_io_cost: number;
+  estimated_rows: number;
+  actual_rows?: number | null;
+  cardinality_skew?: string | null;
+  is_expensive: boolean;
+  warnings: string[];
+  predicate?: string | null;
+  object_name?: string | null;
+  output_list: string[];
+  children: PlanOperatorNode[];
+}
+
+export interface MissingIndexRecommendation {
+  impact_percent: number;
+  table_name: string;
+  equality_columns: string[];
+  inequality_columns: string[];
+  included_columns: string[];
+  create_statement: string;
+}
+
+export interface ParsedExecutionPlan {
+  query_text: string;
+  statement_type: string;
+  total_cost: number;
+  optimization_level: string;
+  compile_cpu_ms: number;
+  compile_memory_kb: number;
+  has_warnings: boolean;
+  warnings_count: number;
+  missing_index?: MissingIndexRecommendation | null;
+  root_operator?: PlanOperatorNode | null;
+  is_live: boolean;
+}

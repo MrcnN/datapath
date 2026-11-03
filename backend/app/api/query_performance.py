@@ -8,6 +8,8 @@ from fastapi import APIRouter, Query, HTTPException
 from app.core.config import settings
 from app.core.exceptions import FeatureUnavailableError
 from app.db.connection import ConnectionParams
+from app.schemas.execution_plan import ParsedExecutionPlan, ParsePlanRequest
+from app.services.execution_plan_service import parse_execution_plan
 from app.schemas.query_performance import (
     ExpensiveQuery,
     QueryStoreOverview,
@@ -131,3 +133,13 @@ def read_plan_anti_patterns():
             queries=[],
         )
 
+
+@router.post("/query-performance/plan-parse", response_model=ParsedExecutionPlan)
+def parse_plan_endpoint(req: ParsePlanRequest):
+    """Parse raw ShowPlanXML or fetch plan XML via plan_handle into an interactive operator tree."""
+    params = _get_connection_params()
+    return parse_execution_plan(
+        plan_xml=req.plan_xml,
+        plan_handle=req.plan_handle,
+        params=params,
+    )
