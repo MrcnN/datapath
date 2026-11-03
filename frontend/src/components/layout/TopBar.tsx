@@ -48,39 +48,39 @@ interface RouteInfo {
 }
 
 const routeMap: Record<string, RouteInfo> = {
-  // 1. Genel Bakış & Filo
-  '/': { label: 'Gösterge Paneli', category: 'Genel Bakış & Filo', icon: LayoutDashboard },
-  '/instances': { label: 'Sunucular & Bağlantı', category: 'Genel Bakış & Filo', icon: Server },
-  '/catalog': { label: 'Modül Kataloğu', category: 'Genel Bakış & Filo', icon: Compass },
+  // 1. Genel Bakış
+  '/': { label: 'Gösterge Paneli', category: 'Genel Bakış', icon: LayoutDashboard },
+  '/instances': { label: 'Canlı Oturumlar & Sunucular', category: 'Genel Bakış', icon: Server },
+  '/catalog': { label: 'Tüm Özellikler Kataloğu', category: 'Genel Bakış', icon: Compass },
 
-  // 2. Sorgu & Performans Zekası
-  '/query-performance': { label: 'Sorgu Performansı', category: 'Sorgu & Performans Zekası', icon: TrendingUp },
-  '/query-rewriter': { label: 'Akıllı Sorgu İyileştirici', category: 'Sorgu & Performans Zekası', icon: Wand2 },
-  '/execution-plan': { label: 'Grafiksel Yürütme Planı', category: 'Sorgu & Performans Zekası', icon: GitPullRequest },
-  '/waits': { label: 'Bekleme İstatistikleri', category: 'Sorgu & Performans Zekası', icon: Hourglass },
+  // 2. Sorgu & Performans
+  '/query-performance': { label: 'Ağır Sorgular & Query Store', category: 'Sorgu & Performans', icon: TrendingUp },
+  '/query-rewriter': { label: 'Sorgu Düzeltici & İyileştirici', category: 'Sorgu & Performans', icon: Wand2 },
+  '/execution-plan': { label: 'Sorgu Yürütme Planı', category: 'Sorgu & Performans', icon: GitPullRequest },
+  '/waits': { label: 'Bekleme İstatistikleri', category: 'Sorgu & Performans', icon: Hourglass },
 
-  // 3. İndeksler & Akıllı Bakım
-  '/indexes': { label: 'İndeks Zekası', category: 'İndeksler & Akıllı Bakım', icon: Layers },
-  '/hypothetical-indexes': { label: 'Hipotetik Simülatör (What-If)', category: 'İndeksler & Akıllı Bakım', icon: FlaskConical },
-  '/maintenance-planner': { label: 'Akıllı Bakım Planlayıcısı', category: 'İndeksler & Akıllı Bakım', icon: Wrench },
+  // 3. İndeks & Bakım
+  '/indexes': { label: 'İndeks Analizi', category: 'İndeks & Bakım', icon: Layers },
+  '/hypothetical-indexes': { label: 'Sanal İndeks Simülatörü', category: 'İndeks & Bakım', icon: FlaskConical },
+  '/maintenance-planner': { label: 'İndeks Bakım Planlayıcı', category: 'İndeks & Bakım', icon: Wrench },
 
-  // 4. Bellek, TempDB & Depolama
-  '/tempdb': { label: 'TempDB & Bellek', category: 'Bellek, TempDB & Depolama', icon: Cpu },
-  '/buffer-pool': { label: 'Buffer Pool Tomografisi', category: 'Bellek, TempDB & Depolama', icon: PieChart },
-  '/storage': { label: 'Depolama & Log Dosyaları', category: 'Bellek, TempDB & Depolama', icon: HardDrive },
+  // 4. Bellek & Depolama
+  '/tempdb': { label: 'TempDB & RAM Durumu', category: 'Bellek & Depolama', icon: Cpu },
+  '/buffer-pool': { label: 'Tablo RAM Dağılımı (Buffer Pool)', category: 'Bellek & Depolama', icon: PieChart },
+  '/storage': { label: 'Disk & Log Dosyaları (VLF)', category: 'Bellek & Depolama', icon: HardDrive },
 
-  // 5. Kriz, Güvenilirlik & Yedekleme
-  '/incidents': { label: 'Olay Merkezi & Deadlock', category: 'Kriz, Güvenilirlik & Yedekleme', icon: AlertTriangle },
-  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Kriz, Güvenilirlik & Yedekleme', icon: Radio },
-  '/backups': { label: 'Yedekleme & Kurtarma', category: 'Kriz, Güvenilirlik & Yedekleme', icon: Database },
-  '/high-availability': { label: 'Yüksek Erişilebilirlik (HA)', category: 'Kriz, Güvenilirlik & Yedekleme', icon: Activity },
+  // 5. Kilitlenme & Güvenilirlik
+  '/incidents': { label: 'Kilitlenmeler & Deadlock', category: 'Kilitlenme & Güvenilirlik', icon: AlertTriangle },
+  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Kilitlenme & Güvenilirlik', icon: Radio },
+  '/backups': { label: 'Yedekleme & Disk Sağlığı', category: 'Kilitlenme & Güvenilirlik', icon: Database },
+  '/high-availability': { label: 'AlwaysOn & Replikalar', category: 'Kilitlenme & Güvenilirlik', icon: Activity },
 
-  // 6. Yönetim, Güvenlik & Denetim
-  '/best-practices': { label: 'Best Practice Karnesi', category: 'Yönetim, Güvenlik & Denetim', icon: ShieldCheck },
-  '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim, Güvenlik & Denetim', icon: Shield },
-  '/agent-jobs': { label: 'SQL Agent & Alarmlar', category: 'Yönetim, Güvenlik & Denetim', icon: CalendarClock },
-  '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim, Güvenlik & Denetim', icon: GitCompare },
-  '/toolkit': { label: 'DBA Araç Seti (Scripts)', category: 'Yönetim, Güvenlik & Denetim', icon: Terminal },
+  // 6. Güvenlik & Yönetim
+  '/best-practices': { label: 'Sistem Uygunluk Karnesi', category: 'Güvenlik & Yönetim', icon: ShieldCheck },
+  '/permissions': { label: 'Kullanıcılar & Yetkiler', category: 'Güvenlik & Yönetim', icon: Shield },
+  '/agent-jobs': { label: 'SQL Agent & Sistem Alarmları', category: 'Güvenlik & Yönetim', icon: CalendarClock },
+  '/schema-diff': { label: 'Şema Karşılaştırma', category: 'Güvenlik & Yönetim', icon: GitCompare },
+  '/toolkit': { label: 'T-SQL Betik Kütüphanesi', category: 'Güvenlik & Yönetim', icon: Terminal },
 };
 
 const envBadgeClasses: Record<EnvironmentType, string> = {

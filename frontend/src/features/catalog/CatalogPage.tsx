@@ -24,7 +24,6 @@ import {
   Terminal,
   Search,
   ArrowRight,
-  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -36,19 +35,17 @@ interface ModuleItem {
   category: string;
   path: string;
   icon: LucideIcon;
-  badge?: string;
-  badgeType?: 'default' | 'warning' | 'success';
   description: string;
   technicalSource: string;
   keywords: string[];
 }
 
 const MODULE_REGISTRY: ModuleItem[] = [
-  // 1. Genel Bakış & Filo
+  // 1. Genel Bakış
   {
     id: 'dashboard',
     title: 'Gösterge Paneli',
-    category: 'Genel Bakış & Filo',
+    category: 'Genel Bakış',
     path: '/',
     icon: LayoutDashboard,
     description: 'Bütünleşik sağlık skoru (Health Score), aktif krizler, kaynak bekleme oranları ve anlık sistem metrikleri özeti.',
@@ -57,8 +54,8 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'instances',
-    title: 'Sunucular & Oturumlar',
-    category: 'Genel Bakış & Filo',
+    title: 'Canlı Oturumlar & Sunucular',
+    category: 'Genel Bakış',
     path: '/instances',
     icon: Server,
     description: 'Canlı sp_whoisactive seviyesinde aktif sorgu oturumları, kök kilit bloklayıcıları ve çoklu sunucu ortam geçişi.',
@@ -66,45 +63,41 @@ const MODULE_REGISTRY: ModuleItem[] = [
     keywords: ['sunucu', 'oturum', 'session', 'whoisactive', 'sp_whoisactive', 'bağlantı', 'instances'],
   },
 
-  // 2. Sorgu & Performans Zekası
+  // 2. Sorgu & Performans
   {
     id: 'query-performance',
-    title: 'Sorgu Performansı (Query Store)',
-    category: 'Sorgu & Performans Zekası',
+    title: 'Ağır Sorgular & Query Store',
+    category: 'Sorgu & Performans',
     path: '/query-performance',
     icon: TrendingUp,
-    badge: 'QUERY STORE',
     description: 'En çok CPU, süre ve mantıksal I/O tüketen sorgular, yürütme planı gerilemeleri (regressions) ve anti-pattern radarı.',
     technicalSource: 'sys.query_store_runtime_stats, dm_exec_query_stats',
     keywords: ['sorgu', 'query', 'performans', 'query store', 'en maliyetli', 'gerileme', 'regression', 'cpu'],
   },
   {
     id: 'query-rewriter',
-    title: 'Akıllı Sorgu İyileştirici & Rewriter',
-    category: 'Sorgu & Performans Zekası',
+    title: 'Sorgu Düzeltici & İyileştirici',
+    category: 'Sorgu & Performans',
     path: '/query-rewriter',
     icon: Wand2,
-    badge: 'YENİ / SARGABLE',
-    badgeType: 'success',
     description: 'SARGable olmayan anti-desenleri (YEAR, LEFT, COUNT(*), SELECT *, leading wildcard) tespit eder; Index Seek uyumlu optimize T-SQL diff üretir.',
     technicalSource: 'T-SQL AST & Regex Optimizasyon Motoru',
     keywords: ['sorgu iyileştirici', 'rewriter', 'sargable', 'anti-pattern', 'diff', 'seek', 'optimize', 'year', 'left'],
   },
   {
     id: 'execution-plan',
-    title: 'Grafiksel Yürütme Planı (.sqlplan)',
-    category: 'Sorgu & Performans Zekası',
+    title: 'Sorgu Yürütme Planı',
+    category: 'Sorgu & Performans',
     path: '/execution-plan',
     icon: GitPullRequest,
-    badge: 'XML SHOWPLAN',
     description: 'SSMS gerektirmeyen ShowPlanXML interaktif operatör ağacı; maliyet %, uyarı rozetleri, spill ve eksik indeks tespiti.',
     technicalSource: 'sys.dm_exec_query_plan, .sqlplan XML',
     keywords: ['yürütme planı', 'execution plan', 'sqlplan', 'showplan', 'operatör', 'maliyet', 'ağaç', 'spill'],
   },
   {
     id: 'waits',
-    title: 'Bekleme İstatistikleri (Wait Stats)',
-    category: 'Sorgu & Performans Zekası',
+    title: 'Bekleme İstatistikleri',
+    category: 'Sorgu & Performans',
     path: '/waits',
     icon: Hourglass,
     description: 'SQL Server kaynak beklemeleri, kümülatif bekleme türleri ve CPU baskısını teşhis eden Signal Wait oranı göstergesi.',
@@ -112,11 +105,11 @@ const MODULE_REGISTRY: ModuleItem[] = [
     keywords: ['bekleme', 'wait stats', 'signal wait', 'cxpacket', 'pageiolatch', 'sos_scheduler_yield', 'darboğaz'],
   },
 
-  // 3. İndeksler & Akıllı Bakım
+  // 3. İndeks & Bakım
   {
     id: 'indexes',
-    title: 'İndeks Zekası',
-    category: 'İndeksler & Akıllı Bakım',
+    title: 'İndeks Analizi',
+    category: 'İndeks & Bakım',
     path: '/indexes',
     icon: Layers,
     description: 'SQL Server Query Optimizer eksik indeks önerileri, hiç okunmayan kullanılmayan indeksler, mükerrer indeksler ve parçalanma.',
@@ -125,34 +118,30 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'hypothetical-indexes',
-    title: '"What-If" Hipotetik İndeks Simülatörü',
-    category: 'İndeksler & Akıllı Bakım',
+    title: 'Sanal İndeks Simülatörü',
+    category: 'İndeks & Bakım',
     path: '/hypothetical-indexes',
     icon: FlaskConical,
-    badge: 'ZERO-DISK',
-    badgeType: 'success',
     description: 'Diske tek bayt yazmadan WITH STATISTICS_ONLY = -1 mimarisiyle sanal indeks oluşturur ve sorgunun tahmini maliyet kazanımını simüle eder.',
     technicalSource: 'WITH STATISTICS_ONLY = -1, AUTOCREATE',
     keywords: ['what-if', 'hipotetik', 'sanal indeks', 'hypothetical', 'simülatör', 'zero-disk', 'maliyet', 'optimizer'],
   },
   {
     id: 'maintenance-planner',
-    title: 'Akıllı Bakım & İndeks Planlayıcısı',
-    category: 'İndeksler & Akıllı Bakım',
+    title: 'İndeks Bakım Planlayıcı',
+    category: 'İndeks & Bakım',
     path: '/maintenance-planner',
     icon: Wrench,
-    badge: 'OTONOM JOB',
-    badgeType: 'warning',
     description: 'Sayfa sayısı ve parçalanma eşikli REORGANIZE/REBUILD ayrımı, istatistik tazeleme ve tek tıkla kopyalanabilir SQL Agent bakım işi üretimi.',
     technicalSource: 'sys.dm_db_index_physical_stats, ALTER INDEX',
     keywords: ['bakım', 'maintenance', 'defrag', 'rebuild', 'reorganize', 'istatistik', 'update statistics', 'agent job'],
   },
 
-  // 4. Bellek, TempDB & Depolama
+  // 4. Bellek & Depolama
   {
     id: 'tempdb',
-    title: 'TempDB & Bellek Yönetimi',
-    category: 'Bellek, TempDB & Depolama',
+    title: 'TempDB & RAM Durumu',
+    category: 'Bellek & Depolama',
     path: '/tempdb',
     icon: Cpu,
     description: 'TempDB GAM/SGAM/PFS sayfa çekişmesi, oturum alan sızıntıları, Page Life Expectancy (PLE) ve Plan Cache Bloat analizi.',
@@ -161,20 +150,18 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'buffer-pool',
-    title: 'Buffer Pool Bellek Tomografisi',
-    category: 'Bellek, TempDB & Depolama',
+    title: 'Tablo RAM Dağılımı (Buffer Pool)',
+    category: 'Bellek & Depolama',
     path: '/buffer-pool',
     icon: PieChart,
-    badge: 'YENİ / RÖNTGEN',
-    badgeType: 'success',
     description: 'Veritabanı bazında RAM nesne dağılımı, diske henüz yazılmamış kirli sayfalar (dirty pages) ve kontrollü CHECKPOINT yönergeleri.',
     technicalSource: 'sys.dm_os_buffer_descriptors, CHECKPOINT',
     keywords: ['buffer pool', 'tomografi', 'kirli sayfa', 'dirty pages', 'clean pages', 'checkpoint', 'ram nesne'],
   },
   {
     id: 'storage',
-    title: 'Depolama & Log Dosyaları (VLF)',
-    category: 'Bellek, TempDB & Depolama',
+    title: 'Disk & Log Dosyaları (VLF)',
+    category: 'Bellek & Depolama',
     path: '/storage',
     icon: HardDrive,
     description: 'MDF/LDF disk alanı, okuma/yazma disk gecikmeleri (stall ms), Virtual Log File (VLF) şişmesi ve açık kalan işlemler.',
@@ -182,15 +169,13 @@ const MODULE_REGISTRY: ModuleItem[] = [
     keywords: ['depolama', 'disk', 'storage', 'vlf', 'log', 'mdf', 'ldf', 'gecikme', 'stall', 'open transaction'],
   },
 
-  // 5. Kriz, Güvenilirlik & Yedekleme
+  // 5. Kilitlenme & Güvenilirlik
   {
     id: 'incidents',
-    title: 'Olay Merkezi & Deadlock Radarı',
-    category: 'Kriz, Güvenilirlik & Yedekleme',
+    title: 'Kilitlenmeler & Deadlock',
+    category: 'Kilitlenme & Güvenilirlik',
     path: '/incidents',
     icon: AlertTriangle,
-    badge: 'RCA JENERATÖRÜ',
-    badgeType: 'warning',
     description: 'Canlı kilitlenmeler, interaktif SVG Deadlock döngü grafiği, SQL Server hata günlükleri ve kurumsal RCA Post-Mortem raporlayıcısı.',
     technicalSource: 'system_health XE, deadlock-list XML, RCA Generator',
     keywords: ['olay', 'kriz', 'incident', 'deadlock', 'kilitlenme', 'rca', 'post-mortem', 'hata günlüğü', 'errorlog'],
@@ -198,7 +183,7 @@ const MODULE_REGISTRY: ModuleItem[] = [
   {
     id: 'extended-events',
     title: 'Genişletilmiş Olaylar (XE)',
-    category: 'Kriz, Güvenilirlik & Yedekleme',
+    category: 'Kilitlenme & Güvenilirlik',
     path: '/extended-events',
     icon: Radio,
     description: 'SQL Server Extended Events oturum yönetimi, ring_buffer ve event_file hedef ayrıştırıcısı ile derin kernel düzeyinde izleme.',
@@ -207,8 +192,8 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'backups',
-    title: 'Yedekleme & Kurtarma (Bütünlük)',
-    category: 'Kriz, Güvenilirlik & Yedekleme',
+    title: 'Yedekleme & Disk Sağlığı',
+    category: 'Kilitlenme & Güvenilirlik',
     path: '/backups',
     icon: Database,
     description: 'Son Full/Diff/Log yedekleme geçmişi, RPO veri kaybı riski, DBCC CHECKDB tarihleri ve msdb.dbo.suspect_pages bozuk sayfa radarı.',
@@ -217,8 +202,8 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'high-availability',
-    title: 'Yüksek Erişilebilirlik (AlwaysOn AG)',
-    category: 'Kriz, Güvenilirlik & Yedekleme',
+    title: 'AlwaysOn & Replikalar',
+    category: 'Kilitlenme & Güvenilirlik',
     path: '/high-availability',
     icon: Activity,
     description: 'AlwaysOn Availability Groups replika durumları, senkronizasyon gecikmesi (log send/redo queue) ve failover hazırlık izleyicisi.',
@@ -226,23 +211,21 @@ const MODULE_REGISTRY: ModuleItem[] = [
     keywords: ['alwayson', 'ha', 'availability group', 'replika', 'replica', 'senkron', 'failover', 'yüksek erişilebilirlik'],
   },
 
-  // 6. Yönetim, Güvenlik & Denetim
+  // 6. Güvenlik & Yönetim
   {
     id: 'best-practices',
-    title: 'Best Practice & Hazırlık Karnesi',
-    category: 'Yönetim, Güvenlik & Denetim',
+    title: 'Sistem Uygunluk Karnesi',
+    category: 'Güvenlik & Yönetim',
     path: '/best-practices',
     icon: ShieldCheck,
-    badge: '16 MİMARİ KURAL',
-    badgeType: 'success',
     description: 'MAXDOP, Cost Threshold, TempDB dosya sayısı, DAC, Auto-Close, Ad-Hoc ve Backup Checksum dahil 16 kural ve ağırlıklı karne puanı.',
     technicalSource: 'sys.configurations, sys.databases, sp_configure',
     keywords: ['best practice', 'hazırlık', 'karne', 'benchmark', 'maxdop', 'dac', 'auto close', 'denetim', 'kurallar'],
   },
   {
     id: 'permissions',
-    title: 'İzinler, Roller & Güvenlik',
-    category: 'Yönetim, Güvenlik & Denetim',
+    title: 'Kullanıcılar & Yetkiler',
+    category: 'Güvenlik & Yönetim',
     path: '/permissions',
     icon: Shield,
     description: 'Sunucu oturumları (logins), sysadmin rol üyeleri, yetim kullanıcılar (orphaned users) ve veri tabanı rol izin matrisi.',
@@ -251,19 +234,18 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'agent-jobs',
-    title: 'SQL Agent İşleri, Alarmlar & Webhook',
-    category: 'Yönetim, Güvenlik & Denetim',
+    title: 'SQL Agent & Sistem Alarmları',
+    category: 'Güvenlik & Yönetim',
     path: '/agent-jobs',
     icon: CalendarClock,
-    badge: 'SİSTEM ALARMLARI',
     description: 'Zamanlanmış işler, başarısız adımlar, sysalerts (Severity 17-25, Error 823-825) kör nokta radarı, Database Mail ve Slack/Teams webhook.',
     technicalSource: 'msdb.dbo.sysjobs, sysalerts, sysmail_mailitems',
     keywords: ['sql agent', 'agent jobs', 'sysalerts', 'alarmlar', 'database mail', 'webhook', 'slack', 'teams'],
   },
   {
     id: 'schema-diff',
-    title: 'Şema Karşılaştırması (Schema Diff)',
-    category: 'Yönetim, Güvenlik & Denetim',
+    title: 'Şema Karşılaştırma',
+    category: 'Güvenlik & Yönetim',
     path: '/schema-diff',
     icon: GitCompare,
     description: 'İki veritabanı arasındaki tablo, kolon, veri tipi ve indeks farklılıklarını karşılaştırır; güvenli DDL senkronizasyon betiği üretir.',
@@ -272,8 +254,8 @@ const MODULE_REGISTRY: ModuleItem[] = [
   },
   {
     id: 'toolkit',
-    title: 'DBA T-SQL Teşhis Araç Seti',
-    category: 'Yönetim, Güvenlik & Denetim',
+    title: 'T-SQL Betik Kütüphanesi',
+    category: 'Güvenlik & Yönetim',
     path: '/toolkit',
     icon: Terminal,
     description: 'Kategorize edilmiş, kopyalanabilir, güvenli (review-only) acil durum müdahale ve performans teşhis T-SQL betik kütüphanesi.',
@@ -284,12 +266,12 @@ const MODULE_REGISTRY: ModuleItem[] = [
 
 const CATEGORIES = [
   'Tümü',
-  'Genel Bakış & Filo',
-  'Sorgu & Performans Zekası',
-  'İndeksler & Akıllı Bakım',
-  'Bellek, TempDB & Depolama',
-  'Kriz, Güvenilirlik & Yedekleme',
-  'Yönetim, Güvenlik & Denetim',
+  'Genel Bakış',
+  'Sorgu & Performans',
+  'İndeks & Bakım',
+  'Bellek & Depolama',
+  'Kilitlenme & Güvenilirlik',
+  'Güvenlik & Yönetim',
 ];
 
 export default function CatalogPage() {
@@ -317,7 +299,7 @@ export default function CatalogPage() {
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Modül & Yetenek Kataloğu"
+        title="Tüm Özellikler Kataloğu"
         subtitle="Datapath platformundaki tüm teşhis, optimizasyon, indeks, bellek ve kriz müdahale yeteneklerinin haritası."
       />
 
@@ -328,7 +310,7 @@ export default function CatalogPage() {
           <input
             type="text"
             className={styles.searchInput}
-            placeholder="Modül, metrik veya araç ara (örn: 'sargable', 'what-if', 'deadlock', 'rca', 'vlf', 'buffer pool', 'checkpoint', 'maxdop')..."
+            placeholder="Özellik, metrik veya araç ara (örn: 'sargable', 'sanal indeks', 'deadlock', 'rca', 'vlf', 'buffer pool', 'checkpoint', 'maxdop')..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -381,19 +363,6 @@ export default function CatalogPage() {
                     <span className={styles.categorySub}>{mod.category}</span>
                   </div>
                 </div>
-                {mod.badge && (
-                  <span
-                    className={`${styles.badgePill} ${
-                      mod.badgeType === 'success'
-                        ? styles.badgeSuccess
-                        : mod.badgeType === 'warning'
-                        ? styles.badgeWarning
-                        : ''
-                    }`}
-                  >
-                    {mod.badge}
-                  </span>
-                )}
               </div>
 
               <p className={styles.cardDescription}>{mod.description}</p>
@@ -407,7 +376,7 @@ export default function CatalogPage() {
                   Rota: <code>{mod.path}</code>
                 </span>
                 <Link to={mod.path} className={styles.navigateBtn}>
-                  Modüle Git <ArrowRight size={13} />
+                  Aç <ArrowRight size={13} />
                 </Link>
               </div>
             </div>

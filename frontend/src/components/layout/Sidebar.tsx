@@ -35,8 +35,6 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   exact?: boolean;
-  badge?: string;
-  badgeClass?: string;
 }
 
 interface NavSection {
@@ -46,101 +44,55 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: 'Genel Bakış & Filo',
+    title: 'Genel Bakış',
     items: [
       { path: '/', label: 'Gösterge Paneli', icon: LayoutDashboard, exact: true },
-      { path: '/instances', label: 'Sunucular & Bağlantı', icon: Server },
-      {
-        path: '/catalog',
-        label: 'Modül Kataloğu',
-        icon: Compass,
-        badge: 'REHBER',
-        badgeClass: styles.itemBadgeNew,
-      },
+      { path: '/instances', label: 'Canlı Oturumlar & Sunucular', icon: Server },
+      { path: '/catalog', label: 'Tüm Özellikler Kataloğu', icon: Compass },
     ],
   },
   {
-    title: 'Sorgu & Performans Zekası',
+    title: 'Sorgu & Performans',
     items: [
-      { path: '/query-performance', label: 'Sorgu Performansı', icon: TrendingUp },
-      {
-        path: '/query-rewriter',
-        label: 'Akıllı Sorgu İyileştirici',
-        icon: Wand2,
-        badge: 'YENİ',
-        badgeClass: styles.itemBadgeSuccess,
-      },
-      {
-        path: '/execution-plan',
-        label: 'Grafiksel Yürütme Planı',
-        icon: GitPullRequest,
-      },
+      { path: '/query-performance', label: 'Ağır Sorgular & Query Store', icon: TrendingUp },
+      { path: '/query-rewriter', label: 'Sorgu Düzeltici & İyileştirici', icon: Wand2 },
+      { path: '/execution-plan', label: 'Sorgu Yürütme Planı', icon: GitPullRequest },
       { path: '/waits', label: 'Bekleme İstatistikleri', icon: Hourglass },
     ],
   },
   {
-    title: 'İndeksler & Akıllı Bakım',
+    title: 'İndeks & Bakım',
     items: [
-      { path: '/indexes', label: 'İndeks Zekası', icon: Layers },
-      {
-        path: '/hypothetical-indexes',
-        label: 'Hipotetik Simülatör',
-        icon: FlaskConical,
-        badge: 'WHAT-IF',
-        badgeClass: styles.itemBadgeSuccess,
-      },
-      {
-        path: '/maintenance-planner',
-        label: 'Akıllı Bakım Planlayıcı',
-        icon: Wrench,
-        badge: 'JOB',
-        badgeClass: styles.itemBadgeWarning,
-      },
+      { path: '/indexes', label: 'İndeks Analizi', icon: Layers },
+      { path: '/hypothetical-indexes', label: 'Sanal İndeks Simülatörü', icon: FlaskConical },
+      { path: '/maintenance-planner', label: 'İndeks Bakım Planlayıcı', icon: Wrench },
     ],
   },
   {
-    title: 'Bellek, TempDB & Depolama',
+    title: 'Bellek & Depolama',
     items: [
-      { path: '/tempdb', label: 'TempDB & Bellek', icon: Cpu },
-      {
-        path: '/buffer-pool',
-        label: 'Buffer Pool Tomografisi',
-        icon: PieChart,
-        badge: 'YENİ',
-        badgeClass: styles.itemBadgeSuccess,
-      },
-      { path: '/storage', label: 'Depolama & Log Dosyaları', icon: HardDrive },
+      { path: '/tempdb', label: 'TempDB & RAM Durumu', icon: Cpu },
+      { path: '/buffer-pool', label: 'Tablo RAM Dağılımı (Buffer Pool)', icon: PieChart },
+      { path: '/storage', label: 'Disk & Log Dosyaları (VLF)', icon: HardDrive },
     ],
   },
   {
-    title: 'Kriz, Güvenilirlik & Yedekleme',
+    title: 'Kilitlenme & Güvenilirlik',
     items: [
-      {
-        path: '/incidents',
-        label: 'Olay Merkezi & Deadlock',
-        icon: AlertTriangle,
-        badge: 'RCA',
-        badgeClass: styles.itemBadgeWarning,
-      },
+      { path: '/incidents', label: 'Kilitlenmeler & Deadlock', icon: AlertTriangle },
       { path: '/extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Radio },
-      { path: '/backups', label: 'Yedekleme & Kurtarma', icon: Database },
-      { path: '/high-availability', label: 'Yüksek Erişilebilirlik', icon: Activity },
+      { path: '/backups', label: 'Yedekleme & Disk Sağlığı', icon: Database },
+      { path: '/high-availability', label: 'AlwaysOn & Replikalar', icon: Activity },
     ],
   },
   {
-    title: 'Yönetim, Güvenlik & Denetim',
+    title: 'Güvenlik & Yönetim',
     items: [
-      {
-        path: '/best-practices',
-        label: 'Best Practice Karnesi',
-        icon: ShieldCheck,
-        badge: '16 KURAL',
-        badgeClass: styles.itemBadgeSuccess,
-      },
-      { path: '/permissions', label: 'İzinler & Güvenlik', icon: Shield },
-      { path: '/agent-jobs', label: 'SQL Agent & Alarmlar', icon: CalendarClock },
-      { path: '/schema-diff', label: 'Şema Karşılaştırması', icon: GitCompare },
-      { path: '/toolkit', label: 'DBA Araç Seti (Scripts)', icon: Terminal },
+      { path: '/best-practices', label: 'Sistem Uygunluk Karnesi', icon: ShieldCheck },
+      { path: '/permissions', label: 'Kullanıcılar & Yetkiler', icon: Shield },
+      { path: '/agent-jobs', label: 'SQL Agent & Sistem Alarmları', icon: CalendarClock },
+      { path: '/schema-diff', label: 'Şema Karşılaştırma', icon: GitCompare },
+      { path: '/toolkit', label: 'T-SQL Betik Kütüphanesi', icon: Terminal },
     ],
   },
 ];
@@ -189,7 +141,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             )}
 
             <div className={styles.sectionItems}>
-              {section.items.map(({ path, label, icon: Icon, exact, badge, badgeClass }) => (
+              {section.items.map(({ path, label, icon: Icon, exact }) => (
                 <NavLink
                   key={path}
                   to={path}
@@ -202,16 +154,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   <div className={styles.navIconBox}>
                     <Icon size={15} className={styles.navIcon} />
                   </div>
-                  {!collapsed && (
-                    <>
-                      <span className={styles.navLabel}>{label}</span>
-                      {badge && (
-                        <span className={`${styles.itemBadge} ${badgeClass || ''}`}>
-                          {badge}
-                        </span>
-                      )}
-                    </>
-                  )}
+                  {!collapsed && <span className={styles.navLabel}>{label}</span>}
                 </NavLink>
               ))}
             </div>
