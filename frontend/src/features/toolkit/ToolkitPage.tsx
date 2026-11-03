@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Search, Wrench, ShieldCheck, Terminal } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import CodeBlock from '../../components/ui/CodeBlock';
@@ -10,8 +11,25 @@ import { getToolkitScripts, getToolkitCategories } from '../../lib/api';
 import type { Script } from '../../lib/types';
 import styles from './ToolkitPage.module.css';
 
-export default function ToolkitPage() {
-  const [activeTab, setActiveTab] = useState<'scripts' | 'benchmark'>('benchmark');
+export default function ToolkitPage({ initialTab }: { initialTab?: 'scripts' | 'benchmark' } = {}) {
+  const location = useLocation();
+
+  const resolveInitialTab = (): 'scripts' | 'benchmark' => {
+    if (initialTab) return initialTab;
+    if (location.pathname === '/best-practices') return 'benchmark';
+    if (location.pathname === '/toolkit') return 'scripts';
+    return 'scripts';
+  };
+
+  const [activeTab, setActiveTab] = useState<'scripts' | 'benchmark'>(resolveInitialTab);
+
+  useEffect(() => {
+    if (location.pathname === '/best-practices') {
+      setActiveTab('benchmark');
+    } else if (location.pathname === '/toolkit') {
+      setActiveTab('scripts');
+    }
+  }, [location.pathname]);
   const [scripts, setScripts] = useState<Script[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>('');

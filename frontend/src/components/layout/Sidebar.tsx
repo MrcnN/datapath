@@ -3,19 +3,26 @@ import { NavLink } from 'react-router-dom';
 import {
   LayoutDashboard,
   Server,
-  AlertTriangle,
   TrendingUp,
-  Database,
-  GitCompare,
-  Wrench,
-  Shield,
-  Activity,
-  Layers,
+  Wand2,
+  GitPullRequest,
   Hourglass,
-  HardDrive,
+  Layers,
+  FlaskConical,
+  Wrench,
   Cpu,
-  CalendarClock,
+  PieChart,
+  HardDrive,
+  AlertTriangle,
   Radio,
+  Database,
+  Activity,
+  ShieldCheck,
+  Shield,
+  CalendarClock,
+  GitCompare,
+  Terminal,
+  Compass,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -23,45 +30,117 @@ import {
 import { brand } from '../../config/brand';
 import styles from './Sidebar.module.css';
 
+interface NavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  exact?: boolean;
+  badge?: string;
+  badgeClass?: string;
+}
+
 interface NavSection {
   title: string;
-  items: {
-    path: string;
-    label: string;
-    icon: LucideIcon;
-    exact?: boolean;
-  }[];
+  items: NavItem[];
 }
 
 const navSections: NavSection[] = [
   {
-    title: 'Genel Bakış',
+    title: 'Genel Bakış & Filo',
     items: [
       { path: '/', label: 'Gösterge Paneli', icon: LayoutDashboard, exact: true },
       { path: '/instances', label: 'Sunucular & Bağlantı', icon: Server },
+      {
+        path: '/catalog',
+        label: 'Modül Kataloğu',
+        icon: Compass,
+        badge: 'REHBER',
+        badgeClass: styles.itemBadgeNew,
+      },
     ],
   },
   {
-    title: 'Tanı & İzleme',
+    title: 'Sorgu & Performans Zekası',
     items: [
-      { path: '/incidents', label: 'Olay Merkezi', icon: AlertTriangle },
-      { path: '/extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Radio },
       { path: '/query-performance', label: 'Sorgu Performansı', icon: TrendingUp },
-      { path: '/indexes', label: 'İndeks Zekası', icon: Layers },
+      {
+        path: '/query-rewriter',
+        label: 'Akıllı Sorgu İyileştirici',
+        icon: Wand2,
+        badge: 'YENİ',
+        badgeClass: styles.itemBadgeSuccess,
+      },
+      {
+        path: '/execution-plan',
+        label: 'Grafiksel Yürütme Planı',
+        icon: GitPullRequest,
+      },
       { path: '/waits', label: 'Bekleme İstatistikleri', icon: Hourglass },
-      { path: '/storage', label: 'Depolama & Dosyalar', icon: HardDrive },
+    ],
+  },
+  {
+    title: 'İndeksler & Akıllı Bakım',
+    items: [
+      { path: '/indexes', label: 'İndeks Zekası', icon: Layers },
+      {
+        path: '/hypothetical-indexes',
+        label: 'Hipotetik Simülatör',
+        icon: FlaskConical,
+        badge: 'WHAT-IF',
+        badgeClass: styles.itemBadgeSuccess,
+      },
+      {
+        path: '/maintenance-planner',
+        label: 'Akıllı Bakım Planlayıcı',
+        icon: Wrench,
+        badge: 'JOB',
+        badgeClass: styles.itemBadgeWarning,
+      },
+    ],
+  },
+  {
+    title: 'Bellek, TempDB & Depolama',
+    items: [
       { path: '/tempdb', label: 'TempDB & Bellek', icon: Cpu },
+      {
+        path: '/buffer-pool',
+        label: 'Buffer Pool Tomografisi',
+        icon: PieChart,
+        badge: 'YENİ',
+        badgeClass: styles.itemBadgeSuccess,
+      },
+      { path: '/storage', label: 'Depolama & Log Dosyaları', icon: HardDrive },
+    ],
+  },
+  {
+    title: 'Kriz, Güvenilirlik & Yedekleme',
+    items: [
+      {
+        path: '/incidents',
+        label: 'Olay Merkezi & Deadlock',
+        icon: AlertTriangle,
+        badge: 'RCA',
+        badgeClass: styles.itemBadgeWarning,
+      },
+      { path: '/extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Radio },
       { path: '/backups', label: 'Yedekleme & Kurtarma', icon: Database },
       { path: '/high-availability', label: 'Yüksek Erişilebilirlik', icon: Activity },
     ],
   },
   {
-    title: 'Yönetim & Araçlar',
+    title: 'Yönetim, Güvenlik & Denetim',
     items: [
-      { path: '/toolkit', label: 'DBA Araç Seti', icon: Wrench },
-      { path: '/agent-jobs', label: 'SQL Agent İşleri', icon: CalendarClock },
-      { path: '/schema-diff', label: 'Şema Karşılaştırması', icon: GitCompare },
+      {
+        path: '/best-practices',
+        label: 'Best Practice Karnesi',
+        icon: ShieldCheck,
+        badge: '16 KURAL',
+        badgeClass: styles.itemBadgeSuccess,
+      },
       { path: '/permissions', label: 'İzinler & Güvenlik', icon: Shield },
+      { path: '/agent-jobs', label: 'SQL Agent & Alarmlar', icon: CalendarClock },
+      { path: '/schema-diff', label: 'Şema Karşılaştırması', icon: GitCompare },
+      { path: '/toolkit', label: 'DBA Araç Seti (Scripts)', icon: Terminal },
     ],
   },
 ];
@@ -110,7 +189,7 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             )}
 
             <div className={styles.sectionItems}>
-              {section.items.map(({ path, label, icon: Icon, exact }) => (
+              {section.items.map(({ path, label, icon: Icon, exact, badge, badgeClass }) => (
                 <NavLink
                   key={path}
                   to={path}
@@ -121,9 +200,18 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                   }
                 >
                   <div className={styles.navIconBox}>
-                    <Icon size={16} className={styles.navIcon} />
+                    <Icon size={15} className={styles.navIcon} />
                   </div>
-                  {!collapsed && <span className={styles.navLabel}>{label}</span>}
+                  {!collapsed && (
+                    <>
+                      <span className={styles.navLabel}>{label}</span>
+                      {badge && (
+                        <span className={`${styles.itemBadge} ${badgeClass || ''}`}>
+                          {badge}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </NavLink>
               ))}
             </div>

@@ -25,6 +25,14 @@ import {
   ExternalLink,
   FileText,
   Zap,
+  Compass,
+  Wand2,
+  GitPullRequest,
+  FlaskConical,
+  PieChart,
+  ShieldCheck,
+  Terminal,
+  Radio,
   type LucideIcon,
 } from 'lucide-react';
 import DossierReportModal from '../report/DossierReportModal';
@@ -40,21 +48,39 @@ interface RouteInfo {
 }
 
 const routeMap: Record<string, RouteInfo> = {
-  '/': { label: 'Gösterge Paneli', category: 'Genel Bakış', icon: LayoutDashboard },
-  '/instances': { label: 'Sunucular & Bağlantı', category: 'Genel Bakış', icon: Server },
-  '/incidents': { label: 'Olay Merkezi', category: 'Tanı & İzleme', icon: AlertTriangle },
-  '/query-performance': { label: 'Sorgu Performansı', category: 'Tanı & İzleme', icon: TrendingUp },
-  '/indexes': { label: 'İndeks Zekası', category: 'Tanı & İzleme', icon: Layers },
-  '/waits': { label: 'Bekleme İstatistikleri', category: 'Tanı & İzleme', icon: Hourglass },
-  '/storage': { label: 'Depolama & Dosyalar', category: 'Tanı & İzleme', icon: HardDrive },
-  '/tempdb': { label: 'TempDB & Bellek', category: 'Tanı & İzleme', icon: Cpu },
-  '/backups': { label: 'Yedekleme & Kurtarma', category: 'Tanı & İzleme', icon: Database },
-  '/high-availability': { label: 'Yüksek Erişilebilirlik', category: 'Tanı & İzleme', icon: Activity },
-  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Tanı & İzleme', icon: Sparkles },
-  '/toolkit': { label: 'DBA Araç Seti', category: 'Yönetim & Araçlar', icon: Wrench },
-  '/agent-jobs': { label: 'SQL Agent İşleri', category: 'Yönetim & Araçlar', icon: CalendarClock },
-  '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim & Araçlar', icon: GitCompare },
-  '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim & Araçlar', icon: Shield },
+  // 1. Genel Bakış & Filo
+  '/': { label: 'Gösterge Paneli', category: 'Genel Bakış & Filo', icon: LayoutDashboard },
+  '/instances': { label: 'Sunucular & Bağlantı', category: 'Genel Bakış & Filo', icon: Server },
+  '/catalog': { label: 'Modül Kataloğu', category: 'Genel Bakış & Filo', icon: Compass },
+
+  // 2. Sorgu & Performans Zekası
+  '/query-performance': { label: 'Sorgu Performansı', category: 'Sorgu & Performans Zekası', icon: TrendingUp },
+  '/query-rewriter': { label: 'Akıllı Sorgu İyileştirici', category: 'Sorgu & Performans Zekası', icon: Wand2 },
+  '/execution-plan': { label: 'Grafiksel Yürütme Planı', category: 'Sorgu & Performans Zekası', icon: GitPullRequest },
+  '/waits': { label: 'Bekleme İstatistikleri', category: 'Sorgu & Performans Zekası', icon: Hourglass },
+
+  // 3. İndeksler & Akıllı Bakım
+  '/indexes': { label: 'İndeks Zekası', category: 'İndeksler & Akıllı Bakım', icon: Layers },
+  '/hypothetical-indexes': { label: 'Hipotetik Simülatör (What-If)', category: 'İndeksler & Akıllı Bakım', icon: FlaskConical },
+  '/maintenance-planner': { label: 'Akıllı Bakım Planlayıcısı', category: 'İndeksler & Akıllı Bakım', icon: Wrench },
+
+  // 4. Bellek, TempDB & Depolama
+  '/tempdb': { label: 'TempDB & Bellek', category: 'Bellek, TempDB & Depolama', icon: Cpu },
+  '/buffer-pool': { label: 'Buffer Pool Tomografisi', category: 'Bellek, TempDB & Depolama', icon: PieChart },
+  '/storage': { label: 'Depolama & Log Dosyaları', category: 'Bellek, TempDB & Depolama', icon: HardDrive },
+
+  // 5. Kriz, Güvenilirlik & Yedekleme
+  '/incidents': { label: 'Olay Merkezi & Deadlock', category: 'Kriz, Güvenilirlik & Yedekleme', icon: AlertTriangle },
+  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Kriz, Güvenilirlik & Yedekleme', icon: Radio },
+  '/backups': { label: 'Yedekleme & Kurtarma', category: 'Kriz, Güvenilirlik & Yedekleme', icon: Database },
+  '/high-availability': { label: 'Yüksek Erişilebilirlik (HA)', category: 'Kriz, Güvenilirlik & Yedekleme', icon: Activity },
+
+  // 6. Yönetim, Güvenlik & Denetim
+  '/best-practices': { label: 'Best Practice Karnesi', category: 'Yönetim, Güvenlik & Denetim', icon: ShieldCheck },
+  '/permissions': { label: 'İzinler & Güvenlik', category: 'Yönetim, Güvenlik & Denetim', icon: Shield },
+  '/agent-jobs': { label: 'SQL Agent & Alarmlar', category: 'Yönetim, Güvenlik & Denetim', icon: CalendarClock },
+  '/schema-diff': { label: 'Şema Karşılaştırması', category: 'Yönetim, Güvenlik & Denetim', icon: GitCompare },
+  '/toolkit': { label: 'DBA Araç Seti (Scripts)', category: 'Yönetim, Güvenlik & Denetim', icon: Terminal },
 };
 
 const envBadgeClasses: Record<EnvironmentType, string> = {

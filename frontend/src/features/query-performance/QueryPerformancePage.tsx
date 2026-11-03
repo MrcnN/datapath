@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import {
   TrendingUp,
   AlertTriangle,
@@ -44,8 +45,25 @@ import ExecutionPlanViewer from './components/ExecutionPlanViewer';
 import QueryRewriterStudio from './components/QueryRewriterStudio';
 import styles from './QueryPerformancePage.module.css';
 
-export default function QueryPerformancePage() {
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO'>('PLAN_ANTI_PATTERNS');
+export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' } = {}) {
+  const location = useLocation();
+
+  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' => {
+    if (initialTab) return initialTab;
+    if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
+    if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
+    return 'PLAN_ANTI_PATTERNS';
+  };
+
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO'>(resolveInitialTab);
+
+  useEffect(() => {
+    if (location.pathname === '/query-rewriter') {
+      setActiveTab('REWRITER_STUDIO');
+    } else if (location.pathname === '/execution-plan') {
+      setActiveTab('PLAN_VIEWER');
+    }
+  }, [location.pathname]);
   const [selectedPlanHandle, setSelectedPlanHandle] = useState<string | undefined>(undefined);
 
   // Plan Anti-Patterns State

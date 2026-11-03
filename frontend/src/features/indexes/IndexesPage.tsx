@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck, Wrench, FlaskConical } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -33,8 +34,25 @@ import styles from './IndexesPage.module.css';
 
 type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant' | 'maintenance' | 'hypothetical';
 
-export default function IndexesPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('missing');
+export default function IndexesPage({ initialTab }: { initialTab?: TabType } = {}) {
+  const location = useLocation();
+
+  const resolveInitialTab = (): TabType => {
+    if (initialTab) return initialTab;
+    if (location.pathname === '/hypothetical-indexes') return 'hypothetical';
+    if (location.pathname === '/maintenance-planner') return 'maintenance';
+    return 'missing';
+  };
+
+  const [activeTab, setActiveTab] = useState<TabType>(resolveInitialTab);
+
+  useEffect(() => {
+    if (location.pathname === '/hypothetical-indexes') {
+      setActiveTab('hypothetical');
+    } else if (location.pathname === '/maintenance-planner') {
+      setActiveTab('maintenance');
+    }
+  }, [location.pathname]);
   const [summary, setSummary] = useState<IndexSummary | null>(null);
   const [missingIndexes, setMissingIndexes] = useState<MissingIndex[]>([]);
   const [unusedIndexes, setUnusedIndexes] = useState<UnusedIndex[]>([]);
