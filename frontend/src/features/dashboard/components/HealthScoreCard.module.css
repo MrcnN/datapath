@@ -1,14 +1,13 @@
 .card {
-  background-color: rgba(13, 21, 39, 0.75);
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.14);
-  border-radius: var(--radius-lg);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-5);
   margin-bottom: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-md);
   position: relative;
   overflow: hidden;
 }
@@ -43,19 +42,16 @@
 .dialHealthy {
   border-color: #10b981;
   background: rgba(16, 185, 129, 0.08);
-  box-shadow: 0 0 16px rgba(16, 185, 129, 0.2);
 }
 
 .dialWarning {
   border-color: #f59e0b;
   background: rgba(245, 158, 11, 0.08);
-  box-shadow: 0 0 16px rgba(245, 158, 11, 0.2);
 }
 
 .dialCritical {
   border-color: #ef4444;
   background: rgba(239, 68, 68, 0.08);
-  box-shadow: 0 0 16px rgba(239, 68, 68, 0.2);
 }
 
 .scoreNumber {
@@ -260,7 +256,7 @@
 }
 
 .findingBullet::before {
-  content: "•";
+  content: "â€¢";
   position: absolute;
   left: 2px;
   color: var(--text-muted);
@@ -274,7 +270,7 @@
 }
 
 .recBullet::before {
-  content: "→";
+  content: "â†’";
   position: absolute;
   left: 0;
   color: #f59e0b;

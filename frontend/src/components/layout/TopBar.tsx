@@ -60,6 +60,7 @@ const routeMap: Record<string, RouteInfo> = {
 
   // 3. İndeks & Bakım
   '/indexes': { label: 'İndeks Analizi', category: 'İndeks & Bakım', icon: Layers },
+  '/statistics': { label: 'İstatistik Sağlığı & Bayatlık', category: 'İndeks & Bakım', icon: Layers },
   '/hypothetical-indexes': { label: 'Sanal İndeks Simülatörü', category: 'İndeks & Bakım', icon: FlaskConical },
   '/maintenance-planner': { label: 'İndeks Bakım Planlayıcı', category: 'İndeks & Bakım', icon: Wrench },
 

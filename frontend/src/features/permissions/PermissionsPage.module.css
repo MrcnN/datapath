@@ -7,25 +7,28 @@
 
 .tabs {
   display: inline-flex;
-  gap: 4px;
+  gap: 3px;
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 4px;
+  border-radius: var(--radius-sm);
+  padding: 3px;
   width: fit-content;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .tabBtn {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
-  padding: 7px 16px;
+  padding: 6px 14px;
   cursor: pointer;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-xs);
   transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
 }
 
 .tabBtn:hover {
@@ -35,10 +38,10 @@
 
 .tabBtnActive {
   color: #ffffff;
-  background: linear-gradient(135deg, rgba(0, 210, 255, 0.18), rgba(2, 132, 199, 0.22));
-  border-color: rgba(0, 210, 255, 0.35);
+  background-color: var(--bg-elevated);
+  border-color: var(--border);
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .controls {
@@ -46,10 +49,10 @@
   gap: var(--space-3);
   align-items: center;
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-5);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .controls label {
@@ -84,10 +87,10 @@
   flex-wrap: wrap;
   gap: 12px;
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4) var(--space-5);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .scoreLeft {
@@ -159,19 +162,19 @@
 
 .auditCard {
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4) var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
 }
 
 .auditCard:hover {
   border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
+  
 }
 
 .auditCardCritical {
@@ -251,7 +254,6 @@
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -262,14 +264,14 @@
 
 .modalContent {
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
+  border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   width: 100%;
   max-width: 750px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
 }
 

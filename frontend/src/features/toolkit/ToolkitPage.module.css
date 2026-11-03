@@ -10,10 +10,10 @@
   flex-direction: column;
   gap: var(--space-4);
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4) var(--space-5);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .searchBox {
@@ -29,7 +29,7 @@
 
 .searchBox:focus-within {
   border-color: var(--border-focus);
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .searchBox input {
@@ -69,11 +69,10 @@
 }
 
 .categoryPillActive {
-  background: linear-gradient(135deg, rgba(0, 210, 255, 0.2), rgba(2, 132, 199, 0.25));
+  background-color: var(--bg-hover);
   color: #ffffff;
-  border-color: rgba(0, 210, 255, 0.5);
+  border-color: var(--accent);
   font-weight: 600;
-  box-shadow: 0 0 12px rgba(0, 210, 255, 0.15);
 }
 
 .grid {
@@ -84,20 +83,20 @@
 
 .card {
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
   transition: all var(--transition-base);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .card:hover {
-  transform: translateY(-2px);
+  
   border-color: rgba(0, 210, 255, 0.3);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-sm);
 }
 
 .cardHeader {
@@ -189,18 +188,19 @@
 }
 
 .tabBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 18px;
-  border-radius: var(--radius-md);
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-secondary);
-  font-size: 13px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 6px 14px;
   cursor: pointer;
+  border-radius: var(--radius-xs);
   transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
 }
 
 .tabBtn:hover {
@@ -209,8 +209,9 @@
 }
 
 .tabBtnActive {
-  background: var(--bg-surface);
-  border-color: var(--border-card);
-  color: var(--accent-primary, #00d2ff);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: #ffffff;
+  background-color: var(--bg-elevated);
+  border-color: var(--border);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }

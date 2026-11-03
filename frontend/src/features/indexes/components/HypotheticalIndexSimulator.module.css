@@ -15,7 +15,7 @@
   padding: 18px 24px;
   flex-wrap: wrap;
   gap: 16px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-sm);
 }
 
 .bannerLeft {
@@ -155,19 +155,20 @@
   gap: 8px;
   padding: 10px 18px;
   border-radius: 6px;
-  background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);
+  background-color: var(--accent);
+  color: #080d1a;
   color: #ffffff;
   border: none;
   font-size: 13px;
   font-weight: 700;
   cursor: pointer;
-  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+  box-shadow: var(--shadow-sm);
   transition: all 0.2s ease;
 }
 
 .runBtn:hover {
   opacity: 0.92;
-  transform: translateY(-1px);
+  
 }
 
 /* Results View */

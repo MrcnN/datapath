@@ -11,10 +11,10 @@
   align-items: center;
   flex-wrap: wrap;
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4) var(--space-5);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .selectGroup {
@@ -45,7 +45,7 @@
 
 .select:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 10px rgba(0, 210, 255, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .overviewCard {
@@ -53,10 +53,10 @@
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: var(--space-4);
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4) var(--space-5);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: var(--shadow-sm);
 }
 
 .metricItem {
@@ -87,7 +87,6 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -97,14 +96,14 @@
 
 .sqlModal {
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   width: 100%;
   max-width: 800px;
   max-height: 85vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-sm);
   animation: fadeIn 0.2s ease-out;
 }
 
@@ -160,9 +159,9 @@
 /* Tabs & Plan Anti-Patterns Styles */
 .tabsContainer {
   display: flex;
-  gap: 12px;
-  border-bottom: 1px solid var(--border-subtle);
-  padding-bottom: 4px;
+  gap: 8px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
 }
 
 .tabButton {
@@ -177,7 +176,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  transition: all var(--transition-base);
+  margin-bottom: -1px;
+  transition: all var(--transition-fast);
 }
 
 .tabButton:hover {
@@ -185,8 +185,8 @@
 }
 
 .tabActive {
-  color: var(--accent-blue) !important;
-  border-bottom-color: var(--accent-blue) !important;
+  color: #ffffff !important;
+  border-bottom-color: var(--accent) !important;
   font-weight: 600;
 }
 
@@ -198,13 +198,13 @@
 
 .summaryStatBox {
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 .summaryStatVal {
@@ -227,19 +227,19 @@
 
 .antiPatternCard {
   background: var(--bg-surface);
-  border: 1px solid var(--border-card);
-  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   padding: var(--space-5);
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
   transition: all var(--transition-base);
 }
 
 .antiPatternCard:hover {
   border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-1px);
+  
 }
 
 .antiPatternCardCritical {

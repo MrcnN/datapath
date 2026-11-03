@@ -4,7 +4,6 @@
   width: 100vw;
   height: 100vh;
   background-color: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -22,7 +21,7 @@
   max-height: calc(100vh - 40px);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   animation: scaleUp 0.15s ease-out;
 }

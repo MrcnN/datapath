@@ -91,7 +91,6 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  backdrop-filter: blur(4px);
 }
 
 .sqlModalContent {
@@ -100,7 +99,7 @@
   border-radius: 12px;
   width: 90%;
   max-width: 680px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
   display: flex;
   flex-direction: column;

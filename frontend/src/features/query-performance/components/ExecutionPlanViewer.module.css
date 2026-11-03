@@ -172,7 +172,7 @@
   padding: 28px;
   overflow-x: auto;
   min-height: 440px;
-  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.2);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Operator Tree Rendering */
@@ -200,13 +200,13 @@
 
 .operatorCard:hover {
   border-color: var(--accent-primary, #3b82f6);
-  transform: translateY(-2px);
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  
+  box-shadow: var(--shadow-sm);
 }
 
 .operatorCardSelected {
   border-color: var(--accent-primary, #3b82f6);
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.35);
+  box-shadow: var(--shadow-sm);
   background: rgba(59, 130, 246, 0.08);
 }
 
@@ -317,7 +317,7 @@
   gap: 14px;
   position: sticky;
   top: 20px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-sm);
 }
 
 .inspectorHeader {

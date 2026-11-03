@@ -53,12 +53,12 @@
 
 .dotVictim {
   background-color: #ef4444;
-  box-shadow: 0 0 6px rgba(239, 68, 68, 0.6);
+  box-shadow: var(--shadow-sm);
 }
 
 .dotWinner {
   background-color: #10b981;
-  box-shadow: 0 0 6px rgba(16, 185, 129, 0.6);
+  box-shadow: var(--shadow-sm);
 }
 
 .dotResource {

@@ -76,9 +76,6 @@
   font-weight: 700;
   color: #ffffff;
   letter-spacing: -0.3px;
-  background: linear-gradient(135deg, #ffffff 60%, #38bdf8 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .versionBadge {
