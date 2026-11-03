@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   AlertTriangle,
   CheckCircle2,
@@ -77,10 +78,10 @@ export default function EmergencyTriageModal({ onClose }: EmergencyTriageModalPr
     ? styles.pillWarning
     : styles.pillHealthy;
 
-  return (
+  return createPortal(
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-        {/* Header */}
+        {/* Header - Always pinned at top */}
         <div className={styles.header}>
           <div className={styles.titleArea}>
             <Zap size={18} className={styles.titleIcon} />
@@ -94,7 +95,7 @@ export default function EmergencyTriageModal({ onClose }: EmergencyTriageModalPr
           </button>
         </div>
 
-        {/* Content Body */}
+        {/* Content Body - Scrollable */}
         <div className={styles.body}>
           {loading && (
             <div style={{ padding: '40px 0' }}>
@@ -201,6 +202,7 @@ export default function EmergencyTriageModal({ onClose }: EmergencyTriageModalPr
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
