@@ -114,17 +114,17 @@
 }
 
 .statPillPass {
-  border-color: rgba(16, 185, 129, 0.3);
+  border-color: var(--status-success-border);
   background: rgba(16, 185, 129, 0.05);
 }
 
 .statPillWarn {
-  border-color: rgba(245, 158, 11, 0.3);
+  border-color: var(--status-warning-border);
   background: rgba(245, 158, 11, 0.05);
 }
 
 .statPillFail {
-  border-color: rgba(239, 68, 68, 0.3);
+  border-color: var(--status-critical-border);
   background: rgba(239, 68, 68, 0.05);
 }
 
@@ -308,21 +308,21 @@
 }
 
 .badgePass {
-  background: rgba(16, 185, 129, 0.15);
+  background: var(--status-success-bg);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid var(--status-success-border);
 }
 
 .badgeWarn {
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--status-warning-bg);
   color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid var(--status-warning-border);
 }
 
 .badgeFail {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--status-critical-border);
 }
 
 .impactBadge {
@@ -334,7 +334,7 @@
 }
 
 .impactCritical {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--status-critical-border);
   color: #ef4444;
 }
 
@@ -344,7 +344,7 @@
 }
 
 .impactMedium {
-  background: rgba(234, 179, 8, 0.15);
+  background: var(--status-warning-bg);
   color: #eab308;
 }
 
@@ -451,7 +451,7 @@
 }
 
 .copyBtnCopied {
-  background: rgba(16, 185, 129, 0.2);
+  background: var(--status-success-border);
   border-color: #10b981;
   color: #10b981;
 }

@@ -15,7 +15,7 @@
 .modalContent {
   background-color: #101622;
   border: 1px solid var(--border);
-  border-radius: var(--radius-lg, 12px);
+  border-radius: var(--radius-sm);
   width: 100%;
   max-width: 900px;
   max-height: calc(100vh - 40px);
@@ -43,7 +43,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0b0f17;
+  background-color: var(--bg-elevated);
   flex-shrink: 0;
 }
 
@@ -137,9 +137,9 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  background-color: #0b0f17;
+  background-color: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 10px 16px;
   font-size: 12px;
   color: var(--text-secondary);
@@ -172,9 +172,9 @@
 }
 
 .kpiBlock {
-  background-color: #0b0f17;
+  background-color: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -204,9 +204,9 @@
 }
 
 .sectionCard {
-  background-color: #0b0f17;
+  background-color: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 14px 16px;
   display: flex;
   flex-direction: column;
@@ -265,7 +265,7 @@
   color: var(--text-primary);
   background-color: #080b11;
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 16px;
   margin: 0;
   white-space: pre-wrap;
@@ -279,7 +279,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #0b0f17;
+  background-color: var(--bg-elevated);
   gap: var(--space-3);
   flex-wrap: wrap;
   flex-shrink: 0;

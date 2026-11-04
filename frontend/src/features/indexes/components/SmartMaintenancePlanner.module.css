@@ -156,7 +156,7 @@
 .scriptModal {
   background: var(--bg-surface, #1e1e24);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg, 12px);
+  border-radius: var(--radius-sm);
   width: 100%;
   max-width: 860px;
   max-height: 85vh;
@@ -232,27 +232,27 @@
 }
 
 .badgeRebuild {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--status-critical-border);
 }
 
 .badgeReorg {
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--status-warning-bg);
   color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid var(--status-warning-border);
 }
 
 .badgeStats {
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--accent-muted);
   color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  border: 1px solid var(--border-hover);
 }
 
 .badgeNoAction {
-  background: rgba(16, 185, 129, 0.15);
+  background: var(--status-success-bg);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid var(--status-success-border);
 }
 
 .fragBarWrapper {

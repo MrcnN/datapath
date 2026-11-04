@@ -136,8 +136,8 @@
   gap: 5px;
   padding: 5px 12px;
   border-radius: var(--radius-xs);
-  background-color: rgba(56, 189, 248, 0.1);
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background-color: var(--accent-muted);
+  border: 1px solid var(--border-hover);
   color: var(--accent);
   font-size: 11.5px;
   font-weight: 600;
@@ -146,7 +146,7 @@
 }
 
 .toggleDetailsBtn:hover {
-  background-color: rgba(56, 189, 248, 0.2);
+  background-color: var(--border-hover);
   color: #fff;
 }
 

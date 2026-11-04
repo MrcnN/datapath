@@ -48,9 +48,9 @@
 }
 
 .semaphoreAlert {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: var(--radius-md);
+  background: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   align-items: flex-start;

@@ -8,6 +8,7 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Header & Controls Toolbar */
 .headerBar {
   display: flex;
   align-items: center;
@@ -16,7 +17,7 @@
   background-color: var(--bg-elevated);
   border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
 }
 
 .headerTitle {
@@ -28,235 +29,173 @@
   color: var(--text-primary);
 }
 
-.legendGroup {
+.titleBadge {
+  font-size: 10.5px;
+  font-family: var(--font-mono);
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  color: var(--accent);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.toolbarActions {
   display: flex;
   align-items: center;
-  gap: 14px;
-  font-size: 11.5px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.legendBar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
 }
 
 .legendItem {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
 }
 
-.legendPill {
-  width: 9px;
-  height: 9px;
+.legendDot {
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
 }
 
-.pillRoot {
+.dotRoot {
   background-color: var(--status-critical);
-  box-shadow: 0 0 6px rgba(244, 63, 94, 0.4);
+  
 }
 
-.pillBlocked {
+.dotWaiter {
   background-color: var(--status-warning);
 }
 
-/* Two-column Layout: Tree on Left, Inspector on Right */
-.treeLayout {
-  display: grid;
-  grid-template-columns: 1.15fr 1fr;
-  min-height: 420px;
+.dotLock {
+  background-color: var(--accent);
 }
 
-@media (max-width: 900px) {
-  .treeLayout {
+.zoomControls {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--bg-base);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 2px;
+}
+
+.zoomBtn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.zoomBtn:hover {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+}
+
+.zoomLevel {
+  font-size: 11px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  padding: 0 4px;
+}
+
+/* Two-column Layout: SVG Canvas on Left, Telemetry Inspector on Right */
+.layoutGrid {
+  display: grid;
+  grid-template-columns: 1.35fr 1fr;
+  min-height: 480px;
+}
+
+@media (max-width: 1080px) {
+  .layoutGrid {
     grid-template-columns: 1fr;
   }
 }
 
-/* Tree Canvas */
-.treeCanvas {
-  padding: 18px 20px;
+/* Interactive SVG Canvas Area */
+.canvasWrapper {
+  position: relative;
+  background-color: #070b14;
+  overflow: auto;
   border-right: 1px solid var(--border);
-  overflow-y: auto;
-  max-height: 520px;
   display: flex;
-  flex-direction: column;
-  gap: 22px;
-  background-color: var(--bg-base);
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  max-height: 560px;
 }
 
-.treeChain {
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-/* Node Cards */
-.nodeCard {
-  background-color: var(--bg-surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 14px;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.svgElement {
+  display: block;
   user-select: none;
+  transition: transform 0.15s ease-out;
+  transform-origin: center top;
 }
 
-.nodeCard:hover {
-  border-color: var(--border-hover);
-  background-color: var(--bg-hover);
+/* Interactive Node Classes */
+.interactiveNode {
+  cursor: pointer;
+  transition: filter 0.15s ease;
 }
 
-.nodeSelected {
-  border-color: var(--accent) !important;
-  box-shadow: 0 0 0 1px var(--accent), 0 2px 8px rgba(0, 0, 0, 0.3);
+.interactiveNode:hover {
+  
 }
 
-.nodeRoot {
-  border-left: 3px solid var(--status-critical);
-  max-width: 380px;
+/* Animated Flow Connectors */
+@keyframes dashFlow {
+  to {
+    stroke-dashoffset: -20;
+  }
 }
 
-.nodeChild {
-  border-left: 3px solid var(--status-warning);
-  max-width: 340px;
+.animatedFlow {
+  animation: dashFlow 1s linear infinite;
 }
 
-.nodeCardHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
+@keyframes pulseGlow {
+  0% {
+    r: 4;
+    opacity: 1;
+  }
+  50% {
+    r: 7;
+    opacity: 0.4;
+  }
+  100% {
+    r: 4;
+    opacity: 1;
+  }
 }
 
-.nodeBadgeRoot {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 700;
-  color: var(--status-critical);
-  background-color: var(--status-critical-bg);
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
-  letter-spacing: 0.4px;
+.pulsingDot {
+  
 }
 
-.nodeBadgeBlocked {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--status-warning);
-  background-color: var(--status-warning-bg);
-  padding: 2px 6px;
-  border-radius: var(--radius-xs);
-  letter-spacing: 0.4px;
-}
-
-.spidTag {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  color: var(--text-primary);
-}
-
-.nodeMeta {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--text-secondary);
-}
-
-.metaRow {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-.metaIcon {
-  color: var(--text-muted);
-}
-
-.nodeCommand {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--text-muted);
-  background-color: var(--bg-base);
-  padding: 2px 6px;
-  border-radius: 4px;
-  width: fit-content;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.nodeImpact {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--status-critical);
-}
-
-.waitBadge {
-  font-size: 11px;
-  color: var(--status-warning);
-  display: flex;
-  align-items: center;
-  gap: 4px;
-}
-
-/* Branch Tree Connectors */
-.childrenBranch {
-  display: flex;
-  position: relative;
-  margin-top: 10px;
-  padding-left: 26px;
-}
-
-.connectorTrunk {
-  position: absolute;
-  top: -10px;
-  left: 20px;
-  bottom: 24px;
-  width: 2px;
-  background-color: rgba(56, 189, 248, 0.25);
-}
-
-.childrenList {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  width: 100%;
-}
-
-.childRow {
-  display: flex;
-  align-items: center;
-  position: relative;
-}
-
-.connectorBranch {
-  position: absolute;
-  left: -6px;
-  width: 18px;
-  height: 2px;
-  background-color: rgba(56, 189, 248, 0.25);
-}
-
-.childRow .nodeChild {
-  margin-left: 12px;
-  width: 100%;
-}
-
-/* Right Side: Selected Inspector Panel */
-.inspectorPanel {
+/* Right Side: Telemetry Inspector */
+.inspectorPane {
   background-color: var(--bg-surface);
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  max-height: 560px;
 }
 
 .inspectorHeader {
@@ -264,20 +203,24 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 18px;
-  border-bottom: 1px solid var(--border);
   background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
+  gap: 10px;
 }
 
-.inspectorTitle {
+.inspectorTitleGroup {
   display: flex;
   align-items: center;
   gap: 8px;
+}
+
+.inspectorTitle {
   font-size: 13px;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.rootPillSmall {
+.rootBadge {
   font-size: 10px;
   font-weight: 700;
   color: var(--status-critical);
@@ -285,9 +228,10 @@
   border: 1px solid var(--status-critical-border);
   padding: 2px 7px;
   border-radius: var(--radius-xs);
+  letter-spacing: 0.4px;
 }
 
-.waiterPillSmall {
+.waiterBadge {
   font-size: 10px;
   font-weight: 600;
   color: var(--status-warning);
@@ -295,6 +239,7 @@
   border: 1px solid var(--status-warning-border);
   padding: 2px 7px;
   border-radius: var(--radius-xs);
+  letter-spacing: 0.4px;
 }
 
 .inspectorBody {
@@ -304,30 +249,32 @@
   gap: 16px;
 }
 
-.metaGrid {
+/* Telemetry KPI Grid */
+.telemetryGrid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 10px 14px;
+  gap: 10px;
   background-color: var(--bg-base);
   border: 1px solid var(--border);
   border-radius: var(--radius-xs);
   padding: 12px 14px;
 }
 
-.metaField {
+.telemetryItem {
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
 
-.fieldLabel {
-  font-size: 10.5px;
+.telemetryLabel {
+  font-size: 10px;
+  font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.4px;
+  letter-spacing: 0.5px;
 }
 
-.fieldVal {
+.telemetryVal {
   font-size: 12px;
   font-weight: 600;
   color: var(--text-primary);
@@ -337,13 +284,22 @@
   white-space: nowrap;
 }
 
-.sqlSection {
+.waitValue {
+  color: var(--status-warning);
+}
+
+.dangerValue {
+  color: var(--status-critical);
+}
+
+/* Query Section */
+.querySection {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.sqlSectionTitle {
+.queryHeader {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -352,7 +308,7 @@
   color: var(--text-secondary);
 }
 
-.noSqlNotice {
+.noSqlCard {
   display: flex;
   align-items: flex-start;
   gap: 8px;
@@ -362,11 +318,11 @@
   border-radius: var(--radius-xs);
   font-size: 11.5px;
   color: var(--text-muted);
-  line-height: 1.4;
+  line-height: 1.45;
 }
 
-.actionSection {
-  margin-top: 4px;
+/* Action Recipes */
+.recipeSection {
   padding-top: 14px;
   border-top: 1px solid var(--border);
   display: flex;
@@ -374,56 +330,56 @@
   gap: 10px;
 }
 
-.actionTitle {
+.recipeTitle {
   font-size: 11.5px;
   font-weight: 600;
   color: var(--text-secondary);
 }
 
-.actionButtons {
+.recipeButtons {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   flex-wrap: wrap;
 }
 
-.diagBtn {
+.btnSecondary {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background-color: var(--bg-elevated);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-xs);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 500;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.diagBtn:hover {
+.btnSecondary:hover {
   background-color: var(--bg-hover);
   border-color: var(--border-hover);
 }
 
-.killBtn {
+.btnDanger {
   display: inline-flex;
   align-items: center;
   gap: 6px;
   background-color: var(--status-critical-bg);
   border: 1px solid var(--status-critical-border);
   color: var(--status-critical);
-  padding: 6px 14px;
+  padding: 6px 12px;
   border-radius: var(--radius-xs);
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
 }
 
-.killBtn:hover {
-  background-color: rgba(244, 63, 94, 0.22);
+.btnDanger:hover {
+  background-color: var(--status-critical-border);
   border-color: var(--status-critical);
   color: #ffffff;
 }

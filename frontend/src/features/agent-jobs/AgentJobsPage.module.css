@@ -49,9 +49,9 @@
 }
 
 .dangerAlert {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.35);
-  border-radius: var(--radius-md);
+  background: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   align-items: flex-start;
@@ -94,7 +94,7 @@
   width: 100%;
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 8px 12px 8px 36px;
   color: var(--text-primary);
   font-size: 13px;
@@ -111,7 +111,7 @@
   gap: 8px;
   background: var(--bg-surface);
   padding: 4px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border);
 }
 
@@ -150,9 +150,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: rgba(59, 130, 246, 0.12);
+  background: var(--accent-muted);
   color: var(--accent-blue);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  border: 1px solid var(--border-hover);
   padding: 5px 10px;
   border-radius: var(--radius-sm);
   font-size: 12px;
@@ -162,7 +162,7 @@
 }
 
 .viewStepsBtn:hover {
-  background: rgba(59, 130, 246, 0.25);
+  background: var(--border-hover);
   border-color: var(--accent-blue);
 }
 
@@ -172,8 +172,8 @@
   gap: 6px;
   margin-top: 6px;
   padding: 6px 10px;
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  background: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
   border-radius: var(--radius-sm);
   font-size: 11px;
   color: #f87171;
@@ -197,7 +197,7 @@
 .modalContent {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
+  border-radius: var(--radius-sm);
   width: 100%;
   max-width: 800px;
   max-height: 85vh;
@@ -255,7 +255,7 @@
 .stepCard {
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
@@ -263,7 +263,7 @@
 }
 
 .stepFailed {
-  border-color: rgba(239, 68, 68, 0.4);
+  border-color: var(--status-critical-border);
   background: rgba(239, 68, 68, 0.04);
 }
 

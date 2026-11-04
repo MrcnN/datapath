@@ -146,7 +146,7 @@
 .rawQueryText {
   background: var(--bg-base);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font-family: var(--font-mono);
   font-size: 12px;
@@ -277,7 +277,7 @@
   font-weight: 600;
   padding: 2px 8px;
   border-radius: 4px;
-  background: rgba(59, 130, 246, 0.15);
+  background: var(--accent-muted);
   color: var(--accent-blue);
 }
 
@@ -286,9 +286,9 @@
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 4px;
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: var(--status-danger);
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--status-critical-border);
 }
 
 .badgeWarning {
@@ -296,9 +296,9 @@
   font-weight: 700;
   padding: 3px 10px;
   border-radius: 4px;
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--status-warning-bg);
   color: #fbbf24;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid var(--status-warning-border);
 }
 
 .detailsText {
@@ -350,8 +350,8 @@
 }
 
 .recommendationBox {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.25);
+  background: var(--accent-muted);
+  border: 1px solid var(--border-hover);
   border-radius: var(--radius-sm);
   padding: 10px 14px;
   display: flex;

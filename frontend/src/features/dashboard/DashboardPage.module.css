@@ -12,7 +12,7 @@
 }
 
 .loadingText {
-  font-size: 13px;
+  font-size: 12px;
   color: var(--text-muted);
   font-family: var(--font-mono);
 }
@@ -60,7 +60,7 @@
 }
 
 .serverName {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 700;
   color: var(--text-primary);
   letter-spacing: -0.2px;
@@ -69,23 +69,23 @@
 .statusBadge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 1px 7px;
+  gap: 4px;
+  padding: 2px 6px;
   border-radius: var(--radius-xs);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
 }
 
 .statusBadgeLive {
-  background-color: rgba(16, 185, 129, 0.12);
-  border: 1px solid rgba(16, 185, 129, 0.35);
-  color: #10b981;
+  background-color: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
+  color: var(--status-success);
 }
 
 .statusBadgeDemo {
-  background-color: rgba(245, 158, 11, 0.12);
-  border: 1px solid rgba(245, 158, 11, 0.35);
-  color: #f59e0b;
+  background-color: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  color: var(--status-warning);
 }
 
 .statusDot {
@@ -122,11 +122,11 @@
 }
 
 .agentGreen {
-  color: #10b981;
+  color: var(--status-success);
 }
 
 .agentRed {
-  color: #f43f5e;
+  color: var(--status-critical);
 }
 
 .refreshControlGroup {
@@ -161,7 +161,8 @@
   border-radius: var(--radius-xs);
   font-size: 11.5px;
   font-weight: 500;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .refreshBtn:hover:not(:disabled) {
@@ -222,18 +223,21 @@
   display: flex;
   align-items: center;
   gap: 4px;
-  background-color: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #ffffff;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
   padding: 3px 8px;
   border-radius: var(--radius-xs);
   font-size: 11px;
   font-weight: 500;
   white-space: nowrap;
+  cursor: pointer;
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .alertBtn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
+  background-color: var(--bg-hover);
+  border-color: var(--border-hover);
 }
 
 /* ============================================
@@ -253,7 +257,7 @@
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
-  transition: all var(--transition-fast);
+  transition: border-color var(--transition-fast);
 }
 
 .kpiCard:hover {
@@ -275,21 +279,10 @@
   letter-spacing: 0.5px;
 }
 
-.kpiIconAccent {
-  color: var(--accent);
-}
-
-.kpiIconSuccess {
-  color: var(--status-success);
-}
-
-.kpiIconWarning {
-  color: var(--status-warning);
-}
-
-.kpiIconCritical {
-  color: var(--status-critical);
-}
+.kpiIconAccent { color: var(--text-muted); }
+.kpiIconSuccess { color: var(--text-muted); }
+.kpiIconWarning { color: var(--text-muted); }
+.kpiIconCritical { color: var(--text-muted); }
 
 .kpiValue {
   font-size: 24px;
@@ -299,17 +292,9 @@
   margin-bottom: 4px;
 }
 
-.kpiValSuccess {
-  color: var(--status-success);
-}
-
-.kpiValWarning {
-  color: var(--status-warning);
-}
-
-.kpiValCritical {
-  color: var(--status-critical);
-}
+.kpiValSuccess { color: var(--text-primary); }
+.kpiValWarning { color: var(--text-primary); }
+.kpiValCritical { color: var(--text-primary); }
 
 .kpiSub {
   font-size: 11.5px;
@@ -339,19 +324,19 @@
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 16px;
   display: flex;
   flex-direction: column;
   box-shadow: var(--shadow-sm);
+  overflow: hidden;
 }
 
 .sectionHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid var(--border-subtle);
+  padding: 10px 16px;
+  background-color: var(--bg-elevated);
+  border-bottom: 1px solid var(--border);
 }
 
 .sectionTitleRow {
@@ -371,7 +356,7 @@
 }
 
 .sectionBadge {
-  font-size: 10.5px;
+  font-size: 10px;
   font-family: var(--font-mono);
   color: var(--text-muted);
   background-color: var(--bg-subtle);
@@ -383,6 +368,7 @@
 .chartWrapper {
   flex: 1;
   min-height: 180px;
+  padding: 16px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -397,8 +383,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 6px;
-  margin-top: 10px;
-  padding-top: 10px;
+  padding: 10px 16px;
   border-top: 1px solid var(--border-subtle);
 }
 
@@ -414,7 +399,8 @@
   border-radius: var(--radius-xs);
   font-size: 11px;
   font-weight: 500;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .quickBtn:hover {
@@ -437,23 +423,21 @@
 
 .filterTabs {
   display: inline-flex;
-  gap: 2px;
-  background-color: var(--bg-base);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xs);
-  padding: 2px;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
 }
 
 .tabBtn {
   background: transparent;
   border: none;
+  border-bottom: 2px solid transparent;
   color: var(--text-secondary);
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 4px 9px;
-  border-radius: var(--radius-xs);
+  padding: 6px 12px;
   cursor: pointer;
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  margin-bottom: -1px;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .tabBtn:hover {
@@ -461,8 +445,8 @@
 }
 
 .tabBtnActive {
-  background-color: var(--bg-elevated);
   color: var(--text-primary);
+  border-bottom-color: var(--accent);
   font-weight: 600;
 }
 
@@ -521,6 +505,10 @@
   transition: background-color var(--transition-fast);
 }
 
+.tableRow:nth-child(even) {
+  background-color: var(--bg-subtle);
+}
+
 .tableRow:hover {
   background-color: var(--bg-hover);
 }
@@ -554,28 +542,30 @@
   color: var(--text-muted);
   background-color: var(--bg-elevated);
   padding: 1px 4px;
-  border-radius: 2px;
+  border-radius: var(--radius-xs);
   border: 1px solid var(--border-subtle);
 }
 
 .statusPill {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 1px 6px;
+  gap: 4px;
+  padding: 2px 6px;
   border-radius: var(--radius-xs);
-  font-size: 10.5px;
+  font-size: 10px;
   font-weight: 600;
 }
 
 .pillOnline {
-  background-color: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  background-color: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
+  color: var(--status-success);
 }
 
 .pillOther {
-  background-color: rgba(245, 158, 11, 0.1);
-  color: #f59e0b;
+  background-color: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  color: var(--status-warning);
 }
 
 .solidDot {
@@ -592,6 +582,7 @@
   background-color: var(--bg-elevated);
   padding: 1px 5px;
   border-radius: var(--radius-xs);
+  border: 1px solid var(--border-subtle);
 }
 
 .monoCell {
@@ -621,19 +612,21 @@
 }
 
 .tagReadOnly {
-  font-size: 10.5px;
-  color: #f59e0b;
-  background-color: rgba(245, 158, 11, 0.1);
+  font-size: 10px;
+  color: var(--status-warning);
+  background-color: var(--status-warning-bg);
   padding: 1px 5px;
   border-radius: var(--radius-xs);
+  border: 1px solid var(--status-warning-border);
 }
 
 .tagReadWrite {
-  font-size: 10.5px;
-  color: #10b981;
-  background-color: rgba(16, 185, 129, 0.1);
+  font-size: 10px;
+  color: var(--status-success);
+  background-color: var(--status-success-bg);
   padding: 1px 5px;
   border-radius: var(--radius-xs);
+  border: 1px solid var(--status-success-border);
 }
 
 .actionBtns {
@@ -650,7 +643,8 @@
   font-size: 11px;
   padding: 3px 7px;
   border-radius: var(--radius-xs);
-  transition: background-color var(--transition-fast), color var(--transition-fast);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .rowActionBtn:hover {

@@ -25,7 +25,7 @@
 .metricIconWrap {
   width: 48px;
   height: 48px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -46,9 +46,9 @@
 }
 
 .alertBanner {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md);
+  background: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   align-items: flex-start;
@@ -132,7 +132,7 @@
   padding: 8px 12px 8px 36px;
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   color: var(--text-primary);
   font-size: 13px;
 }
@@ -161,7 +161,7 @@
   align-items: center;
   gap: 4px;
   padding: 2px 8px;
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: var(--status-danger);
   border-radius: 4px;
   font-size: 11px;
@@ -239,7 +239,7 @@
 .sqlCodeBox {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font-family: monospace;
   font-size: 13px;
@@ -275,7 +275,7 @@
   color: #ffffff;
   border: none;
   padding: 8px 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -359,11 +359,11 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 4px;
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: var(--status-danger);
   font-weight: 700;
   font-size: 11.5px;
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  border: 1px solid var(--status-critical-border);
 }
 
 .runwayBadgeWarning {
@@ -372,11 +372,11 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 4px;
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--status-warning-bg);
   color: #fbbf24;
   font-weight: 700;
   font-size: 11.5px;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid var(--status-warning-border);
 }
 
 .runwayBadgeOk {
@@ -385,7 +385,7 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 4px;
-  background: rgba(34, 197, 94, 0.15);
+  background: var(--status-success-bg);
   color: var(--status-success);
   font-weight: 600;
   font-size: 11.5px;

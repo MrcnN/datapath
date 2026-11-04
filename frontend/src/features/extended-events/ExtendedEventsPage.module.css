@@ -14,7 +14,7 @@
 .kpiCard {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -106,7 +106,7 @@
   background-color: var(--bg-elevated);
   border: 1px solid var(--border);
   color: var(--text-primary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 6px 12px 6px 32px;
   font-size: 13px;
   width: 280px;
@@ -121,7 +121,7 @@
 .infoCallout {
   background: rgba(0, 210, 255, 0.05);
   border: 1px solid rgba(0, 210, 255, 0.2);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
   font-size: 13px;
   color: var(--text-secondary);
@@ -267,7 +267,7 @@
   align-items: center;
   gap: 6px;
   padding: 6px 14px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;

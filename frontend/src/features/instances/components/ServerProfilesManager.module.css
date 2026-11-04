@@ -79,7 +79,7 @@
 .createFormCard {
   background: var(--bg-surface);
   border: 1px solid var(--accent);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   box-shadow: var(--shadow-sm);
   display: flex;
@@ -179,7 +179,7 @@
 .serverCard {
   background: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   flex-direction: column;
@@ -195,7 +195,7 @@
 
 .activeCard {
   border-color: var(--accent);
-  background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, var(--bg-surface) 100%);
+  background: linear-gradient(180deg, var(--accent-muted) 0%, var(--bg-surface) 100%);
   box-shadow: var(--shadow-sm);
 }
 
@@ -219,9 +219,9 @@
 }
 
 .envProd {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--status-critical-border);
 }
 
 .envReplica {
@@ -231,15 +231,15 @@
 }
 
 .envStaging {
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--status-warning-bg);
   color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  border: 1px solid var(--status-warning-border);
 }
 
 .envDev {
-  background: rgba(34, 197, 94, 0.15);
+  background: var(--status-success-bg);
   color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  border: 1px solid var(--status-success-border);
 }
 
 .envDR {
@@ -256,9 +256,9 @@
   border-radius: var(--radius-xs);
   font-size: 10px;
   font-weight: 600;
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--border-hover);
   color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  border: 1px solid var(--border-hover);
 }
 
 .cardTitle {
@@ -312,10 +312,10 @@
   align-items: center;
   gap: 5px;
   color: var(--status-success);
-  background: rgba(34, 197, 94, 0.1);
+  background: var(--status-success-bg);
   padding: 4px 8px;
   border-radius: var(--radius-xs);
-  border: 1px solid rgba(34, 197, 94, 0.2);
+  border: 1px solid var(--status-success-border);
 }
 
 .cardFooter {
@@ -386,7 +386,7 @@
 
 .deleteBtn:hover {
   color: var(--status-danger);
-  background: rgba(239, 68, 68, 0.1);
+  background: var(--status-critical-bg);
 }
 
 .spinning {

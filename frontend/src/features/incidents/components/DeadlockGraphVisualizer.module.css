@@ -1,7 +1,7 @@
 .graphContainer {
   background-color: var(--bg-surface);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   margin-bottom: var(--space-4);
   display: flex;
@@ -159,8 +159,8 @@
   font-size: 12px;
   padding: 6px 10px;
   border-radius: var(--radius-xs);
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
   color: #f59e0b;
   display: flex;
   align-items: center;

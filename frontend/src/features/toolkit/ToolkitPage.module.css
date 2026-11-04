@@ -22,7 +22,7 @@
   gap: var(--space-3);
   background: var(--bg-subtle);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 8px 14px;
   transition: all var(--transition-fast);
 }
@@ -149,9 +149,9 @@
 }
 
 .riskReadOnly {
-  background: rgba(16, 185, 129, 0.15);
+  background: var(--status-success-bg);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.35);
+  border: 1px solid var(--status-success-border);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   font-size: 11px;
@@ -159,9 +159,9 @@
 }
 
 .riskCaution {
-  background: rgba(245, 158, 11, 0.15);
+  background: var(--status-warning-bg);
   color: #f59e0b;
-  border: 1px solid rgba(245, 158, 11, 0.35);
+  border: 1px solid var(--status-warning-border);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   font-size: 11px;
@@ -169,9 +169,9 @@
 }
 
 .riskDestructive {
-  background: rgba(244, 63, 94, 0.15);
+  background: var(--status-critical-bg);
   color: #f43f5e;
-  border: 1px solid rgba(244, 63, 94, 0.35);
+  border: 1px solid var(--status-critical-border);
   padding: 2px 8px;
   border-radius: var(--radius-sm);
   font-size: 11px;

@@ -96,7 +96,7 @@
 .sqlModalContent {
   background: var(--bg-card);
   border: 1px solid var(--border-color);
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   width: 90%;
   max-width: 680px;
   box-shadow: var(--shadow-sm);

@@ -1,9 +1,9 @@
 .badge {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 2px 8px;
-  border-radius: var(--radius-full, 9999px);
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: var(--radius-xs);
   font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
@@ -14,38 +14,43 @@
 }
 
 .dot {
-  width: 5.5px;
-  height: 5.5px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   flex-shrink: 0;
 }
 
-.success { border-color: rgba(16, 185, 129, 0.3);
+.success {
+  border-color: var(--status-success-border);
   color: var(--status-success);
   background-color: var(--status-success-bg);
 }
 .success .dot { background-color: var(--status-success); }
 
-.warning { border-color: rgba(245, 158, 11, 0.3);
+.warning {
+  border-color: var(--status-warning-border);
   color: var(--status-warning);
   background-color: var(--status-warning-bg);
 }
 .warning .dot { background-color: var(--status-warning); }
 
-.error { border-color: rgba(239, 68, 68, 0.3);
-  color: var(--status-error);
-  background-color: var(--status-error-bg);
+.error {
+  border-color: var(--status-critical-border);
+  color: var(--status-critical);
+  background-color: var(--status-critical-bg);
 }
-.error .dot { background-color: var(--status-error); }
+.error .dot { background-color: var(--status-critical); }
 
-.info { border-color: rgba(100, 116, 139, 0.3);
+.info {
+  border-color: var(--status-info-border);
   color: var(--status-info);
   background-color: var(--status-info-bg);
 }
 .info .dot { background-color: var(--status-info); }
 
-.neutral { border-color: rgba(148, 163, 184, 0.2);
-  color: var(--status-neutral);
-  background-color: var(--status-neutral-bg);
+.neutral {
+  border-color: var(--border);
+  color: var(--text-secondary);
+  background-color: var(--bg-elevated);
 }
-.neutral .dot { background-color: var(--status-neutral); }
+.neutral .dot { background-color: var(--text-muted); }

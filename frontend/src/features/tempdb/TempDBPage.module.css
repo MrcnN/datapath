@@ -49,7 +49,7 @@
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(34, 197, 94, 0.15);
+  background: var(--status-success-bg);
   color: var(--status-success);
 }
 
@@ -60,7 +60,7 @@
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(234, 179, 8, 0.15);
+  background: var(--status-warning-bg);
   color: #eab308;
 }
 
@@ -71,14 +71,14 @@
   border-radius: 4px;
   font-size: 11px;
   font-weight: 600;
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: var(--status-danger);
 }
 
 .infoAlert {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: var(--radius-md);
+  background: var(--accent-muted);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   align-items: flex-start;
@@ -89,9 +89,9 @@
 }
 
 .dangerAlert {
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md);
+  background: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   display: flex;
   align-items: flex-start;
@@ -234,7 +234,7 @@
 }
 
 .bloatCardCritical {
-  border-color: rgba(239, 68, 68, 0.4);
+  border-color: var(--status-critical-border);
   background: linear-gradient(180deg, rgba(239, 68, 68, 0.05) 0%, var(--bg-surface) 100%);
 }
 
@@ -269,7 +269,7 @@
 .bloatItem {
   background: var(--bg-base);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-3);
   display: flex;
   flex-direction: column;
@@ -304,7 +304,7 @@
   position: relative;
   background: #0d1117;
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: 10px 14px;
 }
 

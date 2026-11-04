@@ -57,7 +57,7 @@
   background-color: rgba(56, 189, 248, 0.15);
   border-color: var(--accent);
   color: #ffffff;
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.35);
+  
 }
 
 .toggleIcon {
@@ -177,7 +177,7 @@
 .sidebarCollapsed .navItem.active {
   border-left: none;
   background: rgba(56, 189, 248, 0.15);
-  box-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
+  
 }
 
 .navIconBox {
@@ -196,7 +196,7 @@
 
 .navItem.active .navIcon {
   color: var(--accent);
-  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.5));
+  
 }
 
 .navLabel {
@@ -223,7 +223,7 @@
   border: 1px solid rgba(56, 189, 248, 0.25);
   border-radius: var(--radius-sm);
   padding: 8px 12px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55), 0 0 16px rgba(56, 189, 248, 0.15);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
   max-width: 290px;
   min-width: 200px;
   animation: tooltipFadeIn 120ms ease-out forwards;

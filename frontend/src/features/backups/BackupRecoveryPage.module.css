@@ -182,9 +182,9 @@
 }
 
 .alertBox {
-  background: rgba(59, 130, 246, 0.08);
-  border: 1px solid rgba(59, 130, 246, 0.25);
-  border-radius: var(--radius-md);
+  background: var(--accent-muted);
+  border: 1px solid var(--border-hover);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font-size: 13px;
   color: var(--text-primary);
@@ -240,7 +240,7 @@
 .sqlCodeBox {
   background: var(--bg-elevated);
   border: 1px solid var(--border);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   padding: var(--space-4);
   font-family: monospace;
   font-size: 13px;
@@ -270,7 +270,7 @@
   color: #ffffff;
   border: none;
   padding: 8px 16px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;

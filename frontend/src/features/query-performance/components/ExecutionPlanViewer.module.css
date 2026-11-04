@@ -82,7 +82,7 @@
   align-items: center;
   justify-content: space-between;
   background: rgba(16, 185, 129, 0.08);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid var(--status-success-border);
   border-radius: var(--radius-lg, 10px);
   padding: 14px 18px;
   gap: 16px;
@@ -168,7 +168,7 @@
 .treeCanvas {
   background: var(--bg-card, #121217);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg, 12px);
+  border-radius: var(--radius-sm);
   padding: 28px;
   overflow-x: auto;
   min-height: 440px;
@@ -207,7 +207,7 @@
 .operatorCardSelected {
   border-color: var(--accent-primary, #3b82f6);
   box-shadow: var(--shadow-sm);
-  background: rgba(59, 130, 246, 0.08);
+  background: var(--accent-muted);
 }
 
 .operatorCardExpensive {
@@ -242,7 +242,7 @@
 
 .warningBadge {
   color: #f59e0b;
-  animation: pulse 2s infinite;
+  
 }
 
 @keyframes pulse {
@@ -310,7 +310,7 @@
 .inspectorPanel {
   background: var(--bg-surface, var(--bg-card));
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg, 12px);
+  border-radius: var(--radius-sm);
   padding: 18px;
   display: flex;
   flex-direction: column;
@@ -413,8 +413,8 @@
 }
 
 .warningsBox {
-  background: rgba(245, 158, 11, 0.1);
-  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
   border-radius: 6px;
   padding: 10px;
   display: flex;

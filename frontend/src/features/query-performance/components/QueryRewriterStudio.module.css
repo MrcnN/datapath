@@ -11,7 +11,7 @@
   justify-content: space-between;
   background: var(--bg-surface, var(--bg-card));
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg, 12px);
+  border-radius: var(--radius-sm);
   padding: 18px 24px;
   flex-wrap: wrap;
   gap: 16px;
@@ -27,7 +27,7 @@
 .magicIconBox {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
+  border-radius: var(--radius-sm);
   background: rgba(139, 92, 246, 0.15);
   border: 1px solid rgba(139, 92, 246, 0.3);
   display: flex;
@@ -151,15 +151,15 @@
 }
 
 .badgeOrig {
-  background: rgba(239, 68, 68, 0.15);
+  background: var(--status-critical-bg);
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
+  border: 1px solid var(--status-critical-border);
 }
 
 .badgeOpt {
-  background: rgba(16, 185, 129, 0.15);
+  background: var(--status-success-bg);
   color: #10b981;
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border: 1px solid var(--status-success-border);
 }
 
 .queryTextarea {
@@ -233,9 +233,9 @@
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: 20px;
-  background: rgba(16, 185, 129, 0.15);
-  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: var(--radius-sm);
+  background: var(--status-success-bg);
+  border: 1px solid var(--status-success-border);
   color: #10b981;
   font-size: 12px;
   font-weight: 700;
@@ -309,17 +309,17 @@
 }
 
 .sevHigh {
-  background: rgba(239, 68, 68, 0.2);
+  background: var(--status-critical-border);
   color: #ef4444;
 }
 
 .sevMedium {
-  background: rgba(245, 158, 11, 0.2);
+  background: var(--status-warning-border);
   color: #f59e0b;
 }
 
 .sevLow {
-  background: rgba(59, 130, 246, 0.2);
+  background: var(--border-hover);
   color: #3b82f6;
 }
 
