@@ -107,6 +107,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.20** Bağımsız Sayfa Mimarisi & Başlık Altı Canlı Açıklamalar (Dedicated Views & Informative Subtitles): Her menü elemanı için bağımsız özel sayfaların oluşturulması (/query-rewriter, /execution-plan, /hypothetical-indexes, /maintenance-planner, /buffer-pool, /best-practices), sekmeler arası çakışmanın tamamen giderilmesi ve her sayfa başlığının altına ne işe yaradığını anlatan net Türkçe kılavuz açıklamalarının yerleştirilmesi
 - [x] **5.21** İstatistik Sağlığı & Kardinalite Tahmin Radarı (Statistics Health & Cardinality Estimation Radar): sys.dm_db_stats_properties histogram bayatlık takibi, modifikasyon sayacı / satır oranı, örnekleme tutarsızlığı, tek tıkla ve toplu UPDATE STATISTICS T-SQL reçete üretimi (/statistics).
 - [x] **5.22** Canlı Deadlock Radarı & system_health Forensics (Live system_health Deadlock Forensics): Extended Events ring buffer hedefini otomatik sorgulayan, sunucuda gerçekleşen kilitlenme döngülerini tek tıkla interaktif SVG grafiğine aktaran ve RCA post-mortem oluşturan otomatik kaza tespit motoru.
+- [x] **5.23** Canlı Kilit & Blocker Hiyerarşi Ağacı (Interactive Lock Hierarchy Tree Visualizer): sp_whoisactive seviyesinde root blocker -> waiter bağıntısını katmanlı interaktif ağaç diyagramına dökme, oturum teşhis müfettişi ve tek tıkla güvenli review-only KILL / DMV teşhis T-SQL reçete üretimi.
 
 ---
 
