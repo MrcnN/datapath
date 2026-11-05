@@ -108,6 +108,10 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.21** İstatistik Sağlığı & Kardinalite Tahmin Radarı (Statistics Health & Cardinality Estimation Radar): sys.dm_db_stats_properties histogram bayatlık takibi, modifikasyon sayacı / satır oranı, örnekleme tutarsızlığı, tek tıkla ve toplu UPDATE STATISTICS T-SQL reçete üretimi (/statistics).
 - [x] **5.22** Canlı Deadlock Radarı & system_health Forensics (Live system_health Deadlock Forensics): Extended Events ring buffer hedefini otomatik sorgulayan, sunucuda gerçekleşen kilitlenme döngülerini tek tıkla interaktif SVG grafiğine aktaran ve RCA post-mortem oluşturan otomatik kaza tespit motoru.
 - [x] **5.23** Canlı Kilit & Blocker Hiyerarşi Ağacı (Interactive Lock Hierarchy Tree Visualizer): sp_whoisactive seviyesinde root blocker -> waiter bağıntısını katmanlı interaktif ağaç diyagramına dökme, oturum teşhis müfettişi ve tek tıkla güvenli review-only KILL / DMV teşhis T-SQL reçete üretimi.
+- [x] **5.24** İstatistiksel Anomali & Z-Score Kriz Radarı (Predictive Anomaly Radar): CPU, PAGEIOLATCH, CXPACKET ve RESOURCE_SEMAPHORE telemetrisi üzerinde hareketli ortalama ve Z-score hesaplayarak normal çalışma aralığının (±2σ) dışına çıkan krizleri önceden saptayan tahminleme motoru ve Dashboard bileşeni.
+- [x] **5.25** Kapasite & Disk Tükenme Tahminleyicisi (Capacity Runway Forecasting): sys.master_files ve sys.dm_os_volume_stats üzerinden lineer regresyon büyüme modeliyle %90 ve %100 disk dolum gün sayısını (Runway Days) hesaplayan ve proaktif dosya genişletme reçeteleri sunan depolama zekası.
+- [x] **5.26** Kardinalite Sapması & Parameter Sniffing Radarı (Cardinality Drift & Parameter Sniffing Detector): sys.dm_exec_query_stats üzerinden Estimated Rows vs Actual Rows arasındaki 10x-1000x sapmaları, bellek israfını (Over-grant) ve TempDB dökülmelerini yakalayıp OPTION (RECOMPILE/OPTIMIZE FOR UNKNOWN) reçeteleri üreten optimizasyon motoru.
+- [x] **5.27** Kurumsal Rol Tabanlı Erişim Denetimi (RBAC & Security Matrix): Viewer, Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi, aktif rol seçici ve TopBar güvenlik rozeti entegrasyonu.: sp_whoisactive seviyesinde root blocker -> waiter bağıntısını katmanlı interaktif ağaç diyagramına dökme, oturum teşhis müfettişi ve tek tıkla güvenli review-only KILL / DMV teşhis T-SQL reçete üretimi.
 
 ---
 
@@ -147,7 +151,7 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 71 Test (Tamamı Başarılı)
+- **Mevcut pytest Test Sayısı:** 76 Test (Tamamı Başarılı)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
   - `GET /api/agent-jobs/alerts-and-mail` ✅

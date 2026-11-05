@@ -22,6 +22,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import OpenTransactionsViewer from './components/OpenTransactionsViewer';
+import CapacityRunwayForecasting from './components/CapacityRunwayForecasting';
 import { getStorageSummary } from '../../lib/api';
 import type {
   StorageSummary,
@@ -927,74 +928,7 @@ export default function StoragePage() {
 
       {/* Tab 4: Growth Trends & Capacity Forecasting */}
       {activeTab === 'growth' && (
-        <div>
-          {/* Summary KPIs */}
-          <div className={styles.growthSummaryGrid}>
-            <div className={styles.growthStatCard}>
-              <div className={styles.growthStatVal} style={{ color: 'var(--accent-blue)' }}>
-                {summary?.fastest_growing_db || '—'}
-              </div>
-              <div className={styles.growthStatLbl}>En Hızlı Büyüyen Veritabanı</div>
-            </div>
-
-            <div className={styles.growthStatCard}>
-              <div className={styles.growthStatVal} style={{ color: '#fbbf24' }}>
-                +{formatSize(summary?.total_30_day_growth_mb || 0)}
-              </div>
-              <div className={styles.growthStatLbl}>Son 30 Gün Toplam Büyüme</div>
-            </div>
-
-            <div className={styles.growthStatCard}>
-              <div
-                className={styles.growthStatVal}
-                style={{
-                  color:
-                    summary?.min_disk_runway_days && summary.min_disk_runway_days < 60
-                      ? 'var(--status-danger)'
-                      : 'var(--status-success)',
-                }}
-              >
-                {summary?.min_disk_runway_days ? `${summary.min_disk_runway_days} Gün` : 'Geniş Kapasite'}
-              </div>
-              <div className={styles.growthStatLbl}>Kritik Disk Dolum Süresi (En Düşük Runway)</div>
-            </div>
-
-            <div className={styles.growthStatCard}>
-              <div
-                className={styles.growthStatVal}
-                style={{
-                  color:
-                    (summary?.growth_forecasts?.filter((g) => g.status === 'CRITICAL_CAPACITY').length || 0) > 0
-                      ? 'var(--status-danger)'
-                      : 'var(--status-success)',
-                }}
-              >
-                {summary?.growth_forecasts?.filter((g) => g.status === 'CRITICAL_CAPACITY').length || 0} Veritabanı
-              </div>
-              <div className={styles.growthStatLbl}>Kapasite Riski Taşıyan Diskler</div>
-            </div>
-          </div>
-
-          {/* Critical Capacity Warning if < 60 days */}
-          {summary?.min_disk_runway_days && summary.min_disk_runway_days < 60 && (
-            <div className={styles.alertBanner} style={{ marginBottom: '16px' }}>
-              <AlertTriangle size={20} className={styles.alertIcon} />
-              <div>
-                <strong>Kritik Disk Kapasite Uyarısı:</strong> Mevcut veritabanı büyüme ivmesiyle en kritik disk alanının{' '}
-                <strong>{summary.min_disk_runway_days} gün</strong> içerisinde dolacağı tahmin edilmektedir.
-                Üretim kesintisi yaşamamak için disk alanı tahsisini genişletiniz veya eski verileri arşivleyiniz.
-              </div>
-            </div>
-          )}
-
-          <div className={styles.tableCard}>
-            <DataTable
-              data={summary?.growth_forecasts || []}
-              columns={growthColumns}
-              emptyMessage="Veritabanı büyüme tahmini bulunamadı."
-            />
-          </div>
-        </div>
+        <CapacityRunwayForecasting />
       )}
 
       {/* Tab 6: VLFs */}

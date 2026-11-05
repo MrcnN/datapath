@@ -17,12 +17,14 @@ from app.schemas.query_performance import (
     QueryStoreOverview,
     RegressionResult,
     PlanAntiPatternsSummary,
+    CardinalityDriftResponse,
 )
 from app.services.query_performance_service import (
     get_expensive_queries,
     get_query_store_overview,
     get_regressions,
     get_plan_anti_patterns,
+    get_cardinality_drift,
 )
 
 logger = logging.getLogger(__name__)
@@ -151,3 +153,10 @@ def parse_plan_endpoint(req: ParsePlanRequest):
 def rewrite_query_endpoint(req: RewriteQueryRequest):
     """Analyze T-SQL query for anti-patterns and return optimized rewritten T-SQL."""
     return rewrite_tsql_query(query_text=req.query_text, database=req.database)
+
+
+@router.get("/query-performance/cardinality-drift", response_model=CardinalityDriftResponse)
+def read_cardinality_drift():
+    """Retrieve cardinality estimation drift, actual vs estimated row discrepancies, and parameter sniffing suspects."""
+    params = _get_connection_params()
+    return get_cardinality_drift(params)

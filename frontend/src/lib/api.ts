@@ -64,6 +64,12 @@ import type {
   RCARequest,
   RCAReport,
   BufferPoolDrilldownResponse,
+  AnomalyRadarResponse,
+  CapacityRunwayResponse,
+  CardinalityDriftResponse,
+  RBACMatrixResponse,
+  UserRoleType,
+  SwitchRoleResponse,
 } from './types';
 
 const BASE_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
@@ -558,3 +564,36 @@ export async function getBufferPoolDrilldown(database?: string): Promise<BufferP
   return apiFetch<BufferPoolDrilldownResponse>(`/api/tempdb-memory/buffer-pool-drilldown${query}`);
 }
 
+
+
+// ── Predictive Anomaly Radar ───────────────────────────────────────────────
+
+export async function getAnomalyRadar(serverId?: string): Promise<AnomalyRadarResponse> {
+  const query = serverId ? `?server_id=${encodeURIComponent(serverId)}` : '';
+  return apiFetch<AnomalyRadarResponse>(`/api/anomaly-radar${query}`);
+}
+
+// ── Capacity Runway Forecasting ───────────────────────────────────────────
+
+export async function getCapacityRunway(): Promise<CapacityRunwayResponse> {
+  return apiFetch<CapacityRunwayResponse>('/api/storage/capacity-runway');
+}
+
+// ── Cardinality Drift & Parameter Sniffing ─────────────────────────────────
+
+export async function getCardinalityDrift(): Promise<CardinalityDriftResponse> {
+  return apiFetch<CardinalityDriftResponse>('/api/query-performance/cardinality-drift');
+}
+
+// ── Role-Based Access Control (RBAC) ───────────────────────────────────────
+
+export async function getRBACMatrix(): Promise<RBACMatrixResponse> {
+  return apiFetch<RBACMatrixResponse>('/api/permissions/rbac-matrix');
+}
+
+export async function switchUserRole(newRole: UserRoleType): Promise<SwitchRoleResponse> {
+  return apiFetch<SwitchRoleResponse>('/api/permissions/switch-role', {
+    method: 'POST',
+    body: JSON.stringify({ new_role: newRole }),
+  });
+}

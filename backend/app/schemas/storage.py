@@ -167,3 +167,31 @@ class OpenTransactionsSummary(BaseModel):
     is_demo: bool = False
 
 
+
+
+class CapacityRunwayItem(BaseModel):
+    database_name: str
+    drive_letter: str
+    drive_total_gb: float
+    drive_free_gb: float
+    data_size_mb: float
+    log_size_mb: float
+    daily_growth_mb: float
+    growth_velocity_30d_pct: float
+    runway_days_to_90pct: Optional[int] = None
+    runway_days_to_full: Optional[int] = None
+    forecast_exhaustion_date: Optional[str] = None
+    status: str  # 'CRITICAL_RUNWAY', 'WARNING_RUNWAY', 'HEALTHY_RUNWAY', 'STABLE'
+    regression_slope_mb_per_day: float
+    regression_r_squared: float
+    forecast_points: List[GrowthHistoryPoint] = []
+    remediation_tsql: str
+
+
+class CapacityRunwayResponse(BaseModel):
+    evaluated_at: str
+    server_name: str
+    critical_drives_count: int
+    min_runway_days: Optional[int] = None
+    total_tracked_databases: int
+    items: List[CapacityRunwayItem] = []

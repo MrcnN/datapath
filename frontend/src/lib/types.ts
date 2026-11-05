@@ -1531,3 +1531,150 @@ export interface BufferPoolDrilldownResponse {
   checkpoint_urgency: 'HEALTHY' | 'MODERATE' | 'URGENT';
   items: BufferPoolDrilldownItem[];
 }
+
+
+// ==========================================
+// 1. Predictive Anomaly Radar Types
+// ==========================================
+export interface AnomalyMetricPoint {
+  timestamp: string;
+  value: number;
+  rolling_mean: number;
+  upper_bound: number;
+  lower_bound: number;
+  z_score: number;
+  is_anomaly: boolean;
+  severity: 'NORMAL' | 'WARNING' | 'CRITICAL';
+}
+
+export interface AnomalyMetricSeries {
+  metric_id: string;
+  metric_name: string;
+  unit: string;
+  current_value: number;
+  baseline_mean: number;
+  baseline_std: number;
+  current_z_score: number;
+  status: 'NORMAL' | 'ELEVATED' | 'ANOMALY_SPIKE';
+  datapoints: AnomalyMetricPoint[];
+}
+
+export interface DetectedAnomalyAlert {
+  id: string;
+  metric_name: string;
+  timestamp: string;
+  z_score: number;
+  severity: 'WARNING' | 'CRITICAL';
+  deviation_percent: number;
+  description: string;
+  root_cause_hypothesis: string;
+  recommended_action: string;
+  surgical_tsql?: string;
+}
+
+export interface AnomalyRadarResponse {
+  server_name: string;
+  evaluated_at: string;
+  status: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  overall_risk_score: number;
+  active_anomalies_count: number;
+  series: AnomalyMetricSeries[];
+  alerts: DetectedAnomalyAlert[];
+}
+
+// ==========================================
+// 2. Capacity Runway Forecasting Types
+// ==========================================
+export interface CapacityRunwayItem {
+  database_name: string;
+  drive_letter: string;
+  drive_total_gb: number;
+  drive_free_gb: number;
+  data_size_mb: number;
+  log_size_mb: number;
+  daily_growth_mb: number;
+  growth_velocity_30d_pct: number;
+  runway_days_to_90pct: number | null;
+  runway_days_to_full: number | null;
+  forecast_exhaustion_date: string | null;
+  status: 'CRITICAL_RUNWAY' | 'WARNING_RUNWAY' | 'HEALTHY_RUNWAY' | 'STABLE';
+  regression_slope_mb_per_day: number;
+  regression_r_squared: number;
+  forecast_points: { date: string; size_mb: number }[];
+  remediation_tsql: string;
+}
+
+export interface CapacityRunwayResponse {
+  evaluated_at: string;
+  server_name: string;
+  critical_drives_count: number;
+  min_runway_days: number | null;
+  total_tracked_databases: number;
+  items: CapacityRunwayItem[];
+}
+
+// ==========================================
+// 3. Cardinality Drift & Parameter Sniffing Types
+// ==========================================
+export interface CardinalityDriftItem {
+  query_id?: number;
+  query_hash: string;
+  database_name: string;
+  query_text_snippet: string;
+  estimated_rows: number;
+  actual_rows: number;
+  drift_ratio: number;
+  drift_direction: 'OVER_ESTIMATION' | 'UNDER_ESTIMATION';
+  parameter_sniffing_suspect: boolean;
+  execution_count: number;
+  avg_cpu_ms: number;
+  avg_duration_ms: number;
+  avg_logical_reads: number;
+  impact_summary: string;
+  root_cause: string;
+  remediation_strategy: string;
+  surgical_tsql: string;
+}
+
+export interface CardinalityDriftResponse {
+  evaluated_at: string;
+  server_name: string;
+  total_analyzed_queries: number;
+  drift_queries_count: number;
+  parameter_sniffing_candidates_count: number;
+  items: CardinalityDriftItem[];
+}
+
+// ==========================================
+// 4. Role-Based Access Control (RBAC) Types
+// ==========================================
+export type UserRoleType = 'VIEWER' | 'OPERATOR' | 'SENIOR_DBA';
+
+export interface RolePermissionMatrixEntry {
+  feature_id: string;
+  feature_name: string;
+  category: string;
+  viewer_allowed: boolean;
+  operator_allowed: boolean;
+  senior_dba_allowed: boolean;
+  description: string;
+}
+
+export interface RBACMatrixResponse {
+  active_role: UserRoleType;
+  server_name: string;
+  evaluated_at: string;
+  roles: UserRoleType[];
+  permissions: RolePermissionMatrixEntry[];
+  can_view_metrics: boolean;
+  can_generate_tsql_remedies: boolean;
+  can_export_dossier: boolean;
+  can_manage_servers: boolean;
+  can_execute_simulations: boolean;
+}
+
+export interface SwitchRoleResponse {
+  success: boolean;
+  active_role: UserRoleType;
+  message: string;
+}

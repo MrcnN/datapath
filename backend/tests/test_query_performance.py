@@ -41,3 +41,22 @@ def test_query_regressions_endpoint():
         assert "remediation_sql" in first_reg
         assert "sp_query_store_force_plan" in first_reg["remediation_sql"]
 
+
+
+def test_cardinality_drift_endpoint():
+    response = client.get("/api/query-performance/cardinality-drift")
+    assert response.status_code == 200
+    data = response.json()
+    assert "evaluated_at" in data
+    assert "server_name" in data
+    assert "total_analyzed_queries" in data
+    assert "items" in data
+    assert len(data["items"]) >= 2
+    first_item = data["items"][0]
+    assert "query_hash" in first_item
+    assert "estimated_rows" in first_item
+    assert "actual_rows" in first_item
+    assert "drift_ratio" in first_item
+    assert "drift_direction" in first_item
+    assert "remediation_strategy" in first_item
+    assert "surgical_tsql" in first_item

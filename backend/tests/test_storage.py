@@ -110,4 +110,24 @@ def test_vlf_summary_endpoint():
     assert "remediation_script" in first_vlf
 
 
+def test_capacity_runway_endpoint():
+    response = client.get("/api/storage/capacity-runway")
+    assert response.status_code == 200
+    data = response.json()
+    assert "evaluated_at" in data
+    assert "server_name" in data
+    assert "items" in data
+    assert len(data["items"]) >= 2
+    first_item = data["items"][0]
+    assert "database_name" in first_item
+    assert "drive_letter" in first_item
+    assert "drive_free_gb" in first_item
+    assert "runway_days_to_90pct" in first_item
+    assert "status" in first_item
+    assert "regression_r_squared" in first_item
+    assert "remediation_tsql" in first_item
+    assert len(first_item["forecast_points"]) > 0
+
+
+
 

@@ -62,3 +62,36 @@ class SecurityAuditSummary(BaseModel):
     hardening_script: str
     is_demo: bool = False
 
+
+
+class RolePermissionMatrixEntry(BaseModel):
+    feature_id: str
+    feature_name: str
+    category: str
+    viewer_allowed: bool
+    operator_allowed: bool
+    senior_dba_allowed: bool
+    description: str
+
+
+class RBACMatrixResponse(BaseModel):
+    active_role: str  # 'VIEWER', 'OPERATOR', 'SENIOR_DBA'
+    server_name: str
+    evaluated_at: str
+    roles: List[str] = ["VIEWER", "OPERATOR", "SENIOR_DBA"]
+    permissions: List[RolePermissionMatrixEntry] = []
+    can_view_metrics: bool = True
+    can_generate_tsql_remedies: bool = True
+    can_export_dossier: bool = True
+    can_manage_servers: bool = True
+    can_execute_simulations: bool = True
+
+
+class SwitchRoleRequest(BaseModel):
+    new_role: str  # 'VIEWER', 'OPERATOR', 'SENIOR_DBA'
+
+
+class SwitchRoleResponse(BaseModel):
+    success: bool
+    active_role: str
+    message: str

@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import (
     agent_jobs,
+    anomaly_radar,
     backups,
     connections,
     extended_events,
@@ -81,6 +82,7 @@ app.include_router(agent_jobs.router, prefix="/api")
 app.include_router(extended_events.router, prefix="/api")
 app.include_router(webhooks.router, prefix="/api")
 app.include_router(triage.router, prefix="/api")
+app.include_router(anomaly_radar.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

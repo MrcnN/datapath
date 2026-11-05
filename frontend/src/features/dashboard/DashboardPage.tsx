@@ -31,6 +31,7 @@ import {
   TrendingUp,
   Wrench,
 } from 'lucide-react';
+import PredictiveAnomalyRadar from './components/PredictiveAnomalyRadar';
 import {
   getInstanceMetadata,
   getDatabases,
@@ -389,6 +390,9 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+
+      {/* Predictive Anomaly & Z-Score Crisis Radar */}
+      <PredictiveAnomalyRadar />
 
       {/* 4. Visual Charts Grid (Equal 2 Columns) */}
       <div className={styles.chartsRow}>

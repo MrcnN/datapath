@@ -84,3 +84,32 @@ class PlanAntiPatternsSummary(BaseModel):
     high_grant_count: int
     queries: List[PlanWarningQuery] = []
 
+
+
+class CardinalityDriftItem(BaseModel):
+    query_id: Optional[int] = None
+    query_hash: str
+    database_name: str
+    query_text_snippet: str
+    estimated_rows: float
+    actual_rows: float
+    drift_ratio: float
+    drift_direction: str
+    parameter_sniffing_suspect: bool
+    execution_count: int
+    avg_cpu_ms: float
+    avg_duration_ms: float
+    avg_logical_reads: float
+    impact_summary: str
+    root_cause: str
+    remediation_strategy: str
+    surgical_tsql: str
+
+
+class CardinalityDriftResponse(BaseModel):
+    evaluated_at: str
+    server_name: str
+    total_analyzed_queries: int
+    drift_queries_count: int
+    parameter_sniffing_candidates_count: int
+    items: List[CardinalityDriftItem] = []

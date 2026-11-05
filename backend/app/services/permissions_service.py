@@ -15,6 +15,10 @@ from app.schemas.permissions import (
     ServerRole,
     SecurityFinding,
     SecurityAuditSummary,
+    RolePermissionMatrixEntry,
+    RBACMatrixResponse,
+    SwitchRoleRequest,
+    SwitchRoleResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -441,3 +445,130 @@ def get_security_audit(params: ConnectionParams) -> SecurityAuditSummary:
             is_demo=False,
         )
 
+
+
+# Active session role in-memory state (default: SENIOR_DBA)
+_CURRENT_ROLE = "SENIOR_DBA"
+
+
+def get_current_role() -> str:
+    global _CURRENT_ROLE
+    return _CURRENT_ROLE
+
+
+def switch_user_role(new_role: str) -> SwitchRoleResponse:
+    global _CURRENT_ROLE
+    valid_roles = ["VIEWER", "OPERATOR", "SENIOR_DBA"]
+    target = new_role.upper()
+    if target not in valid_roles:
+        return SwitchRoleResponse(
+            success=False,
+            active_role=_CURRENT_ROLE,
+            message=f"Geçersiz rol: {new_role}. İzin verilen roller: {', '.join(valid_roles)}",
+        )
+    _CURRENT_ROLE = target
+    return SwitchRoleResponse(
+        success=True,
+        active_role=_CURRENT_ROLE,
+        message=f"Aktif kullanıcı rolü '{target}' olarak güncellendi.",
+    )
+
+
+def get_rbac_matrix() -> RBACMatrixResponse:
+    from datetime import datetime, timezone
+
+    now = datetime.now(timezone.utc)
+    role = get_current_role()
+
+    matrix: List[RolePermissionMatrixEntry] = [
+        RolePermissionMatrixEntry(
+            feature_id="dashboard_view",
+            feature_name="Canlı Metrikler & Dashboard Gözlemi",
+            category="Gözlem",
+            viewer_allowed=True,
+            operator_allowed=True,
+            senior_dba_allowed=True,
+            description="KPI kartları, CPU/RAM grafikleri ve canlı oturum listesini okuma hakkı.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="incident_view",
+            feature_name="Deadlock & Kilitlenme Olay İncelemesi",
+            category="Kriz Yönetimi",
+            viewer_allowed=True,
+            operator_allowed=True,
+            senior_dba_allowed=True,
+            description="XDL ayrıştırma, blokaj zinciri ve kaza zaman çizgisi görüntüleme.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="emergency_triage",
+            feature_name="Tek Tıkla Acil Durum Kriz Triyajı",
+            category="Kriz Yönetimi",
+            viewer_allowed=True,
+            operator_allowed=True,
+            senior_dba_allowed=True,
+            description="7 alt sistemin anlık kriz röntgenini çekme ve sağlık durumunu inceleme.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="tsql_remediation_gen",
+            feature_name="Review-Only T-SQL İyileştirme ve Onarım Betikleri",
+            category="Operasyon & İyileştirme",
+            viewer_allowed=False,
+            operator_allowed=True,
+            senior_dba_allowed=True,
+            description="İndeks oluşturma, istatistik güncelleme ve acil durum müdahale scriptleri üretme.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="hypothetical_index_sim",
+            feature_name="What-If Sanal İndeks Simülasyonu",
+            category="Operasyon & İyileştirme",
+            viewer_allowed=False,
+            operator_allowed=True,
+            senior_dba_allowed=True,
+            description="Diske veri yazmadan STATISTICS_ONLY mimarisiyle sanal indeks denemeleri yapma.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="maintenance_planner",
+            feature_name="Akıllı İndeks Defrag & Rebuild Planlayıcı",
+            category="Bakım & Depolama",
+            viewer_allowed=False,
+            operator_allowed=True,
+            senior_dba_allowed=True,
+            description="Sayfa eşikli REORG/REBUILD bakım scripti ve SQL Agent Job üretme.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="dossier_export",
+            feature_name="Mühendislik Teşhis Dosyası (Dossier) Dışa Aktarma",
+            category="Raporlama & Audit",
+            viewer_allowed=False,
+            operator_allowed=False,
+            senior_dba_allowed=True,
+            description="Tüm sunucu meta verisi ve hassas sistem analizlerini PDF/Markdown/JSON olarak dışa aktarma.",
+        ),
+        RolePermissionMatrixEntry(
+            feature_id="server_registry_manage",
+            feature_name="Sunucu Profilleri & Bağlantı Yönetimi",
+            category="Yönetim & Güvenlik",
+            viewer_allowed=False,
+            operator_allowed=False,
+            senior_dba_allowed=True,
+            description="Yeni SQL Server profili ekleme, düzenleme ve kimlik bilgisi yönetme.",
+        ),
+    ]
+
+    can_tsql = role in ["OPERATOR", "SENIOR_DBA"]
+    can_dossier = role == "SENIOR_DBA"
+    can_srv = role == "SENIOR_DBA"
+    can_sim = role in ["OPERATOR", "SENIOR_DBA"]
+
+    return RBACMatrixResponse(
+        active_role=role,
+        server_name="PROD-SQL-01",
+        evaluated_at=now.isoformat(),
+        roles=["VIEWER", "OPERATOR", "SENIOR_DBA"],
+        permissions=matrix,
+        can_view_metrics=True,
+        can_generate_tsql_remedies=can_tsql,
+        can_export_dossier=can_dossier,
+        can_manage_servers=can_srv,
+        can_execute_simulations=can_sim,
+    )

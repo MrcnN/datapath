@@ -7,9 +7,9 @@ from fastapi import APIRouter
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.storage import StorageSummary, OpenTransactionsSummary, DatabaseVLFInfo
+from app.schemas.storage import StorageSummary, OpenTransactionsSummary, DatabaseVLFInfo, CapacityRunwayResponse
 from app.services.server_registry import server_registry
-from app.services.storage_service import get_storage_summary, get_open_transactions_summary
+from app.services.storage_service import get_storage_summary, get_open_transactions_summary, get_capacity_runway
 
 logger = logging.getLogger(__name__)
 
@@ -40,4 +40,12 @@ def read_vlf_summary():
     params = _get_connection_params()
     summary = get_storage_summary(params)
     return summary.vlf_infos
+
+
+@router.get("/storage/capacity-runway", response_model=CapacityRunwayResponse)
+def read_capacity_runway():
+    """Retrieve predictive database capacity runway forecasting, linear regression trend, and exhaustion dates."""
+    params = _get_connection_params()
+    return get_capacity_runway(params)
+
 

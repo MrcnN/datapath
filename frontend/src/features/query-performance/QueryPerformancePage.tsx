@@ -6,6 +6,7 @@ import {
   Flame,
   Cpu,
   Layers,
+  GitCompare,
   Lightbulb,
   Search,
   Filter,
@@ -43,19 +44,20 @@ import type {
 } from '../../lib/types';
 import ExecutionPlanViewer from './components/ExecutionPlanViewer';
 import QueryRewriterStudio from './components/QueryRewriterStudio';
+import CardinalityDriftViewer from './components/CardinalityDriftViewer';
 import styles from './QueryPerformancePage.module.css';
 
-export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' } = {}) {
+export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' } = {}) {
   const location = useLocation();
 
-  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' => {
+  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' => {
     if (initialTab) return initialTab;
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
     if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
     return 'QUERY_STORE';
   };
 
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO'>(resolveInitialTab);
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT'>(resolveInitialTab);
 
   useEffect(() => {
     if (location.pathname === '/query-rewriter') {
@@ -418,10 +420,21 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
           <Wand2 size={16} />
           Akıllı T-SQL İyileştirici (Query Rewriter)
         </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'CARDINALITY_DRIFT' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('CARDINALITY_DRIFT')}
+        >
+          <GitCompare size={16} />
+          Kardinalite & Parameter Sniffing
+        </button>
 
       </div>
 
-                  {activeTab === 'REWRITER_STUDIO' && (
+                  {activeTab === 'CARDINALITY_DRIFT' && (
+        <CardinalityDriftViewer />
+      )}
+
+      {activeTab === 'REWRITER_STUDIO' && (
         <QueryRewriterStudio />
       )}
 

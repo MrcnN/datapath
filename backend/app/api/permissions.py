@@ -8,12 +8,22 @@ from fastapi import APIRouter, Query, HTTPException
 from app.core.config import settings
 from app.core.exceptions import PermissionDeniedError
 from app.db.connection import ConnectionParams
-from app.schemas.permissions import DatabaseUser, ServerLogin, ServerRole, SecurityAuditSummary
+from app.schemas.permissions import (
+    DatabaseUser,
+    ServerLogin,
+    ServerRole,
+    SecurityAuditSummary,
+    RBACMatrixResponse,
+    SwitchRoleRequest,
+    SwitchRoleResponse,
+)
 from app.services.permissions_service import (
     get_database_users,
     get_roles,
     get_server_logins,
     get_security_audit,
+    get_rbac_matrix,
+    switch_user_role,
 )
 
 logger = logging.getLogger(__name__)
@@ -91,3 +101,15 @@ def read_security_audit():
             is_demo=False,
         )
 
+
+
+@router.get("/permissions/rbac-matrix", response_model=RBACMatrixResponse)
+def read_rbac_matrix():
+    """Retrieve Role-Based Access Control matrix and permissions per role (VIEWER, OPERATOR, SENIOR_DBA)."""
+    return get_rbac_matrix()
+
+
+@router.post("/permissions/switch-role", response_model=SwitchRoleResponse)
+def execute_switch_role(req: SwitchRoleRequest):
+    """Switch current active role session (VIEWER, OPERATOR, SENIOR_DBA)."""
+    return switch_user_role(req.new_role)

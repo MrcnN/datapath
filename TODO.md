@@ -119,7 +119,7 @@
   - Dosyalar: `backend/app/services/webhook_service.py`, `frontend/src/features/agent-jobs/components/WebhookSettingsView.tsx`
   - Kritik alarm tespit edildiğinde (Deadlock, Error 823/824 bozuk sayfa, Severity 17-25) webhook bildirim fırlatma ve test altyapısı.
 
-- [ ] **[FEAT-13] Rol Tabanlı Erişim Denetimi (RBAC)**
+- [x] **[FEAT-13] Rol Tabanlı Erişim Denetimi (RBAC)**
   - Platform içi `Viewer` (Salt Okunur Gözlemci) ve `DBA` (T-SQL Betik Üretici) kullanıcı yetkilendirmesi.
 
 - [ ] **[FEAT-14] Zamanlanmış Sağlık Denetimi & Otomatik E-Posta Raporu**
@@ -130,7 +130,7 @@
 ## 🔵 ALTYAPI & KALİTE (CI/CD, Test Kapsamı & Doğrulama)
 
 - [x] **[INFRA-01] Backend Birim ve Entegrasyon Testleri (pytest)**
-  - 70 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
+  - 76 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
 
 - [x] **[FEAT-07] Akıllı T-SQL Sorgu Yeniden Yazıcı (Query Rewriter Studio)**
   - Anti-pattern tespiti, SARGable dönüşümler ve yan yana T-SQL diff editörü.

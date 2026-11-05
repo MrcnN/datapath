@@ -37,7 +37,7 @@ import {
 import DossierReportModal from '../report/DossierReportModal';
 import EmergencyTriageModal from '../triage/EmergencyTriageModal';
 import GlobalCommandPalette from './GlobalCommandPalette';
-import { getInstanceMetadata, getServerProfiles, activateServer } from '../../lib/api';
+import { getInstanceMetadata, getServerProfiles, activateServer, getRBACMatrix } from '../../lib/api';
 import type { InstanceMetadata, ServerProfile, EnvironmentType } from '../../lib/types';
 import styles from './TopBar.module.css';
 
@@ -199,6 +199,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
 
   // Multi-Server Profile State
   const [servers, setServers] = useState<ServerProfile[]>([]);
+  const [currentRole, setCurrentRole] = useState<string>('SENIOR_DBA');
   const [activeServerId, setActiveServerId] = useState<string>('');
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -246,6 +247,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
 
   useEffect(() => {
     loadServerProfiles();
+    getRBACMatrix().then(res => setCurrentRole(res.active_role)).catch(() => {});
 
     const handleServerChange = () => {
       loadServerProfiles();
@@ -457,6 +459,17 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
           >
             {theme === 'dark' ? <Sun size={13} aria-hidden="true" /> : <Moon size={13} aria-hidden="true" />}
           </button>
+
+          {/* Active RBAC Role Badge */}
+          <Link
+            to="/permissions"
+            className={styles.roleCockpitBadge}
+            title={`Aktif Yetki Rolü: ${currentRole} — Tıklayarak RBAC Matrisine Gidin`}
+            aria-label={`Aktif Rol: ${currentRole}`}
+          >
+            <ShieldCheck size={12} color="var(--accent)" aria-hidden="true" />
+            <span>{currentRole === 'SENIOR_DBA' ? 'Senior DBA' : currentRole === 'OPERATOR' ? 'Operator' : 'Viewer'}</span>
+          </Link>
 
           {/* Global Multi-Server Switcher Dropdown */}
           {activeServer ? (
