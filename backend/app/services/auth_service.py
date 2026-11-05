@@ -24,16 +24,16 @@ from app.schemas.auth import (
 
 logger = logging.getLogger(__name__)
 
-# In-memory user database initialized with enterprise profiles
+# In-memory user database initialized with primary administrator profile
 _USERS_DB: Dict[str, dict] = {
     "usr_admin_01": {
         "id": "usr_admin_01",
         "email": "erdim@datapath.internal",
         "username": "erdim",
         "password": "Password123!",
-        "full_name": "Erdim (Senior DBA)",
+        "full_name": "Erdim",
         "role": "SENIOR_DBA",
-        "title": "Lead Database Administrator & Architect",
+        "title": "Veritabanı Yöneticisi & Mimar",
         "department": "Veritabanı & Altyapı Yönetimi",
         "phone": "+90 532 000 00 01",
         "bio": "SQL Server yüksek erişilebilirlik, felaket kurtarma ve performans optimizasyonu lideri.",
@@ -41,40 +41,6 @@ _USERS_DB: Dict[str, dict] = {
         "google_connected": True,
         "github_connected": True,
         "created_at": "2026-01-15T09:00:00Z",
-        "last_login_at": datetime.now(timezone.utc).isoformat(),
-    },
-    "usr_eng_02": {
-        "id": "usr_eng_02",
-        "email": "murat.kaya@datapath.internal",
-        "username": "muratk",
-        "password": "Password123!",
-        "full_name": "Murat Kaya",
-        "role": "DB_ENGINEER",
-        "title": "Database Reliability Engineer",
-        "department": "Veri Mühendisliği",
-        "phone": "+90 532 000 00 02",
-        "bio": "ETL hatları, Query Store ve indeks optimizasyonu uzmanı.",
-        "avatar_url": None,
-        "google_connected": False,
-        "github_connected": True,
-        "created_at": "2026-02-10T11:30:00Z",
-        "last_login_at": datetime.now(timezone.utc).isoformat(),
-    },
-    "usr_ops_03": {
-        "id": "usr_ops_03",
-        "email": "ayse.yilmaz@datapath.internal",
-        "username": "aysey",
-        "password": "Password123!",
-        "full_name": "Ayşe Yılmaz",
-        "role": "OPERATOR",
-        "title": "System & NOC Operator",
-        "department": "NOC & Operasyon İzleme",
-        "phone": "+90 532 000 00 03",
-        "bio": "7/24 kritik sistem ve kilitlenme alarm gözlemcisi.",
-        "avatar_url": None,
-        "google_connected": False,
-        "github_connected": False,
-        "created_at": "2026-03-01T14:00:00Z",
         "last_login_at": datetime.now(timezone.utc).isoformat(),
     },
 }
@@ -247,7 +213,24 @@ _PERMISSIONS_CATALOG: List[PermissionDefinition] = [
 
 # Default Baseline Role Policies
 _DEFAULT_ROLE_POLICIES: Dict[str, List[str]] = {
-    "SENIOR_DBA": [p.code for p in _PERMISSIONS_CATALOG],  # Senior DBA has all permissions
+    "SENIOR_DBA": [p.code for p in _PERMISSIONS_CATALOG],  # Yönetici has all permissions
+    "OPERATOR": [
+        "sessions.view",
+        "deadlocks.resolve",
+        "query_store.force_plan",
+        "queries.rewrite",
+        "execution_plan.analyze",
+        "indexes.rebuild",
+        "hypothetical_indexes.simulate",
+        "statistics.update",
+        "tempdb.purge_version_store",
+        "backups.restore_simulate",
+    ],
+    "VIEWER": [
+        "sessions.view",
+        "execution_plan.analyze",
+        "security.audit_logs",
+    ],
     "DB_ENGINEER": [
         "sessions.view",
         "deadlocks.resolve",
@@ -260,33 +243,22 @@ _DEFAULT_ROLE_POLICIES: Dict[str, List[str]] = {
         "tempdb.purge_version_store",
         "backups.restore_simulate",
     ],
-    "OPERATOR": [
-        "sessions.view",
-        "execution_plan.analyze",
-        "hypothetical_indexes.simulate",
-        "backups.restore_simulate",
-    ],
-    "VIEWER": [
-        "sessions.view",
-        "execution_plan.analyze",
-        "security.audit_logs",
-    ],
 }
 
 _ROLE_POLICIES: Dict[str, List[str]] = copy.deepcopy(_DEFAULT_ROLE_POLICIES)
 
 _ROLE_LABELS: Dict[str, str] = {
-    "SENIOR_DBA": "Kıdemli DBA (En Üst Yetki)",
-    "DB_ENGINEER": "Veritabanı Güvenilirlik Mühendisi",
-    "OPERATOR": "Sistem & NOC Operatörü",
-    "VIEWER": "Gözlemci & Denetçi",
+    "VIEWER": "Görüntüleyici",
+    "OPERATOR": "Operatör",
+    "SENIOR_DBA": "Yönetici",
+    "DB_ENGINEER": "Operatör",
 }
 
 _PERMISSION_AUDIT_LOGS: List[PermissionAuditLog] = [
     PermissionAuditLog(
         id="audit_init_01",
         timestamp=datetime.now(timezone.utc).isoformat(),
-        operator_name="Erdim (Senior DBA)",
+        operator_name="Erdim",
         operator_role="SENIOR_DBA",
         action="Sistem Başlangıç Politikası Yüklendi",
         details="Tüm roller için varsayılan kurumsal DBA yetki matrisi aktif edildi.",
@@ -490,9 +462,40 @@ def change_password(user_id: str, req: PasswordChangeRequest) -> bool:
 # Role & Permission Policy Management Methods (En Üst Yetki Merkezi)
 # =====================================================================
 
+def _is_admin_or_owner(current_user: Optional[UserProfile]) -> bool:
+    """Returns True if the user has SENIOR_DBA role or is the primary root administrator (usr_admin_01)."""
+    if not current_user:
+        return False
+    return (
+        current_user.role == "SENIOR_DBA"
+        or current_user.id == "usr_admin_01"
+        or current_user.email == "erdim@datapath.internal"
+    )
+
+
+def elevate_user_to_admin(token: Optional[str] = None) -> UserProfile:
+    """Restores SENIOR_DBA (Yönetici) privileges to the primary platform administrator."""
+    u = _USERS_DB["usr_admin_01"]
+    old_role = u["role"]
+    u["role"] = "SENIOR_DBA"
+    now_iso = datetime.now(timezone.utc).isoformat()
+    _PERMISSION_AUDIT_LOGS.insert(
+        0,
+        PermissionAuditLog(
+            id=f"audit_{uuid.uuid4().hex[:6]}",
+            timestamp=now_iso,
+            operator_name=u["full_name"],
+            operator_role="SENIOR_DBA",
+            action="Yönetici Yetkisi Geri Yüklendi",
+            details=f"Kullanıcı rolü {old_role} seviyesinden SENIOR_DBA (Yönetici) rolüne başarıyla geri yükseltildi.",
+        ),
+    )
+    return _user_dict_to_profile(u)
+
+
 def get_permission_matrix(current_user: Optional[UserProfile] = None) -> RolePermissionMatrixResponse:
     """Returns catalog of all permissions, current role policies, and audit logs."""
-    is_senior = bool(current_user and current_user.role == "SENIOR_DBA")
+    is_senior = bool(current_user and _is_admin_or_owner(current_user))
     return RolePermissionMatrixResponse(
         is_senior_dba=is_senior,
         permissions=_PERMISSIONS_CATALOG,
@@ -503,14 +506,14 @@ def get_permission_matrix(current_user: Optional[UserProfile] = None) -> RolePer
 
 
 def update_role_permissions(current_user: UserProfile, req: UpdateRolePermissionsRequest) -> RolePermissionMatrixResponse:
-    """Only Senior DBA can change what permissions each role possesses."""
-    if current_user.role != "SENIOR_DBA":
-        raise PermissionError("Yetkisiz Erişim: Rol izinlerini yalnızca En Üst Yetkili (Senior DBA) yönetebilir.")
+    """Only Yönetici (or platform root admin) can change what permissions each role possesses."""
+    if not _is_admin_or_owner(current_user):
+        raise PermissionError("Yetkisiz Erişim: Rol izinlerini yalnızca Yönetici değiştirebilir.")
 
     if req.role not in _ROLE_POLICIES:
         raise ValueError(f"Tanımsız rol: {req.role}")
 
-    # Senior DBA always retains roles.manage_permissions and core permissions
+    # SENIOR_DBA always retains roles.manage_permissions and core permissions
     new_perms = list(req.permissions)
     if req.role == "SENIOR_DBA" and "roles.manage_permissions" not in new_perms:
         new_perms.append("roles.manage_permissions")
@@ -540,9 +543,9 @@ def get_all_users() -> List[UserProfile]:
 
 
 def update_user_role(current_user: UserProfile, req: UpdateUserRoleRequest) -> UserProfile:
-    """Senior DBA can promote/demote user roles."""
-    if current_user.role != "SENIOR_DBA":
-        raise PermissionError("Yetkisiz Erişim: Kullanıcı rolünü yalnızca En Üst Yetkili (Senior DBA) değiştirebilir.")
+    """Yönetici (or platform root admin) can promote/demote user roles."""
+    if not _is_admin_or_owner(current_user):
+        raise PermissionError("Yetkisiz Erişim: Kullanıcı rolünü yalnızca Yönetici değiştirebilir.")
 
     if req.user_id not in _USERS_DB:
         raise ValueError("Belirtilen kullanıcı bulunamadı.")
@@ -572,8 +575,8 @@ def update_user_role(current_user: UserProfile, req: UpdateUserRoleRequest) -> U
 
 def reset_permissions_to_default(current_user: UserProfile) -> RolePermissionMatrixResponse:
     """Restores baseline enterprise role policies."""
-    if current_user.role != "SENIOR_DBA":
-        raise PermissionError("Yetkisiz Erişim: Fabrika ayarlarına yalnızca En Üst Yetkili (Senior DBA) dönebilir.")
+    if not _is_admin_or_owner(current_user):
+        raise PermissionError("Yetkisiz Erişim: Fabrika ayarlarına yalnızca Yönetici dönebilir.")
 
     global _ROLE_POLICIES
     _ROLE_POLICIES = copy.deepcopy(_DEFAULT_ROLE_POLICIES)

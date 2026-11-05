@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BrowserRouter, useLocation } from 'react-router-dom';
+import { BrowserRouter } from 'react-router-dom';
 import styles from './App.module.css';
 import Router from './Router';
 import Sidebar from '../components/layout/Sidebar';
@@ -7,9 +7,6 @@ import TopBar from '../components/layout/TopBar';
 import { AuthProvider } from '../features/auth/AuthContext';
 
 function AppLayout() {
-  const location = useLocation();
-  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
-
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
       return localStorage.getItem('datapath_sidebar_collapsed') === 'true';
@@ -29,14 +26,6 @@ function AppLayout() {
       return next;
     });
   };
-
-  if (isAuthPage) {
-    return (
-      <main className={styles.authLayout}>
-        <Router />
-      </main>
-    );
-  }
 
   return (
     <div className={styles.appLayout}>

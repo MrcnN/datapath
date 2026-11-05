@@ -152,3 +152,11 @@ def reset_permissions(authorization: Optional[str] = Header(None)):
         return auth_service.reset_permissions_to_default(current_user)
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+
+@router.post("/auth/elevate-admin", response_model=UserProfile)
+def elevate_to_admin(authorization: Optional[str] = Header(None)):
+    """Restore SENIOR_DBA (Yönetici) privileges to the primary platform administrator."""
+    token = _extract_token(authorization)
+    return auth_service.elevate_user_to_admin(token)
+

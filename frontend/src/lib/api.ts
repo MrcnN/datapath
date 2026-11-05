@@ -713,3 +713,9 @@ export async function resetPermissionsToDefault(): Promise<RolePermissionMatrixR
     method: 'POST',
   });
 }
+
+export async function elevateToAdmin(): Promise<UserProfile> {
+  return apiFetch<UserProfile>('/api/auth/elevate-admin', {
+    method: 'POST',
+  });
+}

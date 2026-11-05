@@ -67,9 +67,9 @@ export default function Router() {
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/toolkit" element={<ToolkitPage initialTab="scripts" />} />
 
-      {/* 7. Kimlik Doğrulama & Kullanıcı Profili */}
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      {/* 7. Kimlik Doğrulama & Kullanıcı Profili (Login şuanlık devre dışı bırakıldı, doğrudan ana panoya yönlendirilir) */}
+      <Route path="/login" element={<Navigate to="/" replace />} />
+      <Route path="/register" element={<Navigate to="/" replace />} />
       <Route path="/profile" element={<ProfilePage />} />
 
       {/* Fallback */}

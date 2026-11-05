@@ -161,10 +161,9 @@ export default function RegisterPage() {
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
                 >
-                  <option value="SENIOR_DBA">👑 Senior DBA (Tam Yetki)</option>
-                  <option value="DB_ENGINEER">⚡ Veritabanı Mühendisi</option>
-                  <option value="OPERATOR">🛡️ Sistem Operatörü</option>
-                  <option value="VIEWER">👁️ Gözlemci / Denetçi</option>
+                  <option value="VIEWER">Görüntüleyici</option>
+                  <option value="OPERATOR">Operatör</option>
+                  <option value="SENIOR_DBA">Yönetici</option>
                 </select>
               </div>
             </div>

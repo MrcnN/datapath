@@ -174,7 +174,7 @@ interface TopBarProps {
 export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, elevateToAdmin } = useAuth();
 
   // Resolve active route and section memoized
   const currentRoute = useMemo(() => {
@@ -627,12 +627,10 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                   <span className={styles.userNameText}>{user.full_name}</span>
                   <span className={styles.userRoleTag}>
                     {user.role === 'SENIOR_DBA'
-                      ? 'Senior DBA'
-                      : user.role === 'DB_ENGINEER'
-                      ? 'DB Engineer'
+                      ? 'Yönetici'
                       : user.role === 'OPERATOR'
-                      ? 'Operator'
-                      : 'Viewer'}
+                      ? 'Operatör'
+                      : 'Görüntüleyici'}
                   </span>
                 </div>
                 <ChevronDown
@@ -663,7 +661,11 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                         <div className={styles.userMenuEmail}>{user.email}</div>
                         <div className={styles.userMenuBadgeRow}>
                           <span className={styles.userRoleBadgePill}>
-                            {user.role === 'SENIOR_DBA' ? '👑 Senior DBA' : `🛡️ ${user.role}`}
+                            {user.role === 'SENIOR_DBA'
+                              ? 'Yönetici'
+                              : user.role === 'OPERATOR'
+                              ? 'Operatör'
+                              : 'Görüntüleyici'}
                           </span>
                           {user.google_connected && (
                             <span className={styles.oauthMiniTag} title="Google Hesabı Bağlı">Google</span>
@@ -678,7 +680,23 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                   </div>
 
                   <div className={styles.userMenuItems}>
-                    {user.role === 'SENIOR_DBA' && (
+                    {user.role !== 'SENIOR_DBA' && (user.id === 'usr_admin_01' || user.email?.includes('erdim')) && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={styles.userMenuItem}
+                        style={{ color: '#38bdf8', fontWeight: 600, background: 'rgba(56, 189, 248, 0.1)' }}
+                        onClick={async () => {
+                          setUserDropdownOpen(false);
+                          await elevateToAdmin();
+                        }}
+                      >
+                        <ShieldCheck size={13} className={styles.userMenuIcon} aria-hidden="true" />
+                        <span>Yönetici Yetkisini Geri Yükle</span>
+                      </button>
+                    )}
+
+                    {(user.role === 'SENIOR_DBA' || user.id === 'usr_admin_01' || user.email?.includes('erdim')) && (
                       <button
                         type="button"
                         role="menuitem"
@@ -690,7 +708,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                         }}
                       >
                         <Crown size={13} className={styles.userMenuIcon} aria-hidden="true" />
-                        <span>👑 Tüm Rol & Yetkileri Yönet</span>
+                        <span>Tüm Rol & Yetkileri Yönet</span>
                       </button>
                     )}
 
@@ -741,7 +759,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                       onClick={async () => {
                         setUserDropdownOpen(false);
                         await logout();
-                        navigate('/login');
+                        navigate('/');
                       }}
                     >
                       <LogOut size={12} aria-hidden="true" />
@@ -752,7 +770,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
               )}
             </div>
           ) : (
-            <Link to="/login" className={styles.loginLinkBtn} title="Kullanıcı Girişi Yap">
+            <Link to="/" className={styles.loginLinkBtn} title="Kullanıcı Girişi Yap">
               <User size={13} aria-hidden="true" />
               <span>Giriş Yap</span>
             </Link>

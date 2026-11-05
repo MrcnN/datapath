@@ -72,7 +72,7 @@ export default function AGLagTelemetryViewer() {
         <div>
           <div style={{ fontWeight: 700, color: 'var(--text-primary)' }}>{m.replica_name}</div>
           <div style={{ fontSize: '11px', color: m.role === 'PRIMARY' ? 'var(--accent)' : 'var(--text-muted)' }}>
-            {m.role === 'PRIMARY' ? '👑 BİRİNCİL (PRIMARY)' : '🛡️ İKİNCİL (SECONDARY)'}
+            {m.role === 'PRIMARY' ? 'BİRİNCİL (PRIMARY)' : 'İKİNCİL (SECONDARY)'}
           </div>
         </div>
       ),

@@ -129,16 +129,21 @@ def test_get_all_users_and_update_role():
     res = client.get("/api/auth/users")
     assert res.status_code == 200
     users = res.json()
-    assert len(users) >= 2
+    assert len(users) >= 1
 
-    # 2. Update user role
-    target_user = users[1]
+    # 2. Update user role (e.g. self-demote to OPERATOR)
+    target_user = users[0]
     update_res = client.put("/api/auth/users/role", json={
         "user_id": target_user["id"],
         "new_role": "OPERATOR",
     })
     assert update_res.status_code == 200
     assert update_res.json()["role"] == "OPERATOR"
+
+    # 3. Elevate back to SENIOR_DBA (Yönetici)
+    elevate_res = client.post("/api/auth/elevate-admin")
+    assert elevate_res.status_code == 200
+    assert elevate_res.json()["role"] == "SENIOR_DBA"
 
 
 def test_reset_permissions():

@@ -25,7 +25,7 @@ import { useAuth } from './AuthContext';
 import styles from './ProfilePage.module.css';
 
 export default function ProfilePage() {
-  const { user, updateProfile, changePassword, loginOAuth } = useAuth();
+  const { user, updateProfile, changePassword, loginOAuth, elevateToAdmin } = useAuth();
 
   const [activeTab, setActiveTab] = useState<'edit' | 'permissions' | 'security' | 'social'>('edit');
 
@@ -141,12 +141,10 @@ export default function ProfilePage() {
                 <span className={styles.roleBadge}>
                   <Shield size={12} />
                   {role === 'SENIOR_DBA'
-                    ? 'Senior DBA'
-                    : role === 'DB_ENGINEER'
-                    ? 'Database Engineer'
+                    ? 'Yönetici'
                     : role === 'OPERATOR'
-                    ? 'System Operator'
-                    : 'Analyst / Viewer'}
+                    ? 'Operatör'
+                    : 'Görüntüleyici'}
                 </span>
               </h2>
               <p className={styles.userTitle}>{user?.title || 'Veritabanı Yöneticisi'}</p>
@@ -265,10 +263,9 @@ export default function ProfilePage() {
                 value={role}
                 onChange={(e) => setRole(e.target.value)}
               >
-                <option value="SENIOR_DBA">👑 Senior DBA (Tam Teşhis &amp; Reçete Üretimi)</option>
-                <option value="DB_ENGINEER">⚡ Database Engineer (Sorgu &amp; İndeks Optimizasyonu)</option>
-                <option value="OPERATOR">🛡️ System Operator (Alarm &amp; Kriz Gözlemi)</option>
-                <option value="VIEWER">👁️ Viewer (Salt Okunur İzleyici)</option>
+                <option value="VIEWER">Görüntüleyici</option>
+                <option value="OPERATOR">Operatör</option>
+                <option value="SENIOR_DBA">Yönetici</option>
               </select>
             </div>
 
@@ -292,10 +289,43 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div className={`${styles.actionRow} ${styles.fullWidth}`}>
+            <div className={`${styles.actionRow} ${styles.fullWidth}`} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
               <button type="submit" className={styles.saveBtn} disabled={saving}>
                 <Save size={15} /> {saving ? 'Kaydediliyor...' : 'Değişiklikleri Kaydet'}
               </button>
+
+              {user?.role !== 'SENIOR_DBA' && (user?.id === 'usr_admin_01' || user?.email?.includes('erdim')) && (
+                <button
+                  type="button"
+                  onClick={async () => {
+                    try {
+                      setSaving(true);
+                      await elevateToAdmin();
+                      setRole('SENIOR_DBA');
+                      setStatusMsg({ type: 'success', text: 'Yönetici yetkiniz başarıyla geri yüklendi.' });
+                    } catch (err: any) {
+                      setStatusMsg({ type: 'error', text: 'Yetki geri yüklenemedi: ' + err.message });
+                    } finally {
+                      setSaving(false);
+                    }
+                  }}
+                  style={{
+                    background: 'rgba(56, 189, 248, 0.15)',
+                    border: '1px solid var(--accent)',
+                    color: 'var(--accent)',
+                    padding: '8px 16px',
+                    borderRadius: '4px',
+                    fontWeight: 700,
+                    fontSize: '12px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <ShieldCheck size={14} /> Yönetici Yetkisini Geri Yükle
+                </button>
+              )}
             </div>
           </form>
         )}
@@ -313,9 +343,9 @@ export default function ProfilePage() {
               borderRadius: '6px'
             }}>
               <div>
-                <strong style={{ color: '#ffffff', fontSize: '13px' }}>👑 Tüm Rollerin İzinlerini Yönetmek İster misiniz?</strong>
+                <strong style={{ color: '#ffffff', fontSize: '13px' }}>Tüm Rollerin İzinlerini Yönetmek İster misiniz?</strong>
                 <p style={{ margin: '2px 0 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
-                  Kıdemli DBA (Senior DBA) olarak tüm rollerin 18 granüler iznini açıp kapatabilir ve kullanıcılara rol atayabilirsiniz.
+                  Yönetici olarak tüm rollerin 18 granüler iznini açıp kapatabilir ve kullanıcılara rol atayabilirsiniz.
                 </p>
               </div>
               <Link

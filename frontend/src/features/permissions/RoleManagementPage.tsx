@@ -32,8 +32,10 @@ import type {
 import styles from './RoleManagementPage.module.css';
 
 export default function RoleManagementPage() {
-  const { user } = useAuth();
+  const { user, elevateToAdmin } = useAuth();
   const isSeniorDBA = user?.role === 'SENIOR_DBA';
+  const isRootAdmin = user?.id === 'usr_admin_01' || user?.email?.includes('erdim');
+  const canManage = isSeniorDBA || isRootAdmin;
 
   const [activeTab, setActiveTab] = useState<'matrix' | 'users' | 'audit'>('matrix');
 
@@ -85,6 +87,16 @@ export default function RoleManagementPage() {
     loadData();
   }, []);
 
+  const handleRestoreAdmin = async () => {
+    try {
+      await elevateToAdmin();
+      setStatusMsg({ type: 'success', text: 'Yönetici yetkiniz başarıyla geri yüklendi.' });
+      await loadData();
+    } catch (err: any) {
+      setStatusMsg({ type: 'error', text: 'Yetki geri yüklenemedi: ' + err.message });
+    }
+  };
+
   // Unique categories for filter
   const categories = useMemo(() => {
     const set = new Set<string>();
@@ -106,8 +118,8 @@ export default function RoleManagementPage() {
 
   // Toggle permission for a role
   const handleTogglePermission = (role: string, permCode: string) => {
-    if (!isSeniorDBA) {
-      setStatusMsg({ type: 'error', text: 'Yalnızca Kıdemli DBA rolündeki kullanıcılar izinleri değiştirebilir.' });
+    if (!canManage) {
+      setStatusMsg({ type: 'error', text: 'Yalnızca Yönetici rolündeki kullanıcılar izinleri değiştirebilir.' });
       return;
     }
 
@@ -126,7 +138,7 @@ export default function RoleManagementPage() {
 
   // Save changes for all modified roles
   const handleSaveAll = async () => {
-    if (!isSeniorDBA) return;
+    if (!canManage) return;
     try {
       setSavingRole('ALL');
       setStatusMsg(null);
@@ -147,7 +159,7 @@ export default function RoleManagementPage() {
 
   // Reset to default
   const handleReset = async () => {
-    if (!isSeniorDBA) return;
+    if (!canManage) return;
     if (!window.confirm('Tüm rollerin izinlerini kurumsal fabrika ayarlarına sıfırlamak istediğinize emin misiniz?')) {
       return;
     }
@@ -166,7 +178,7 @@ export default function RoleManagementPage() {
 
   // Update a single user's role
   const handleApplyUserRole = async (targetUser: UserProfile) => {
-    if (!isSeniorDBA) return;
+    if (!canManage) return;
     const newRole = userRoleDrafts[targetUser.id];
     if (!newRole || newRole === targetUser.role) return;
 
@@ -174,7 +186,7 @@ export default function RoleManagementPage() {
       await updateUserRole({ user_id: targetUser.id, new_role: newRole });
       setStatusMsg({
         type: 'success',
-        text: `${targetUser.full_name} kullanıcısının rolü başarıyla "${newRole}" olarak güncellendi.`,
+        text: `${targetUser.full_name} kullanıcısının rolü başarıyla "${newRole === 'SENIOR_DBA' ? 'Yönetici' : newRole === 'OPERATOR' ? 'Operatör' : 'Görüntüleyici'}" olarak güncellendi.`,
       });
       await loadData();
     } catch (err: any) {
@@ -186,32 +198,52 @@ export default function RoleManagementPage() {
     <div className={styles.pageContainer}>
       <PageHeader
         title="En Üst Yetki & İzin Yönetim Merkezi"
-        subtitle="Platformdaki tüm operasyonel rollerin (Senior DBA, DB Engineer, Operator, Viewer) granüler izin matrisini ve kullanıcı delegasyonunu yönetin."
+        subtitle="Platformdaki tüm rollerin (Yönetici, Operatör, Görüntüleyici) granüler izin matrisini ve kullanıcı delegasyonunu yönetin."
       />
 
       {/* Authority Banner */}
-      {isSeniorDBA ? (
+      {canManage ? (
         <div className={styles.seniorBanner}>
           <div className={styles.seniorBannerLeft}>
             <div className={styles.crownBadge}>
               <Crown size={20} />
             </div>
             <div>
-              <h3 className={styles.seniorBannerTitle}>Kıdemli DBA (Senior DBA) Yetki Konsolu</h3>
+              <h3 className={styles.seniorBannerTitle}>Yönetici Yetki Konsolu</h3>
               <p className={styles.seniorBannerDesc}>
-                Sistemdeki en yüksek yetkiye sahipsiniz. Tüm rollerin granüler izinlerini açıp kapatabilir, kullanıcılara rol atayabilir ve güvenlik denetim loglarını inceleyebilirsiniz.
+                Sistemdeki en yüksek yetkiye sahipsiniz. Tüm rollerin (Yönetici, Operatör, Görüntüleyici) granüler izinlerini açıp kapatabilir, kullanıcılara rol atayabilir ve güvenlik denetim loglarını inceleyebilirsiniz.
               </p>
             </div>
           </div>
-          <div className={styles.seniorPillBadge}>
-            👑 Tam Yetkili Yönetici
-          </div>
+          {!isSeniorDBA && isRootAdmin ? (
+            <button
+              type="button"
+              onClick={handleRestoreAdmin}
+              style={{
+                background: 'var(--accent)',
+                color: '#080d1a',
+                fontWeight: 700,
+                fontSize: '12px',
+                padding: '8px 16px',
+                borderRadius: '6px',
+                border: 'none',
+                cursor: 'pointer',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              Yönetici Yetkisini Geri Yükle
+            </button>
+          ) : (
+            <div className={styles.seniorPillBadge}>
+              Tam Yetkili Yönetici
+            </div>
+          )}
         </div>
       ) : (
         <div className={styles.lockedBanner}>
           <Lock size={16} />
           <span>
-            <strong>Salt-Okunur Görünüm:</strong> Mevcut rolünüz ({user?.role || 'VIEWER'}) bu ekranı düzenlemek için yetersizdir. Sistem izinlerini ve kullanıcı rollerini yalnızca <strong>Kıdemli DBA (Senior DBA)</strong> değiştirebilir.
+            <strong>Salt-Okunur Görünüm:</strong> Mevcut rolünüz ({user?.role || 'VIEWER'}) bu ekranı düzenlemek için yetersizdir. Sistem izinlerini ve kullanıcı rollerini yalnızca <strong>Yönetici</strong> değiştirebilir.
           </span>
         </div>
       )}
@@ -288,7 +320,7 @@ export default function RoleManagementPage() {
                 type="button"
                 className={styles.resetBtn}
                 onClick={handleReset}
-                disabled={!isSeniorDBA || loading}
+                disabled={!canManage || loading}
                 title="Tüm izinleri varsayılan ayarlara döndür"
               >
                 <RotateCcw size={13} />
@@ -299,7 +331,7 @@ export default function RoleManagementPage() {
                 type="button"
                 className={styles.saveChangesBtn}
                 onClick={handleSaveAll}
-                disabled={!isSeniorDBA || !!savingRole || loading}
+                disabled={!canManage || !!savingRole || loading}
               >
                 <Save size={13} />
                 <span>{savingRole ? 'Kaydediliyor...' : 'Değişiklikleri Canlıya Kaydet'}</span>
@@ -315,16 +347,14 @@ export default function RoleManagementPage() {
                   <th>İzin Adı &amp; Kapsamı</th>
                   <th>Kategori</th>
                   <th>Risk Seviyesi</th>
-                  <th style={{ textAlign: 'center' }}>👑 Senior DBA</th>
-                  <th style={{ textAlign: 'center' }}>⚡ DB Engineer</th>
-                  <th style={{ textAlign: 'center' }}>🛡️ Operator</th>
-                  <th style={{ textAlign: 'center' }}>👁️ Viewer</th>
+                  <th style={{ textAlign: 'center' }}>Yönetici</th>
+                  <th style={{ textAlign: 'center' }}>Operatör</th>
+                  <th style={{ textAlign: 'center' }}>Görüntüleyici</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredPermissions.map((p) => {
                   const dbaHas = (rolePolicies['SENIOR_DBA'] || []).includes(p.code);
-                  const engHas = (rolePolicies['DB_ENGINEER'] || []).includes(p.code);
                   const opsHas = (rolePolicies['OPERATOR'] || []).includes(p.code);
                   const viewHas = (rolePolicies['VIEWER'] || []).includes(p.code);
 
@@ -357,7 +387,7 @@ export default function RoleManagementPage() {
                         </span>
                       </td>
 
-                      {/* SENIOR_DBA Switch (Always ON and locked for safety) */}
+                      {/* YÖNETİCİ Switch (Always ON and locked for safety) */}
                       <td style={{ textAlign: 'center' }}>
                         <label className={`${styles.switchLabel} ${styles.switchDisabled}`}>
                           <input type="checkbox" checked={dbaHas} disabled className={styles.switchInput} />
@@ -365,27 +395,13 @@ export default function RoleManagementPage() {
                         </label>
                       </td>
 
-                      {/* DB_ENGINEER Switch */}
+                      {/* OPERATÖR Switch */}
                       <td style={{ textAlign: 'center' }}>
-                        <label className={`${styles.switchLabel} ${!isSeniorDBA ? styles.switchDisabled : ''}`}>
-                          <input
-                            type="checkbox"
-                            checked={engHas}
-                            disabled={!isSeniorDBA}
-                            onChange={() => handleTogglePermission('DB_ENGINEER', p.code)}
-                            className={styles.switchInput}
-                          />
-                          <span className={styles.switchSlider} />
-                        </label>
-                      </td>
-
-                      {/* OPERATOR Switch */}
-                      <td style={{ textAlign: 'center' }}>
-                        <label className={`${styles.switchLabel} ${!isSeniorDBA ? styles.switchDisabled : ''}`}>
+                        <label className={`${styles.switchLabel} ${!canManage ? styles.switchDisabled : ''}`}>
                           <input
                             type="checkbox"
                             checked={opsHas}
-                            disabled={!isSeniorDBA}
+                            disabled={!canManage}
                             onChange={() => handleTogglePermission('OPERATOR', p.code)}
                             className={styles.switchInput}
                           />
@@ -393,13 +409,13 @@ export default function RoleManagementPage() {
                         </label>
                       </td>
 
-                      {/* VIEWER Switch */}
+                      {/* GÖRÜNTÜLEYİCİ Switch */}
                       <td style={{ textAlign: 'center' }}>
-                        <label className={`${styles.switchLabel} ${!isSeniorDBA ? styles.switchDisabled : ''}`}>
+                        <label className={`${styles.switchLabel} ${!canManage ? styles.switchDisabled : ''}`}>
                           <input
                             type="checkbox"
                             checked={viewHas}
-                            disabled={!isSeniorDBA}
+                            disabled={!canManage}
                             onChange={() => handleTogglePermission('VIEWER', p.code)}
                             className={styles.switchInput}
                           />
@@ -500,7 +516,7 @@ export default function RoleManagementPage() {
                           border: u.role === 'SENIOR_DBA' ? '1px solid rgba(56, 189, 248, 0.3)' : '1px solid #1e293b',
                         }}
                       >
-                        {u.role === 'SENIOR_DBA' ? '👑 Senior DBA' : u.role}
+                        {u.role === 'SENIOR_DBA' ? 'Yönetici' : u.role === 'OPERATOR' ? 'Operatör' : 'Görüntüleyici'}
                       </span>
                     </td>
 
@@ -509,21 +525,20 @@ export default function RoleManagementPage() {
                         <select
                           className={styles.roleSelectDropdown}
                           value={currentDraft}
-                          disabled={!isSeniorDBA}
+                          disabled={!canManage}
                           onChange={(e) =>
                             setUserRoleDrafts((prev) => ({ ...prev, [u.id]: e.target.value }))
                           }
                         >
-                          <option value="SENIOR_DBA">👑 Senior DBA</option>
-                          <option value="DB_ENGINEER">⚡ DB Engineer</option>
-                          <option value="OPERATOR">🛡️ Operator</option>
-                          <option value="VIEWER">👁️ Viewer</option>
+                          <option value="VIEWER">Görüntüleyici</option>
+                          <option value="OPERATOR">Operatör</option>
+                          <option value="SENIOR_DBA">Yönetici</option>
                         </select>
 
                         <button
                           type="button"
                           className={styles.applyRoleBtn}
-                          disabled={!isSeniorDBA || !isChanged}
+                          disabled={!canManage || !isChanged}
                           onClick={() => handleApplyUserRole(u)}
                           title={isChanged ? 'Değişikliği uygula' : 'Rol henüz değiştirilmedi'}
                         >
