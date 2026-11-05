@@ -189,12 +189,6 @@ export const navSections: NavSection[] = [
     title: 'Güvenlik, Yönetim & Betikler',
     items: [
       {
-        path: '/rbac',
-        label: 'RBAC & Yetki Matrisi',
-        icon: ShieldCheck,
-        description: 'Viewer (Salt Okunur), Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi ve rol seçici.',
-      },
-      {
         path: '/permissions',
         label: 'Kullanıcılar & Yetkiler',
         icon: Shield,

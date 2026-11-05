@@ -222,15 +222,6 @@ export const ALL_COMMAND_ITEMS: CommandItem[] = [
 
   // 6. Güvenlik, Yönetim & Betikler
   {
-    id: 'rbac',
-    path: '/rbac',
-    label: 'RBAC & Güvenlik Yetki Matrisi',
-    category: 'Güvenlik, Yönetim & Betikler',
-    description: 'Viewer (Salt Okunur), Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi ve rol seçici.',
-    icon: ShieldCheck,
-    keywords: ['rbac', 'rol', 'yetki', 'role', 'viewer', 'operator', 'senior dba', 'güvenlik', 'izin'],
-  },
-  {
     id: 'best-practices',
     path: '/best-practices',
     label: 'Sistem Uygunluk Karnesi',

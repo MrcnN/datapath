@@ -32,9 +32,8 @@ import type {
   SecurityFinding,
 } from '../../lib/types';
 import styles from './PermissionsPage.module.css';
-import RBACMatrixViewer from './components/RBACMatrixViewer';
 
-type TabType = 'logins' | 'users' | 'roles' | 'audit' | 'rbac';
+type TabType = 'logins' | 'users' | 'roles' | 'audit';
 
 interface PermissionsPageProps {
   initialTab?: TabType;
@@ -258,14 +257,7 @@ export default function PermissionsPage({ initialTab }: PermissionsPageProps = {
         >
           Rol Envanteri ({roles.length})
         </button>
-        <button
-          type="button"
-          className={`${styles.tabBtn} ${activeTab === 'rbac' ? styles.tabBtnActive : ''}`}
-          onClick={() => setActiveTab('rbac')}
-        >
-          <ShieldCheck size={14} style={{ display: 'inline', marginRight: '6px', verticalAlign: '-2px' }} />
-          RBAC & Yetki Matrisi
-        </button>
+
       </div>
 
       {activeTab === 'users' && databases.length > 0 && (
@@ -450,9 +442,7 @@ export default function PermissionsPage({ initialTab }: PermissionsPageProps = {
               emptyMessage="Bu veritabanında kullanıcı bulunamadı."
             />
           )}
-          {activeTab === 'rbac' && (
-        <RBACMatrixViewer />
-      )}
+
 
       {activeTab === 'roles' && (
             <DataTable

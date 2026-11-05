@@ -56,7 +56,6 @@ export default function Router() {
       <Route path="/high-availability" element={<HAPage />} />
 
       {/* 6. Güvenlik & Yönetim */}
-      <Route path="/rbac" element={<PermissionsPage initialTab="rbac" />} />
       <Route path="/best-practices" element={<BestPracticesPage />} />
       <Route path="/permissions" element={<PermissionsPage />} />
       <Route path="/agent-jobs" element={<AgentJobsPage />} />
