@@ -53,6 +53,13 @@ import type {
   RestoreSimulationRequest,
   RestoreSimulationResult,
   VersionStoreAnalysis,
+  UserProfile,
+  UserLoginRequest,
+  UserRegisterRequest,
+  OAuthLoginRequest,
+  ProfileUpdateRequest,
+  PasswordChangeRequest,
+  AuthResponse,
   MemoryGrantsSummary,
   TempDBContentionSummary,
   HealthScoreResponse,
@@ -624,4 +631,52 @@ export async function switchUserRole(newRole: UserRoleType): Promise<SwitchRoleR
 // ── Version Store & Snapshot Isolation Leak Radar ───────────
 export async function getVersionStoreAnalysis(): Promise<VersionStoreAnalysis> {
   return apiFetch<VersionStoreAnalysis>('/api/tempdb-memory/version-store');
+}
+
+
+// ── Authentication, OAuth & Profile Management ───────────────
+
+export async function loginUser(req: UserLoginRequest): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function registerUser(req: UserRegisterRequest): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function oauthLoginUser(req: OAuthLoginRequest): Promise<AuthResponse> {
+  return apiFetch<AuthResponse>('/api/auth/oauth', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function getCurrentUser(): Promise<UserProfile> {
+  return apiFetch<UserProfile>('/api/auth/me');
+}
+
+export async function updateUserProfile(req: ProfileUpdateRequest): Promise<UserProfile> {
+  return apiFetch<UserProfile>('/api/auth/profile', {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function changeUserPassword(req: PasswordChangeRequest): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/api/auth/change-password', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function logoutUser(): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>('/api/auth/logout', {
+    method: 'POST',
+  });
 }

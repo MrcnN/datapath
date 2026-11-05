@@ -31,3 +31,11 @@
     margin-left: 0;
   }
 }
+
+
+.authLayout {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--bg-base);
+  overflow-y: auto;
+}

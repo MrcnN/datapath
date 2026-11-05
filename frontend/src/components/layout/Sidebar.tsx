@@ -189,6 +189,12 @@ export const navSections: NavSection[] = [
     title: 'Güvenlik, Yönetim & Betikler',
     items: [
       {
+        path: '/profile',
+        label: 'Profil & Operasyon Rolü',
+        icon: ShieldCheck,
+        description: 'DBA operasyonel rolü, Google & GitHub hesap bağlama, bio ve parola güvenlik ayarları.',
+      },
+      {
         path: '/permissions',
         label: 'Kullanıcılar & Yetkiler',
         icon: Shield,

@@ -1,11 +1,15 @@
-import React, { useState, useEffect } from 'react';
-import { BrowserRouter } from 'react-router-dom';
+import React, { useState } from 'react';
+import { BrowserRouter, useLocation } from 'react-router-dom';
 import styles from './App.module.css';
 import Router from './Router';
 import Sidebar from '../components/layout/Sidebar';
 import TopBar from '../components/layout/TopBar';
+import { AuthProvider } from '../features/auth/AuthContext';
 
-export default function App() {
+function AppLayout() {
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/login' || location.pathname === '/register';
+
   const [collapsed, setCollapsed] = useState<boolean>(() => {
     try {
       return localStorage.getItem('datapath_sidebar_collapsed') === 'true';
@@ -26,21 +30,37 @@ export default function App() {
     });
   };
 
+  if (isAuthPage) {
+    return (
+      <main className={styles.authLayout}>
+        <Router />
+      </main>
+    );
+  }
+
+  return (
+    <div className={styles.appLayout}>
+      <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
+      <div
+        className={`${styles.mainArea} ${
+          collapsed ? styles.mainAreaCollapsed : ''
+        }`}
+      >
+        <TopBar collapsed={collapsed} onToggle={toggleSidebar} />
+        <main className={styles.pageContent}>
+          <Router />
+        </main>
+      </div>
+    </div>
+  );
+}
+
+export default function App() {
   return (
     <BrowserRouter>
-      <div className={styles.appLayout}>
-        <Sidebar collapsed={collapsed} onToggle={toggleSidebar} />
-        <div
-          className={`${styles.mainArea} ${
-            collapsed ? styles.mainAreaCollapsed : ''
-          }`}
-        >
-          <TopBar collapsed={collapsed} onToggle={toggleSidebar} />
-          <main className={styles.pageContent}>
-            <Router />
-          </main>
-        </div>
-      </div>
+      <AuthProvider>
+        <AppLayout />
+      </AuthProvider>
     </BrowserRouter>
   );
 }

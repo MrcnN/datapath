@@ -32,6 +32,9 @@ import {
   FileText,
   Zap,
   Sparkles,
+  User,
+  LogOut,
+  Settings,
   type LucideIcon,
 } from 'lucide-react';
 import DossierReportModal from '../report/DossierReportModal';
@@ -39,6 +42,7 @@ import EmergencyTriageModal from '../triage/EmergencyTriageModal';
 import GlobalCommandPalette from './GlobalCommandPalette';
 import { getInstanceMetadata, getServerProfiles, activateServer } from '../../lib/api';
 import type { InstanceMetadata, ServerProfile, EnvironmentType } from '../../lib/types';
+import { useAuth } from '../../features/auth/AuthContext';
 import styles from './TopBar.module.css';
 
 interface SubnavItem {
@@ -115,6 +119,7 @@ export const MODULE_SECTIONS: ModuleSection[] = [
     title: 'Güvenlik, Yönetim & Betikler',
     icon: ShieldCheck,
     items: [
+      { path: '/profile', label: 'Profilim & Yetkiler', icon: ShieldCheck },
       { path: '/permissions', label: 'Kullanıcılar & Yetkiler', icon: Shield },
       { path: '/best-practices', label: 'Sistem Uygunluk Karnesi', icon: ShieldCheck },
       { path: '/agent-jobs', label: 'SQL Agent & Alarmlar', icon: CalendarClock },
@@ -167,6 +172,7 @@ interface TopBarProps {
 export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   // Resolve active route and section memoized
   const currentRoute = useMemo(() => {
@@ -206,6 +212,10 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [isSwitching, setIsSwitching] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // User Profile Dropdown State
+  const [userDropdownOpen, setUserDropdownOpen] = useState<boolean>(false);
+  const userDropdownRef = useRef<HTMLDivElement>(null);
 
   // Global Ctrl+K / Cmd+K shortcut listener
   useEffect(() => {
@@ -267,12 +277,16 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
       if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
         setCategoryDropdownOpen(false);
       }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
+        setUserDropdownOpen(false);
+      }
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setDropdownOpen(false);
         setCategoryDropdownOpen(false);
+        setUserDropdownOpen(false);
       }
     };
 
@@ -426,7 +440,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
           </button>
         </div>
 
-        {/* Right: Actions, Server Switcher & Theme */}
+        {/* Right: Actions, Server Switcher, Theme & User Profile */}
         <div className={styles.rightSection}>
           <button
             type="button"
@@ -459,8 +473,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
           >
             {theme === 'dark' ? <Sun size={13} aria-hidden="true" /> : <Moon size={13} aria-hidden="true" />}
           </button>
-
-
 
           {/* Global Multi-Server Switcher Dropdown */}
           {activeServer ? (
@@ -584,6 +596,149 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
               )}
             </div>
           ) : null}
+
+          {/* User Profile & Auth Indicator */}
+          {user ? (
+            <div className={styles.userProfileWrapper} ref={userDropdownRef}>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={userDropdownOpen}
+                aria-label={`Kullanıcı Profili: ${user.full_name} (${user.role})`}
+                className={`${styles.userProfileBtn} ${userDropdownOpen ? styles.userProfileBtnActive : ''}`}
+                onClick={() => setUserDropdownOpen((prev) => !prev)}
+                title={`Profil & Yetki Yönetimi: ${user.full_name}`}
+              >
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt={user.full_name} className={styles.userAvatarImg} />
+                ) : (
+                  <div className={styles.userAvatarInitials}>
+                    {user.full_name
+                      .split(' ')
+                      .map((n) => n[0])
+                      .slice(0, 2)
+                      .join('')
+                      .toUpperCase()}
+                  </div>
+                )}
+                <div className={styles.userMetaPreview}>
+                  <span className={styles.userNameText}>{user.full_name}</span>
+                  <span className={styles.userRoleTag}>
+                    {user.role === 'SENIOR_DBA'
+                      ? 'Senior DBA'
+                      : user.role === 'DB_ENGINEER'
+                      ? 'DB Engineer'
+                      : user.role === 'OPERATOR'
+                      ? 'Operator'
+                      : 'Viewer'}
+                  </span>
+                </div>
+                <ChevronDown
+                  size={12}
+                  className={`${styles.chevronIcon} ${userDropdownOpen ? styles.chevronOpen : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {userDropdownOpen && (
+                <div className={styles.userMenuPopover} role="menu" aria-label="Kullanıcı Menüsü">
+                  <div className={styles.userMenuHeader}>
+                    <div className={styles.userMenuHeaderTop}>
+                      {user.avatar_url ? (
+                        <img src={user.avatar_url} alt={user.full_name} className={styles.userAvatarLarge} />
+                      ) : (
+                        <div className={styles.userAvatarInitialsLarge}>
+                          {user.full_name
+                            .split(' ')
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join('')
+                            .toUpperCase()}
+                        </div>
+                      )}
+                      <div className={styles.userMenuIdentity}>
+                        <div className={styles.userMenuFullName}>{user.full_name}</div>
+                        <div className={styles.userMenuEmail}>{user.email}</div>
+                        <div className={styles.userMenuBadgeRow}>
+                          <span className={styles.userRoleBadgePill}>
+                            {user.role === 'SENIOR_DBA' ? '👑 Senior DBA' : `🛡️ ${user.role}`}
+                          </span>
+                          {user.google_connected && (
+                            <span className={styles.oauthMiniTag} title="Google Hesabı Bağlı">Google</span>
+                          )}
+                          {user.github_connected && (
+                            <span className={styles.oauthMiniTag} title="GitHub Hesabı Bağlı">GitHub</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    {user.title && <div className={styles.userMenuSubTitle}>{user.title} • {user.department}</div>}
+                  </div>
+
+                  <div className={styles.userMenuItems}>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.userMenuItem}
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        navigate('/profile');
+                      }}
+                    >
+                      <User size={13} className={styles.userMenuIcon} aria-hidden="true" />
+                      <span>Profil & Bilgileri Düzenle</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.userMenuItem}
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        navigate('/profile');
+                      }}
+                    >
+                      <ShieldCheck size={13} className={styles.userMenuIcon} aria-hidden="true" />
+                      <span>Operasyonel Yetki Matrisi</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      role="menuitem"
+                      className={styles.userMenuItem}
+                      onClick={() => {
+                        setUserDropdownOpen(false);
+                        navigate('/profile');
+                      }}
+                    >
+                      <Settings size={13} className={styles.userMenuIcon} aria-hidden="true" />
+                      <span>Güvenlik & Parola Ayarları</span>
+                    </button>
+                  </div>
+
+                  <div className={styles.userMenuFooter}>
+                    <button
+                      type="button"
+                      className={styles.logoutBtn}
+                      onClick={async () => {
+                        setUserDropdownOpen(false);
+                        await logout();
+                        navigate('/login');
+                      }}
+                    >
+                      <LogOut size={12} aria-hidden="true" />
+                      <span>Oturumu Kapat</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className={styles.loginLinkBtn} title="Kullanıcı Girişi Yap">
+              <User size={13} aria-hidden="true" />
+              <span>Giriş Yap</span>
+            </Link>
+          )}
         </div>
       </div>
 

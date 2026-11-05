@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 
 from app.api import (
     agent_jobs,
+    auth,
     anomaly_radar,
     backups,
     connections,
@@ -62,6 +63,7 @@ app.add_middleware(
 )
 
 # Include all API Routers under /api
+app.include_router(auth.router, prefix="/api")
 app.include_router(health.router, prefix="/api")
 app.include_router(health_score.router, prefix="/api")
 app.include_router(servers.router, prefix="/api")

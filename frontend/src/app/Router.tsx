@@ -22,6 +22,9 @@ import TempDBPage from '../features/tempdb/TempDBPage';
 import BufferPoolPage from '../features/tempdb/BufferPoolPage';
 import AgentJobsPage from '../features/agent-jobs/AgentJobsPage';
 import ExtendedEventsPage from '../features/extended-events/ExtendedEventsPage';
+import LoginPage from '../features/auth/LoginPage';
+import RegisterPage from '../features/auth/RegisterPage';
+import ProfilePage from '../features/auth/ProfilePage';
 
 export default function Router() {
   return (
@@ -61,6 +64,11 @@ export default function Router() {
       <Route path="/agent-jobs" element={<AgentJobsPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/toolkit" element={<ToolkitPage initialTab="scripts" />} />
+
+      {/* 7. Kimlik Doğrulama & Kullanıcı Profili */}
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/profile" element={<ProfilePage />} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

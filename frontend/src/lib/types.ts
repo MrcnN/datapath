@@ -1807,3 +1807,66 @@ export interface AGLagAnalysisResponse {
   reason?: string | null;
   groups: AGTelemetrySummary[];
 }
+
+
+// ── Authentication, OAuth & User Profile ─────────────────────
+export interface UserProfile {
+  id: string;
+  email: string;
+  username: string;
+  full_name: string;
+  role: 'SENIOR_DBA' | 'DB_ENGINEER' | 'OPERATOR' | 'VIEWER' | string;
+  title: string;
+  department: string;
+  phone?: string | null;
+  bio?: string | null;
+  avatar_url?: string | null;
+  google_connected: boolean;
+  github_connected: boolean;
+  created_at: string;
+  last_login_at: string;
+}
+
+export interface UserLoginRequest {
+  email_or_username: string;
+  password: string;
+}
+
+export interface UserRegisterRequest {
+  full_name: string;
+  email: string;
+  password: string;
+  role?: string;
+  title?: string;
+  department?: string;
+}
+
+export interface OAuthLoginRequest {
+  provider: 'google' | 'github';
+  email: string;
+  full_name: string;
+  avatar_url?: string | null;
+  oauth_id?: string | null;
+}
+
+export interface ProfileUpdateRequest {
+  full_name?: string;
+  title?: string;
+  department?: string;
+  phone?: string;
+  bio?: string;
+  avatar_url?: string;
+  role?: string;
+}
+
+export interface PasswordChangeRequest {
+  current_password: string;
+  new_password: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  token: string;
+  user: UserProfile;
+  message: string;
+}

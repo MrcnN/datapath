@@ -115,6 +115,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.28** Canlı Felaket Kurtarma & Point-in-Time Restore Simülatörü (Disaster Recovery & LSN Chain Engine): msdb.dbo.backupset üzerinde first_lsn ve last_lsn ardışıklığı denetimi (Broken Chain tespiti), hedef dakikaya geri dönüş simülasyonu, sıralı Full -> Diff -> Log zincir görselleştirmesi, STOPAT direktifli review-only T-SQL reçetesi ve Tail-Log güvenlik uyarıları (/backups).
 - [x] **5.29** TempDB Sürüm Deposu & Snapshot İzolasyonu Sızıntı Radarı (Version Store & Snapshot Leak Radar): sys.dm_tran_version_store_space_usage ve sys.dm_tran_active_snapshot_database_transactions üzerinden en eski açık transaction'ı (Purge Blocker SPID), veritabanı bazlı RCSI/Snapshot tüketimini ve en çok sürüm üreten tabloları yakalayıp güvenli T-SQL reçeteleri sunan optimizasyon motoru (/tempdb).
 - [x] **5.30** AlwaysOn AG İkincil Gecikme, Kuyruk & RPO/RTO Telemetrisi (AlwaysOn AG Lag & RPO/RTO Telemetry): sys.dm_hadr_database_replica_states üzerinden birincil ve ikincil replikalar arasındaki log gönderim kuyruğu, redo gecikmesi, ani kaza anında kaybedilecek veri süresi (RPO saniye) ve yük devretme hazırlık matrisi (/high-availability).
+- [x] **5.31** Kurumsal Kimlik Doğrulama, Profil Yönetimi ve Sosyal Giriş (Google & GitHub OAuth): Tam donanımlı kullanıcı profili düzenleme sayfası (`/profile`), kurumsal giriş (`/login`) ve kayıt (`/register`) ekranları, Google ve GitHub ile tek tıkla OAuth kayıt/giriş entegrasyonu, TopBar kullanıcı avatarı ve açılır profil menüsü (`TopBar`), 4 kademeli DBA operasyonel rol matrisi (Senior DBA, DB Engineer, Operator, Viewer) ve parola yönetimi.
 
 ---
 
@@ -134,7 +135,9 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 | **Yüksek Erişilebilirlik** | `/high-availability` | AlwaysOn AG topolojisi, replika durumları, senkronizasyon gecikmesi | ✅ Tamamlandı |
 | **SQL Agent İşleri** | `/agent-jobs` | Zamanlanmış işler, adım hata detayları, kritik alarmlar ve Database Mail | ✅ Tamamlandı |
 | **Şema Karşılaştırması** | `/schema-diff` | İki veritabanı arası nesne farklılıkları ve güvenli DDL üretimi | ✅ Tamamlandı |
-| **İzinler & Güvenlik** | `/permissions` | Login denetimi, sysadmin hesapları, yetim kullanıcılar | ✅ Tamamlandı |
+| **Kullanıcılar & Yetkiler** | `/permissions` | Login denetimi, sysadmin hesapları, yetim kullanıcılar | ✅ Tamamlandı |
+| **Kullanıcı Profili & Yetkiler** | `/profile` | DBA rol yönetimi (Senior DBA, DB Engineer, Operator), profil düzenleme, parola ve Google/GitHub hesap bağlama | ✅ Tamamlandı |
+| **Giriş & Kayıt Ekranları** | `/login`, `/register` | Kurumsal e-posta/kullanıcı adı ile giriş, demo hesaplar ve Google/GitHub OAuth ile kayıt | ✅ Tamamlandı |
 | **DBA Araç Seti** | `/toolkit` | Kategorize, aranabilir, kopyalanabilir T-SQL teşhis betikleri | ✅ Tamamlandı |
 | **İstatistik Sağlığı** | `/statistics` | Bayat istatistikler, kardinalite sapması ve otomatik T-SQL reçeteleri | ✅ Tamamlandı |
 | **Teşhis Dosyası Modalı** | `TopBar` | Tek tıkla tüm sağlık ve olay verilerini derleyip dışa aktarma (Export) | ✅ Tamamlandı |
@@ -148,15 +151,19 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 2. **Frontend Derleme Doğrulaması:** `npm run build` komutu sıfır TypeScript ve derleme uyarısıyla tamamlanmalıdır.
 3. **Demo Fallback Uyumluluğu:** Canlı SQL Server bağlantısı olmadığında arayüz çökmemeli, yüksek sadakatli demo modellerini etiketli olarak render etmelidir.
 4. **Güvenlik Politikası Uyumu:** Hiçbir yıkıcı veya yazma işlemi otomatik çalıştırılmamalı; T-SQL kodları review-only olarak sunulmalıdır.
-5. **Git ve Defter Güncellemesi:** `TODO.md` ve `TODOlist.md` güncellenmeli, iş mantıksal bir commit ile GitHub `main` dalına pushlanmalıdır.
+5. **Git ve Defter Güncellemesi:** `TODO.md` ve `TODOlist.md` güncellenmeli, iş mantıksal bir commit ile yerel repoya işlenmelidir.
 
 ---
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 76 Test (Tamamı Başarılı)
+- **Mevcut pytest Test Sayısı:** 88 Test (Tamamı Başarılı, 100% Geçiş)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
+  - `POST /api/auth/login` & `POST /api/auth/register` ✅
+  - `POST /api/auth/oauth` (Google & GitHub) ✅
+  - `GET /api/auth/me` & `PUT /api/auth/profile` ✅
+  - `POST /api/auth/change-password` ✅
   - `GET /api/agent-jobs/alerts-and-mail` ✅
   - `GET /api/backups/integrity-summary` ✅
   - `GET /api/tempdb-memory/memory-grants` ✅

@@ -48,100 +48,30 @@
   - LDF dosyasının kesilmesini engelleyen kök nedeni (`ACTIVE_TRANSACTION`, `REPLICATION`, `LOG_BACKUP`) ortaya çıkarır.
 
 - [x] **[FEAT-02] Buffer Pool Bellek Dağılımı (Veritabanı & Tablo Bazında)**
-  - `sys.dm_os_buffer_descriptors` ile RAM'i işgal eden veritabanlarını ve tabloları analiz eder.
-  - Diske yazılmayı bekleyen kirli (dirty) sayfalar ile temiz sayfaların oranını gösterir.
+  - `sys.dm_os_buffer_descriptors` ile RAM'deki sayfaların hangi tablolara ait olduğunu çıkarır.
+  - Soğuk/sıcak veri ayrımı ve gereksiz RAM tüketen tabloları listeler.
 
-- [x] **[FEAT-03] Ad-Hoc Plan Cache Şişmesi (Plan Cache Bloat) & Bellek Geri Kazanımı**
-  - Tek seferlik çalıştırılan dinamik sorguların bellekte yarattığı israfı hesaplar.
-  - `optimize for ad hoc workloads` sunucu parametresini önerir ve T-SQL reçetesi sağlar.
+- [x] **[FEAT-03] Plan Cache Şişmesi (Bloat) & Tek Seferlik Sorgu Radarı**
+  - `usecounts = 1` ad-hoc planların harcadığı megabaytları ölçer.
+  - `optimize for ad hoc workloads` önerisi ve bellek tasarrufu simülasyonu sunar.
 
-- [x] **[FEAT-04] Çalışma Belleği Hibeleri & `RESOURCE_SEMAPHORE` Kuyruk Teşhisi**
-  - `sys.dm_exec_query_memory_grants` ile büyük Sort/Hash Join sorgularının bellek bekleme sürelerini gösterir.
-  - Aşırı tahsis edilen bellek israfını (Over-grant Waste) hesaplar.
+- [x] **[FEAT-04] TempDB Tahsis Çekişmesi (PFS / GAM / SGAM Latches)**
+  - `sys.dm_os_waiting_tasks` ile TempDB sayfa tahsis darboğazlarını yakalar.
+  - Eşit boyutlu veri dosyası (T1117/T1118) yapılandırma kontrolü sağlar.
 
-- [x] **[FEAT-05] Çoklu Sunucu Profil Yönetimi (Multi-Server Registry)**
-  - Üst barda global sunucu seçicisi, Production/Staging/Dev ortam etiketleri ve anlık gecikme (latency) ölçümü.
+- [x] **[FEAT-05] Bellek Hibeleri & Bekleyenler (`sys.dm_exec_query_memory_grants`)**
+  - `RESOURCE_SEMAPHORE` beklemesiyle kuyrukta bekleyen yüksek bellekli sorguları tespit eder.
+  - Şişkin bellek tahsislerini (Over-granting) raporlar.
 
-- [x] **[FEAT-06] Tek Tıkla Kapsamlı Mühendislik Teşhis Dosyası (Dossier Export)**
-  - Üst çubuktaki buton ile o anki sunucunun kilitlenme, bellek, disk, bütünlük ve alarm verilerini derleyip Markdown, HTML/PDF ve JSON olarak dışa aktarır.
-
----
-
-## 🟡 ORTA — Sonraki Sprint (Gelişmiş Analitik & Optimizasyon)
-
-### PERFORMANS & İNDEKS ZEKÂSI
-- [x] **[FEAT-07] Tekrarlayan & Önek Çakışmalı İndeks Analizörü (Redundant Indexes)**
-  - `sys.indexes` üzerinden aynı kolon önekini paylaşan gereksiz indeksleri bulur, `DROP INDEX` önerir.
-
-- [x] **[FEAT-08] Virtual Log File (VLF) Mimarisi & Boyutlandırma Motoru**
-  - 1000'den fazla VLF içeren veritabanlarını uyarır, log dosyasını doğru büyütme/küçültme adımlarını sunar.
-  - Bağımsız `/api/storage/vlfs` uç noktası ve 1 tıkla T-SQL küçültme/büyütme reçetesi sağlar.
-
-- [x] **[FEAT-09] Disk Kapasite Tükenme Tahmini (Capacity Runway Forecasting)**
-  - Son 30/60/90 günlük büyüme trendini hesaplar ve diskin dolmasına kalan gün sayısını modeller.
-
-- [x] **[FEAT-10] TempDB Allocation & Sayfa Mandallanması (PAGELATCH_UP/EX) & Sızıntı Takibi**
-  - Dosyalar: `backend/app/services/tempdb_memory_service.py`, `frontend/src/features/tempdb/components/TempDBContentionViewer.tsx`
-  - PFS (Page 1), GAM (Page 2), SGAM (Page 3) mandallanmalarını tespit eder.
-  - `sys.dm_db_session_space_usage` ile `#temp` ve internal sıralama alanı sızdıran uyuyan işlemleri yakalar, çoklu dosya ve `AUTOGROW_ALL_FILES` reçetesi sunar.
-
-- [x] **[FEAT-11] Plan Gerileme Radarı & Plan Zorlama (Query Store Plan Forcing)**
-  - Dosyalar: `backend/app/services/query_performance_service.py`, `frontend/src/features/query-performance/QueryPerformancePage.tsx`
-  - Baseline döneme kıyasla süresi ve CPU'su %500 ile %2500 arasında artan sorguları listeler.
-  - Tek tıkla güvenli `sp_query_store_force_plan` T-SQL plan sabitleme reçetesi sağlar.
-
-- [x] **[FEAT-12] Canlı Deadlock Grafiği İnteraktif SVG/Canvas Görselleştiricisi**
-  - Dosyalar: `frontend/src/features/incidents/components/DeadlockGraphVisualizer.tsx`
-  - XML metni yerine tarayıcıda düğüm, kilit yönü, kurban/kazanan ayrımı ve tıklanabilir T-SQL detay çizimi.
-
-- [x] **[FEAT-15] Acil Durum Kriz Triyajı (1-Click Emergency Incident Triage)**
-  - Dosyalar: `backend/app/services/triage_service.py`, `frontend/src/components/triage/EmergencyTriageModal.tsx`
-  - Tek tıkla Kilitlenme, Askıda Kalan İşlemler, Bellek Hibeleri (RESOURCE_SEMAPHORE), CPU, TempDB mandalları, Disk I/O ve Bozuk Sayfa kontrolü yapan teşhis motoru.
-
-- [x] **[FEAT-16] Kurumsal Best Practice & Üretime Hazırlık Karnesi (Configuration Advisor)**
-  - Dosyalar: `backend/app/services/best_practice_service.py`, `frontend/src/features/toolkit/components/BestPracticeBenchmarkView.tsx`
-  - Max Server Memory, Cost Threshold for Parallelism, MAXDOP, Optimize for Ad-Hoc, TempDB mimarisi, IFI ve CHECKSUM dahil 16 kurumsal kural denetimi ve remediation scriptleri.
-
-- [x] **[FEAT-17] Akıllı Bakım & İndeks İyileştirme Planlayıcısı (Smart Maintenance Planner)**
-  - Dosyalar: `backend/app/services/maintenance_service.py`, `frontend/src/features/indexes/components/SmartMaintenancePlanner.tsx`
-  - Sayfa sayısı eşiğine (min 1000 sayfa) ve parçalanma oranına göre seçici REORG/REBUILD, istatistik güncellemesi ve SQL Agent Job üretimi.
-
-- [x] **[FEAT-18] Grafiksel Yürütme Planı Görselleştiricisi (Execution Plan Viewer)**
-  - Dosyalar: `backend/app/services/execution_plan_service.py`, `frontend/src/features/query-performance/components/ExecutionPlanViewer.tsx`
-  - ShowPlanXML / .sqlplan dosya ve metinlerini interaktif operatör ağacına dönüştüren, maliyet oranlarını, uyarıları ve eksik indeksleri analiz eden görselleştirici.
+- [x] **[FEAT-06] İndeks Parçalanma Analizörü & Akıllı Bakım Planlayıcı**
+  - Sayfa eşikli ve parçalanma yüzdesine duyarlı dinamik `REORGANIZE` / `REBUILD` T-SQL üretimi.
+  - Hazır SQL Server Agent Job scripti çıktısı.
 
 ---
 
-## 🟢 DÜŞÜK — Backlog (Kurumsal Ekosistem & Bildirimler)
+## 🟡 ORTA — Sonraki Sprint (Performans & Genişletilmiş Teşhis)
 
-### ENTEGRASYON & BİLDİRİMLER
-- [x] **[FEAT-13] Webhook Bildirim Entegrasyonu (Discord, Slack, MS Teams, Generic JSON)**
-  - Dosyalar: `backend/app/services/webhook_service.py`, `frontend/src/features/agent-jobs/components/WebhookSettingsView.tsx`
-  - Kritik alarm tespit edildiğinde (Deadlock, Error 823/824 bozuk sayfa, Severity 17-25) webhook bildirim fırlatma ve test altyapısı.
-
-- [x] **[FEAT-13] Rol Tabanlı Erişim Denetimi (RBAC)**
-  - Platform içi `Viewer` (Salt Okunur Gözlemci) ve `DBA` (T-SQL Betik Üretici) kullanıcı yetkilendirmesi.
-
-- [ ] **[FEAT-14] Zamanlanmış Sağlık Denetimi & Otomatik E-Posta Raporu**
-  - Haftalık sağlık özetini oluşturup ilgili teknik ekibe e-posta ile iletme.
-
----
-
-## 🔵 ALTYAPI & KALİTE (CI/CD, Test Kapsamı & Doğrulama)
-
-- [x] **[INFRA-01] Backend Birim ve Entegrasyon Testleri (pytest)**
-  - 81 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
-
-- [x] **[FEAT-15] Canlı Felaket Kurtarma & Point-in-Time Restore Simülatörü**
-  - LSN süreklilik denetimi (Broken Chain tespiti), sıralı Full/Diff/Log kurtarma reçetesi ve review-only T-SQL STOPAT komut üretimi.
-
-- [x] **[FEAT-16] TempDB Sürüm Deposu (Version Store) & Snapshot Sızıntı Radarı**
-  - Purge engelleyici açık transaction (SPID) tespiti, RCSI/Snapshot tüketimi ve kontrollü KILL/DBCC reçeteleri.
-
-- [x] **[FEAT-17] AlwaysOn AG İkincil Gecikme & RPO/RTO Telemetrisi**
-  - Log send queue, redo queue, RPO saniye veri kaybı riski ve yük devretme hazırlık matrisi.
-
-- [x] **[FEAT-07] Akıllı T-SQL Sorgu Yeniden Yazıcı (Query Rewriter Studio)**
+- [x] **[FEAT-07] Akıllı T-SQL Sorgu İyileştirici (Query Rewriter)**
   - Anti-pattern tespiti, SARGable dönüşümler ve yan yana T-SQL diff editörü.
 
 - [x] **[FEAT-08] "What-If" Hipotetik İndeks Simülatörü**
@@ -152,6 +82,12 @@
 
 - [x] **[FEAT-10] Buffer Pool Tomografisi ve Kirli Sayfa Denetleyicisi**
   - Veritabanı bazlı nesne RAM dökümü, dirty page oranı ve kontrollü CHECKPOINT yönergesi.
+
+- [x] **[FEAT-11] Kurumsal Kimlik Doğrulama, Profil Yönetimi ve Google/GitHub OAuth**
+  - Kurumsal giriş (`/login`), kayıt (`/register`) ve profil düzenleme (`/profile`) sayfaları.
+  - Google ve GitHub OAuth sosyal giriş ve hesap bağlama entegrasyonu.
+  - Senior DBA, DB Engineer, Operator ve Viewer 4 kademeli rol ve yetki matrisi.
+  - TopBar kullanıcı avatarı, profil kartı açılır penceresi ve güvenli parola yönetimi.
 
 - [x] **[INFRA-02] Frontend Sıfır-Hata Derleme Kapısı (TypeScript & Vite)**
   - `tsc && vite build` komutunun sıfır hata ve temiz bundle ile tamamlanması.
@@ -170,10 +106,10 @@
 | :--- | :--- | :---: | :---: | :---: |
 | 🔴 **Kritik** | Güvenlik & Veri Bütünlüğü | 6 | 0 | **6** |
 | 🟠 **Yüksek** | Temel DBA Zekası & Tanılama | 6 | 0 | **6** |
-| 🟡 **Orta** | Performans & Derin Analitik | 7 | 2 | **9** |
+| 🟡 **Orta** | Performans, Auth & Derin Analitik | 8 | 1 | **9** |
 | 🟢 **Düşük** | Entegrasyon & Backlog | 0 | 3 | **3** |
 | 🔵 **Altyapı** | Kalite & CI/CD | 2 | 2 | **4** |
-| **GENEL TOPLAM** | | **21** | **7** | **28** |
+| **GENEL TOPLAM** | | **22** | **6** | **28** |
 
 ---
 
