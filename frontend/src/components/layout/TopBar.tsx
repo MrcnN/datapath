@@ -1,22 +1,28 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Server,
-  AlertTriangle,
   TrendingUp,
-  Database,
-  GitCompare,
-  Wrench,
-  Shield,
-  Activity,
-  Clock,
-  Sparkles,
-  Layers,
+  Wand2,
+  GitPullRequest,
   Hourglass,
-  HardDrive,
+  Layers,
+  FlaskConical,
+  Wrench,
+  BarChart3,
   Cpu,
+  PieChart,
+  HardDrive,
+  AlertTriangle,
+  Radio,
+  Database,
+  Activity,
+  ShieldCheck,
+  Shield,
   CalendarClock,
+  GitCompare,
+  Terminal,
   Sun,
   Moon,
   ChevronDown,
@@ -25,63 +31,115 @@ import {
   ExternalLink,
   FileText,
   Zap,
-  Compass,
-  Wand2,
-  GitPullRequest,
-  FlaskConical,
-  PieChart,
-  ShieldCheck,
-  Terminal,
-  Radio,
+  Sparkles,
   type LucideIcon,
 } from 'lucide-react';
 import DossierReportModal from '../report/DossierReportModal';
 import EmergencyTriageModal from '../triage/EmergencyTriageModal';
+import GlobalCommandPalette from './GlobalCommandPalette';
 import { getInstanceMetadata, getServerProfiles, activateServer } from '../../lib/api';
 import type { InstanceMetadata, ServerProfile, EnvironmentType } from '../../lib/types';
 import styles from './TopBar.module.css';
+
+interface SubnavItem {
+  path: string;
+  label: string;
+  icon: LucideIcon;
+  badge?: string;
+}
+
+interface ModuleSection {
+  id: string;
+  title: string;
+  icon: LucideIcon;
+  items: SubnavItem[];
+}
+
+export const MODULE_SECTIONS: ModuleSection[] = [
+  {
+    id: 'genel-bakis',
+    title: 'Genel Bakış',
+    icon: LayoutDashboard,
+    items: [
+      { path: '/', label: 'Gösterge Paneli', icon: LayoutDashboard },
+      { path: '/instances', label: 'Canlı Oturumlar & Sunucular', icon: Server },
+    ],
+  },
+  {
+    id: 'sorgu-performans',
+    title: 'Sorgu & Performans',
+    icon: TrendingUp,
+    items: [
+      { path: '/query-performance', label: 'Ağır Sorgular & Query Store', icon: TrendingUp },
+      { path: '/query-rewriter', label: 'Sorgu Düzeltici', icon: Wand2 },
+      { path: '/execution-plan', label: 'Yürütme Planı (.sqlplan)', icon: GitPullRequest },
+      { path: '/waits', label: 'Bekleme İstatistikleri', icon: Hourglass },
+    ],
+  },
+  {
+    id: 'indeks-bakim',
+    title: 'İndeks & Bakım',
+    icon: Layers,
+    items: [
+      { path: '/indexes', label: 'İndeks Analizi', icon: Layers },
+      { path: '/statistics', label: 'İstatistik Sağlığı & Bayatlık', icon: BarChart3 },
+      { path: '/hypothetical-indexes', label: 'Sanal İndeks Simülatörü', icon: FlaskConical },
+      { path: '/maintenance-planner', label: 'Bakım Planlayıcı', icon: Wrench },
+    ],
+  },
+  {
+    id: 'bellek-depolama',
+    title: 'Bellek & Depolama',
+    icon: Cpu,
+    items: [
+      { path: '/tempdb', label: 'TempDB & RAM Durumu', icon: Cpu },
+      { path: '/buffer-pool', label: 'Tablo RAM (Buffer Pool)', icon: PieChart },
+      { path: '/storage', label: 'Disk & Log Dosyaları (VLF)', icon: HardDrive },
+    ],
+  },
+  {
+    id: 'kilitlenme-guvenilirlik',
+    title: 'Kilitlenme & Güvenilirlik',
+    icon: AlertTriangle,
+    items: [
+      { path: '/incidents', label: 'Kilitlenmeler & Deadlock', icon: AlertTriangle },
+      { path: '/extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Radio },
+      { path: '/backups', label: 'Yedekleme & Disk Sağlığı', icon: Database },
+      { path: '/high-availability', label: 'AlwaysOn & Replikalar', icon: Activity },
+    ],
+  },
+  {
+    id: 'guvenlik-yonetim',
+    title: 'Güvenlik & Yönetim',
+    icon: ShieldCheck,
+    items: [
+      { path: '/best-practices', label: 'Sistem Uygunluk Karnesi', icon: ShieldCheck },
+      { path: '/permissions', label: 'Kullanıcılar & Yetkiler', icon: Shield },
+      { path: '/agent-jobs', label: 'SQL Agent & Alarmlar', icon: CalendarClock },
+      { path: '/schema-diff', label: 'Şema Karşılaştırma', icon: GitCompare },
+      { path: '/toolkit', label: 'T-SQL Betik Kütüphanesi', icon: Terminal },
+    ],
+  },
+];
 
 interface RouteInfo {
   label: string;
   category: string;
   icon: LucideIcon;
+  section: ModuleSection;
 }
 
-const routeMap: Record<string, RouteInfo> = {
-  // 1. Genel Bakış
-  '/': { label: 'Gösterge Paneli', category: 'Genel Bakış', icon: LayoutDashboard },
-  '/instances': { label: 'Canlı Oturumlar & Sunucular', category: 'Genel Bakış', icon: Server },
-
-  // 2. Sorgu & Performans
-  '/query-performance': { label: 'Ağır Sorgular & Query Store', category: 'Sorgu & Performans', icon: TrendingUp },
-  '/query-rewriter': { label: 'Sorgu Düzeltici & İyileştirici', category: 'Sorgu & Performans', icon: Wand2 },
-  '/execution-plan': { label: 'Sorgu Yürütme Planı', category: 'Sorgu & Performans', icon: GitPullRequest },
-  '/waits': { label: 'Bekleme İstatistikleri', category: 'Sorgu & Performans', icon: Hourglass },
-
-  // 3. İndeks & Bakım
-  '/indexes': { label: 'İndeks Analizi', category: 'İndeks & Bakım', icon: Layers },
-  '/statistics': { label: 'İstatistik Sağlığı & Bayatlık', category: 'İndeks & Bakım', icon: Layers },
-  '/hypothetical-indexes': { label: 'Sanal İndeks Simülatörü', category: 'İndeks & Bakım', icon: FlaskConical },
-  '/maintenance-planner': { label: 'İndeks Bakım Planlayıcı', category: 'İndeks & Bakım', icon: Wrench },
-
-  // 4. Bellek & Depolama
-  '/tempdb': { label: 'TempDB & RAM Durumu', category: 'Bellek & Depolama', icon: Cpu },
-  '/buffer-pool': { label: 'Tablo RAM Dağılımı (Buffer Pool)', category: 'Bellek & Depolama', icon: PieChart },
-  '/storage': { label: 'Disk & Log Dosyaları (VLF)', category: 'Bellek & Depolama', icon: HardDrive },
-
-  // 5. Kilitlenme & Güvenilirlik
-  '/incidents': { label: 'Kilitlenmeler & Deadlock', category: 'Kilitlenme & Güvenilirlik', icon: AlertTriangle },
-  '/extended-events': { label: 'Genişletilmiş Olaylar (XE)', category: 'Kilitlenme & Güvenilirlik', icon: Radio },
-  '/backups': { label: 'Yedekleme & Disk Sağlığı', category: 'Kilitlenme & Güvenilirlik', icon: Database },
-  '/high-availability': { label: 'AlwaysOn & Replikalar', category: 'Kilitlenme & Güvenilirlik', icon: Activity },
-
-  // 6. Güvenlik & Yönetim
-  '/best-practices': { label: 'Sistem Uygunluk Karnesi', category: 'Güvenlik & Yönetim', icon: ShieldCheck },
-  '/permissions': { label: 'Kullanıcılar & Yetkiler', category: 'Güvenlik & Yönetim', icon: Shield },
-  '/agent-jobs': { label: 'SQL Agent & Sistem Alarmları', category: 'Güvenlik & Yönetim', icon: CalendarClock },
-  '/schema-diff': { label: 'Şema Karşılaştırma', category: 'Güvenlik & Yönetim', icon: GitCompare },
-  '/toolkit': { label: 'T-SQL Betik Kütüphanesi', category: 'Güvenlik & Yönetim', icon: Terminal },
-};
+const routeMap: Record<string, RouteInfo> = {};
+MODULE_SECTIONS.forEach((sec) => {
+  sec.items.forEach((item) => {
+    routeMap[item.path] = {
+      label: item.label,
+      category: sec.title,
+      icon: item.icon,
+      section: sec,
+    };
+  });
+});
 
 const envBadgeClasses: Record<EnvironmentType, string> = {
   PRODUCTION: styles.envProd,
@@ -107,19 +165,37 @@ interface TopBarProps {
 export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const currentRoute = routeMap[pathname] || {
-    label: 'Sayfa',
-    category: 'Genel',
-    icon: Sparkles,
-  };
+
+  // Resolve active route and section memoized
+  const currentRoute = useMemo(() => {
+    return (
+      routeMap[pathname] || {
+        label: 'Sayfa',
+        category: 'Genel Bakış',
+        icon: Sparkles,
+        section: MODULE_SECTIONS[0],
+      }
+    );
+  }, [pathname]);
+
+  const currentSection = currentRoute.section || MODULE_SECTIONS[0];
 
   const [metadata, setMetadata] = useState<InstanceMetadata | null>(null);
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
+    try {
+      return (localStorage.getItem('datapath-theme') as 'dark' | 'light') || 'dark';
+    } catch {
+      return 'dark';
+    }
   });
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [showTriageModal, setShowTriageModal] = useState<boolean>(false);
+  const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
+
+  // Category Switcher Dropdown
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState<boolean>(false);
+  const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Multi-Server Profile State
   const [servers, setServers] = useState<ServerProfile[]>([]);
@@ -129,16 +205,33 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const [isSwitching, setIsSwitching] = useState<boolean>(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Global Ctrl+K / Cmd+K shortcut listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setShowCommandPalette((prev) => !prev);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Theme synchronization
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('datapath-theme', theme);
+    try {
+      localStorage.setItem('datapath-theme', theme);
+    } catch {
+      // storage unavailable
+    }
   }, [theme]);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
-  };
+  }, []);
 
-  const loadServerProfiles = () => {
+  const loadServerProfiles = useCallback(() => {
     getServerProfiles()
       .then((data) => {
         if (data && data.servers) {
@@ -149,7 +242,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
       .catch((err) => {
         console.warn('Multi-server profiles fetch failed, using fallback:', err);
       });
-  };
+  }, []);
 
   useEffect(() => {
     loadServerProfiles();
@@ -161,22 +254,33 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     return () => {
       window.removeEventListener('datapath-server-changed', handleServerChange);
     };
-  }, []);
+  }, [loadServerProfiles]);
 
-  // Click outside to close dropdown
+  // Click outside and Escape key to close dropdowns
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
+      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
+        setCategoryDropdownOpen(false);
+      }
     };
-    if (dropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setDropdownOpen(false);
+        setCategoryDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    window.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [dropdownOpen]);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -197,222 +301,323 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     };
   }, [pathname, activeServerId]);
 
-  const handleSelectServer = async (server: ServerProfile) => {
-    if (server.id === activeServerId) {
-      setDropdownOpen(false);
-      return;
-    }
-    try {
-      setIsSwitching(true);
-      await activateServer(server.id);
-      setActiveServerId(server.id);
-      setDropdownOpen(false);
-      // Dispatch global event to reload all views
-      window.dispatchEvent(
-        new CustomEvent('datapath-server-changed', { detail: { serverId: server.id } })
-      );
-    } catch (err) {
-      console.error('Failed to switch server:', err);
-      alert('Sunucu değiştirilemedi: ' + String(err));
-    } finally {
-      setIsSwitching(false);
-    }
-  };
-
-  const activeServer =
-    servers.find((s) => s.id === activeServerId) ||
-    servers[0] ||
-    null;
-
-  const filteredServers = servers.filter(
-    (s) =>
-      s.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      s.host.toLowerCase().includes(searchFilter.toLowerCase()) ||
-      s.environment.toLowerCase().includes(searchFilter.toLowerCase())
+  const handleSelectServer = useCallback(
+    async (server: ServerProfile) => {
+      if (server.id === activeServerId) {
+        setDropdownOpen(false);
+        return;
+      }
+      try {
+        setIsSwitching(true);
+        await activateServer(server.id);
+        setActiveServerId(server.id);
+        setDropdownOpen(false);
+        window.dispatchEvent(
+          new CustomEvent('datapath-server-changed', { detail: { serverId: server.id } })
+        );
+      } catch (err) {
+        console.error('Failed to switch server:', err);
+        alert('Sunucu değiştirilemedi: ' + String(err));
+      } finally {
+        setIsSwitching(false);
+      }
+    },
+    [activeServerId]
   );
 
+  const activeServer = useMemo(() => {
+    return servers.find((s) => s.id === activeServerId) || servers[0] || null;
+  }, [servers, activeServerId]);
+
+  const filteredServers = useMemo(() => {
+    const q = searchFilter.trim().toLowerCase();
+    if (!q) return servers;
+    return servers.filter(
+      (s) =>
+        s.name.toLowerCase().includes(q) ||
+        s.host.toLowerCase().includes(q) ||
+        s.environment.toLowerCase().includes(q)
+    );
+  }, [servers, searchFilter]);
+
   const RouteIcon = currentRoute.icon;
+  const CategoryIcon = currentSection.icon;
 
   return (
-    <header className={styles.topBar}>
-      {/* Left: Breadcrumbs */}
-      <div className={styles.leftSection}>
-        <div className={styles.breadcrumbArea}>
-          <span className={styles.categoryLabel}>{currentRoute.category}</span>
-          <span className={styles.breadcrumbSep}>/</span>
-          <div className={styles.pageTitleBox}>
-            <RouteIcon size={14} className={styles.breadcrumbIcon} />
-            <span className={styles.breadcrumbCurrent}>{currentRoute.label}</span>
+    <header className={styles.topBarContainer} role="banner">
+      {/* Tier 1: Primary Cockpit Bar */}
+      <div className={styles.topBarMain}>
+        {/* Left: Category Dropdown & Active Page Breadcrumb */}
+        <div className={styles.leftSection}>
+          <div className={styles.breadcrumbArea}>
+            {/* Quick Category Selector */}
+            <div className={styles.categoryDropdownWrapper} ref={categoryDropdownRef}>
+              <button
+                type="button"
+                aria-haspopup="menu"
+                aria-expanded={categoryDropdownOpen}
+                aria-label={`Modül Değiştir: ${currentSection.title}`}
+                className={`${styles.categoryBtn} ${categoryDropdownOpen ? styles.categoryBtnActive : ''}`}
+                onClick={() => setCategoryDropdownOpen((prev) => !prev)}
+                title="Modül Değiştir"
+              >
+                <CategoryIcon size={13} className={styles.categoryIcon} aria-hidden="true" />
+                <span>{currentSection.title}</span>
+                <ChevronDown size={11} aria-hidden="true" />
+              </button>
+
+              {categoryDropdownOpen && (
+                <div className={styles.categoryDropdownPopover} role="menu" aria-label="Modül Seçenekleri">
+                  {MODULE_SECTIONS.map((sec) => {
+                    const SecIcon = sec.icon;
+                    const isSecActive = sec.id === currentSection.id;
+                    return (
+                      <button
+                        key={sec.id}
+                        type="button"
+                        role="menuitem"
+                        className={`${styles.categoryDropdownItem} ${
+                          isSecActive ? styles.categoryDropdownItemActive : ''
+                        }`}
+                        onClick={() => {
+                          setCategoryDropdownOpen(false);
+                          navigate(sec.items[0].path);
+                        }}
+                      >
+                        <div className={styles.categoryDropdownItemLeft}>
+                          <SecIcon size={14} className={styles.categoryDropdownIcon} aria-hidden="true" />
+                          <span>{sec.title}</span>
+                        </div>
+                        {isSecActive && <Check size={13} color="var(--accent)" aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            <span className={styles.breadcrumbSep} aria-hidden="true">/</span>
+
+            {/* Active View Label */}
+            <div className={styles.activePageTitle}>
+              <RouteIcon size={14} className={styles.pageIcon} aria-hidden="true" />
+              <span>{currentRoute.label}</span>
+            </div>
           </div>
+        </div>
+
+        {/* Center: Global Search Command Bar (Ctrl+K) */}
+        <div className={styles.centerSection}>
+          <button
+            type="button"
+            className={styles.searchBarTrigger}
+            onClick={() => setShowCommandPalette(true)}
+            aria-label="Tüm sayfa ve araçlarda ara (Kısayol: Ctrl+K)"
+            aria-keyshortcuts="Control+K"
+            title="Tüm sayfa, metrik ve araçlarda ara (Ctrl+K)"
+          >
+            <div className={styles.searchBarLeft}>
+              <Search size={13} aria-hidden="true" />
+              <span>Sayfa veya araç ara...</span>
+            </div>
+            <span className={styles.searchKbd} aria-hidden="true">Ctrl K</span>
+          </button>
+        </div>
+
+        {/* Right: Actions, Server Switcher & Theme */}
+        <div className={styles.rightSection}>
+          <button
+            type="button"
+            className={styles.triageBtn}
+            onClick={() => setShowTriageModal(true)}
+            title="Acil Durum Kriz Triyajı (1-Tıkla Teşhis)"
+            aria-label="Acil Durum Kriz Triyajı"
+          >
+            <Zap size={13} className={styles.triageBtnIcon} aria-hidden="true" />
+            <span>Kriz Triyajı</span>
+          </button>
+
+          <button
+            type="button"
+            className={styles.dossierBtn}
+            onClick={() => setShowReportModal(true)}
+            title="Kapsamlı Genel Sistem Özeti İndir & Görüntüle"
+            aria-label="Kapsamlı Genel Sistem Özeti"
+          >
+            <FileText size={13} className={styles.dossierBtnIcon} aria-hidden="true" />
+            <span>Sistem Özeti</span>
+          </button>
+
+          <button
+            type="button"
+            className={styles.themeToggleBtn}
+            onClick={toggleTheme}
+            title={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
+            aria-label={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
+          >
+            {theme === 'dark' ? <Sun size={13} aria-hidden="true" /> : <Moon size={13} aria-hidden="true" />}
+          </button>
+
+          {/* Global Multi-Server Switcher Dropdown */}
+          {activeServer ? (
+            <div className={styles.serverSwitcherWrapper} ref={dropdownRef}>
+              <button
+                type="button"
+                aria-haspopup="listbox"
+                aria-expanded={dropdownOpen}
+                aria-label={`Aktif Sunucu: ${activeServer.name} (${activeServer.host})`}
+                className={`${styles.serverSwitchBtn} ${dropdownOpen ? styles.serverSwitchBtnOpen : ''}`}
+                onClick={() => setDropdownOpen((prev) => !prev)}
+                title={`Aktif Sunucu: ${activeServer.name} (${activeServer.host}) — Tıklayarak Değiştirin`}
+              >
+                <span className={styles.solidDot} aria-hidden="true" />
+                <span
+                  className={`${styles.envPillSmall} ${
+                    envBadgeClasses[activeServer.environment] || styles.envProd
+                  }`}
+                >
+                  {envShortLabels[activeServer.environment] || activeServer.environment}
+                </span>
+                <span className={styles.serverNameLabel}>{activeServer.name}</span>
+                {activeServer.latency_ms && (
+                  <span className={styles.latencyTag}>{activeServer.latency_ms}ms</span>
+                )}
+                <ChevronDown
+                  size={12}
+                  className={`${styles.chevronIcon} ${dropdownOpen ? styles.chevronOpen : ''}`}
+                  aria-hidden="true"
+                />
+              </button>
+
+              {dropdownOpen && (
+                <div className={styles.dropdownPopover} role="dialog" aria-label="SQL Server Ortamları Listesi">
+                  {/* Dropdown Header */}
+                  <div className={styles.dropdownHeader}>
+                    <div className={styles.dropdownHeaderTop}>
+                      <span className={styles.dropdownTitle}>SQL Server Ortamları</span>
+                      <span className={styles.serverTotalCount}>{servers.length} Sunucu</span>
+                    </div>
+                    <div className={styles.searchInputBox}>
+                      <Search size={12} color="var(--text-muted)" aria-hidden="true" />
+                      <input
+                        type="text"
+                        className={styles.searchInput}
+                        placeholder="Sunucu ara..."
+                        value={searchFilter}
+                        onChange={(e) => setSearchFilter(e.target.value)}
+                        aria-label="Sunucu veya host ara"
+                        autoFocus
+                      />
+                    </div>
+                  </div>
+
+                  {/* Server List */}
+                  <div className={styles.serverList} role="listbox" aria-label="Sunucular">
+                    {filteredServers.length === 0 ? (
+                      <div style={{ padding: '10px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
+                        Eşleşen sunucu bulunamadı.
+                      </div>
+                    ) : (
+                      filteredServers.map((s) => {
+                        const isSelected = s.id === activeServerId;
+                        return (
+                          <div
+                            key={s.id}
+                            role="option"
+                            aria-selected={isSelected}
+                            className={`${styles.serverItem} ${isSelected ? styles.activeServerItem : ''}`}
+                            onClick={() => handleSelectServer(s)}
+                          >
+                            <div className={styles.serverItemMain}>
+                              <div className={styles.serverItemHeader}>
+                                <span
+                                  className={`${styles.envPillSmall} ${
+                                    envBadgeClasses[s.environment] || styles.envProd
+                                  }`}
+                                >
+                                  {envShortLabels[s.environment] || s.environment}
+                                </span>
+                                <span className={styles.serverItemName}>{s.name}</span>
+                              </div>
+                              <span className={styles.serverItemHost}>
+                                {s.host}:{s.port}
+                              </span>
+                              {s.role ? <span className={styles.serverItemRole}>{s.role}</span> : null}
+                            </div>
+
+                            <div className={styles.serverItemRight}>
+                              {isSelected ? (
+                                <Check size={13} className={styles.activeCheckIcon} aria-hidden="true" />
+                              ) : null}
+                              {s.latency_ms && (
+                                <span className={styles.latencyTag}>{s.latency_ms}ms</span>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Dropdown Footer */}
+                  <div className={styles.dropdownFooter}>
+                    <button
+                      type="button"
+                      className={styles.manageServersLink}
+                      onClick={() => {
+                        setDropdownOpen(false);
+                        navigate('/instances');
+                      }}
+                    >
+                      <span>Profilleri Yönet</span>
+                      <ExternalLink size={10} aria-hidden="true" />
+                    </button>
+                    <span className={styles.serverTotalCount}>
+                      {isSwitching ? 'Değiştiriliyor...' : '1-Tıkla Değiştir'}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : null}
         </div>
       </div>
 
-      {/* Right: Dossier Button, Theme Toggle & Global Server Switcher Dropdown */}
-      <div className={styles.rightSection}>
-        <button
-          type="button"
-          className={styles.triageBtn}
-          onClick={() => setShowTriageModal(true)}
-          title="Acil Durum Kriz Triyajı (1-Tıkla Teşhis)"
-          aria-label="Acil Durum Kriz Triyajı"
-        >
-          <Zap size={14} className={styles.triageBtnIcon} />
-          <span className={styles.triageBtnText}>Kriz Triyajı</span>
-        </button>
-        <button
-          type="button"
-          className={styles.dossierBtn}
-          onClick={() => setShowReportModal(true)}
-          title="Kapsamlı Genel Sistem Özeti İndir & Görüntüle"
-          aria-label="Kapsamlı Genel Sistem Özeti"
-        >
-          <FileText size={14} className={styles.dossierBtnIcon} />
-          <span className={styles.dossierBtnText}>Genel Sistem Özeti</span>
-        </button>
-
-        <button
-          type="button"
-          className={styles.themeToggleBtn}
-          onClick={toggleTheme}
-          title={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
-          aria-label={theme === 'dark' ? 'Aydınlık Temaya Geç' : 'Karanlık Temaya Geç'}
-        >
-          {theme === 'dark' ? <Sun size={14} /> : <Moon size={14} />}
-        </button>
-
-        {/* Global Multi-Server Switcher Dropdown */}
-        {activeServer ? (
-          <div className={styles.serverSwitcherWrapper} ref={dropdownRef}>
-            <button
-              type="button"
-              className={`${styles.serverSwitchBtn} ${dropdownOpen ? styles.serverSwitchBtnOpen : ''}`}
-              onClick={() => setDropdownOpen(!dropdownOpen)}
-              title={`Aktif Sunucu: ${activeServer.name} (${activeServer.host}) — Tıklayarak Değiştirin`}
-            >
-              <span className={styles.pulsingDot} />
-              <span
-                className={`${styles.envPillSmall} ${
-                  envBadgeClasses[activeServer.environment] || styles.envProd
-                }`}
+      {/* Tier 2: Contextual Module Sub-Navigation Bar (Sibling Pages in Active Module) */}
+      <nav className={styles.subNavBar} aria-label="Modül Alt Menüsü">
+        <div className={styles.subnavTabsList} role="tablist">
+          {currentSection.items.map((subItem) => {
+            const SubIcon = subItem.icon;
+            const isTabActive = pathname === subItem.path;
+            return (
+              <Link
+                key={subItem.path}
+                to={subItem.path}
+                role="tab"
+                aria-selected={isTabActive}
+                aria-current={isTabActive ? 'page' : undefined}
+                className={`${styles.subnavTab} ${isTabActive ? styles.subnavTabActive : ''}`}
               >
-                {envShortLabels[activeServer.environment] || activeServer.environment}
-              </span>
-              <span className={styles.serverNameLabel}>{activeServer.name}</span>
-              {activeServer.latency_ms && (
-                <span className={styles.latencyTag}>{activeServer.latency_ms}ms</span>
-              )}
-              <ChevronDown
-                size={13}
-                className={`${styles.chevronIcon} ${dropdownOpen ? styles.chevronOpen : ''}`}
-              />
-            </button>
+                <SubIcon size={13} className={styles.subnavIcon} aria-hidden="true" />
+                <span>{subItem.label}</span>
+                {subItem.badge && <span className={styles.subnavBadge}>{subItem.badge}</span>}
+              </Link>
+            );
+          })}
+        </div>
 
-            {dropdownOpen && (
-              <div className={styles.dropdownPopover}>
-                {/* Dropdown Header */}
-                <div className={styles.dropdownHeader}>
-                  <div className={styles.dropdownHeaderTop}>
-                    <span className={styles.dropdownTitle}>SQL Server Ortamları</span>
-                    <span className={styles.serverTotalCount}>{servers.length} Kayıtlı Sunucu</span>
-                  </div>
-                  <div className={styles.searchInputBox}>
-                    <Search size={12} color="var(--text-muted)" />
-                    <input
-                      type="text"
-                      className={styles.searchInput}
-                      placeholder="Sunucu veya host ara..."
-                      value={searchFilter}
-                      onChange={(e) => setSearchFilter(e.target.value)}
-                      autoFocus
-                    />
-                  </div>
-                </div>
+        <div className={styles.subnavRightMeta} aria-hidden="true">
+          <span>{currentSection.items.length} Araç</span>
+        </div>
+      </nav>
 
-                {/* Server List */}
-                <div className={styles.serverList}>
-                  {filteredServers.length === 0 ? (
-                    <div style={{ padding: '12px', textAlign: 'center', fontSize: 11, color: 'var(--text-muted)' }}>
-                      Eşleşen sunucu bulunamadı.
-                    </div>
-                  ) : (
-                    filteredServers.map((s) => {
-                      const isSelected = s.id === activeServerId;
-                      return (
-                        <div
-                          key={s.id}
-                          className={`${styles.serverItem} ${isSelected ? styles.activeServerItem : ''}`}
-                          onClick={() => handleSelectServer(s)}
-                        >
-                          <div className={styles.serverItemMain}>
-                            <div className={styles.serverItemHeader}>
-                              <span
-                                className={`${styles.envPillSmall} ${
-                                  envBadgeClasses[s.environment] || styles.envProd
-                                }`}
-                              >
-                                {envShortLabels[s.environment] || s.environment}
-                              </span>
-                              <span className={styles.serverItemName}>{s.name}</span>
-                            </div>
-                            <span className={styles.serverItemHost}>
-                              {s.host}:{s.port}
-                            </span>
-                            {s.role ? <span className={styles.serverItemRole}>{s.role}</span> : null}
-                          </div>
-
-                          <div className={styles.serverItemRight}>
-                            {isSelected ? (
-                              <Check size={14} className={styles.activeCheckIcon} />
-                            ) : null}
-                            {s.latency_ms && (
-                              <span className={styles.latencyTag}>{s.latency_ms}ms</span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })
-                  )}
-                </div>
-
-                {/* Dropdown Footer */}
-                <div className={styles.dropdownFooter}>
-                  <button
-                    type="button"
-                    className={styles.manageServersLink}
-                    onClick={() => {
-                      setDropdownOpen(false);
-                      navigate('/instances');
-                    }}
-                  >
-                    <span>Tüm Profilleri Yönet</span>
-                    <ExternalLink size={11} />
-                  </button>
-                  <span className={styles.serverTotalCount}>
-                    {isSwitching ? 'Geçiş yapılıyor...' : '1-Tıkla Değiştir'}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Fallback static badge if no server profiles */
-          <div
-            className={`${styles.connectionBadge} ${
-              isConnected ? styles.connected : styles.demoMode
-            }`}
-          >
-            <span className={styles.statusDot} />
-            <span className={styles.statusLabel}>
-              {isConnected && metadata?.server_name
-                ? `Canlı: ${metadata.server_name}`
-                : 'Demo Modu'}
-            </span>
-          </div>
-        )}
-      </div>
-
+      {/* Modals */}
       {showReportModal && <DossierReportModal onClose={() => setShowReportModal(false)} />}
       {showTriageModal && <EmergencyTriageModal onClose={() => setShowTriageModal(false)} />}
+      <GlobalCommandPalette
+        isOpen={showCommandPalette}
+        onClose={() => setShowCommandPalette(false)}
+      />
     </header>
   );
 }
