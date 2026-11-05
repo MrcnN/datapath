@@ -111,7 +111,8 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.24** İstatistiksel Anomali & Z-Score Kriz Radarı (Predictive Anomaly Radar): CPU, PAGEIOLATCH, CXPACKET ve RESOURCE_SEMAPHORE telemetrisi üzerinde hareketli ortalama ve Z-score hesaplayarak normal çalışma aralığının (±2σ) dışına çıkan krizleri önceden saptayan tahminleme motoru ve Dashboard bileşeni.
 - [x] **5.25** Kapasite & Disk Tükenme Tahminleyicisi (Capacity Runway Forecasting): sys.master_files ve sys.dm_os_volume_stats üzerinden lineer regresyon büyüme modeliyle %90 ve %100 disk dolum gün sayısını (Runway Days) hesaplayan ve proaktif dosya genişletme reçeteleri sunan depolama zekası.
 - [x] **5.26** Kardinalite Sapması & Parameter Sniffing Radarı (Cardinality Drift & Parameter Sniffing Detector): sys.dm_exec_query_stats üzerinden Estimated Rows vs Actual Rows arasındaki 10x-1000x sapmaları, bellek israfını (Over-grant) ve TempDB dökülmelerini yakalayıp OPTION (RECOMPILE/OPTIMIZE FOR UNKNOWN) reçeteleri üreten optimizasyon motoru.
-- [x] **5.27** Kurumsal Rol Tabanlı Erişim Denetimi (RBAC & Security Matrix): Viewer, Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi, aktif rol seçici ve TopBar güvenlik rozeti entegrasyonu.: sp_whoisactive seviyesinde root blocker -> waiter bağıntısını katmanlı interaktif ağaç diyagramına dökme, oturum teşhis müfettişi ve tek tıkla güvenli review-only KILL / DMV teşhis T-SQL reçete üretimi.
+- [x] **5.27** Kurumsal Rol Tabanlı Erişim Denetimi (RBAC & Security Matrix): Viewer, Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi, aktif rol seçici ve TopBar güvenlik rozeti entegrasyonu.
+- [x] **5.28** Canlı Felaket Kurtarma & Point-in-Time Restore Simülatörü (Disaster Recovery & LSN Chain Engine): msdb.dbo.backupset üzerinde first_lsn ve last_lsn ardışıklığı denetimi (Broken Chain tespiti), hedef dakikaya geri dönüş simülasyonu, sıralı Full -> Diff -> Log zincir görselleştirmesi, STOPAT direktifli review-only T-SQL reçetesi ve Tail-Log güvenlik uyarıları (/backups).
 
 ---
 
@@ -127,7 +128,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 | **Bekleme İstatistikleri** | `/waits` | Kaynak beklemeleri, CPU Signal Wait oranı göstergesi | ✅ Tamamlandı |
 | **Depolama & Dosyalar** | `/storage` | Dosya boyutları, VLF mimarisi, açık işlemler, disk gecikmesi | ✅ Tamamlandı |
 | **TempDB & Bellek** | `/tempdb` | TempDB çekişmesi, PLE, Buffer Pool dökümü, Plan Cache Bloat, Memory Grants | ✅ Tamamlandı |
-| **Yedekleme & Kurtarma** | `/backups` | Yedekleme geçmişi, RPO riski, CHECKDB tarihleri ve suspect_pages radarı | ✅ Tamamlandı |
+| **Yedekleme & Kurtarma** | `/backups` | Yedekleme geçmişi, RPO riski, CHECKDB tarihleri, suspect_pages radarı ve Point-in-Time LSN restore simülatörü | ✅ Tamamlandı |
 | **Yüksek Erişilebilirlik** | `/high-availability` | AlwaysOn AG topolojisi, replika durumları, senkronizasyon gecikmesi | ✅ Tamamlandı |
 | **SQL Agent İşleri** | `/agent-jobs` | Zamanlanmış işler, adım hata detayları, kritik alarmlar ve Database Mail | ✅ Tamamlandı |
 | **Şema Karşılaştırması** | `/schema-diff` | İki veritabanı arası nesne farklılıkları ve güvenli DDL üretimi | ✅ Tamamlandı |

@@ -12,12 +12,17 @@ from app.schemas.backups import (
     RecoveryReadiness,
     DatabaseIntegrityCheck,
     IntegrityAndCorruptionSummary,
+    LSNChainStatus,
+    RestoreSimulationRequest,
+    RestoreSimulationResult,
 )
 from app.services.backup_service import (
     get_backup_history,
     get_recovery_readiness,
     get_database_integrity_checks,
     get_integrity_and_corruption_summary,
+    get_lsn_chains,
+    simulate_point_in_time_restore,
 )
 
 logger = logging.getLogger(__name__)
@@ -98,5 +103,28 @@ def read_integrity_summary():
             suspect_pages=[],
             is_demo=False,
         )
+
+
+@router.get("/backups/lsn-chains", response_model=List[LSNChainStatus])
+def read_lsn_chains():
+    """Evaluate Log Sequence Number (LSN) chain continuity across backups to ensure point-in-time recovery validity."""
+    params = _get_connection_params()
+    try:
+        return get_lsn_chains(params)
+    except Exception as exc:
+        logger.error("LSN chain evaluation error: %s", exc)
+        return get_lsn_chains(None)
+
+
+@router.post("/backups/simulate-restore", response_model=RestoreSimulationResult)
+def run_simulate_restore(req: RestoreSimulationRequest):
+    """Simulate Point-in-Time disaster recovery sequence and generate ordered review-only T-SQL restore script."""
+    params = _get_connection_params()
+    try:
+        return simulate_point_in_time_restore(req, params)
+    except Exception as exc:
+        logger.error("Restore simulation error: %s", exc)
+        return simulate_point_in_time_restore(req, None)
+
 
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, History, HeartPulse, Copy, Check, AlertTriangle, Code2, AlertOctagon, Flame } from 'lucide-react';
+import { ShieldCheck, History, HeartPulse, Copy, Check, AlertTriangle, Code2, AlertOctagon, Flame, RotateCcw } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -8,6 +8,7 @@ import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
 import { getBackupHistory, getRecoveryReadiness, getDatabaseIntegrityChecks, getIntegritySummary } from '../../lib/api';
 import type { BackupEntry, RecoveryReadiness, DatabaseIntegrityCheck, IntegrityAndCorruptionSummary, SuspectPageRecord } from '../../lib/types';
+import DisasterRecoverySimulator from './components/DisasterRecoverySimulator';
 import styles from './BackupRecoveryPage.module.css';
 
 function formatAge(hours?: number | null, dateStr?: string | null): string {
@@ -26,7 +27,7 @@ function formatAge(hours?: number | null, dateStr?: string | null): string {
 }
 
 export default function BackupRecoveryPage() {
-  const [activeTab, setActiveTab] = useState<'history' | 'readiness' | 'integrity'>('history');
+  const [activeTab, setActiveTab] = useState<'history' | 'readiness' | 'integrity' | 'dr_simulator'>('history');
   const [history, setHistory] = useState<BackupEntry[]>([]);
   const [readiness, setReadiness] = useState<RecoveryReadiness[]>([]);
   const [integrityList, setIntegrityList] = useState<DatabaseIntegrityCheck[]>([]);
@@ -263,6 +264,12 @@ export default function BackupRecoveryPage() {
           onClick={() => setActiveTab('integrity')}
         >
           <ShieldCheck size={16} /> Veritabanı Bütünlüğü &amp; DBCC CHECKDB ({integrityList.length})
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'dr_simulator' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('dr_simulator')}
+        >
+          <RotateCcw size={16} /> Felaket Kurtarma &amp; Point-in-Time Simülatörü
         </button>
       </div>
 

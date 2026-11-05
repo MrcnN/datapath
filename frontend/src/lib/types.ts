@@ -369,6 +369,46 @@ export interface DatabaseIntegrityCheck {
   [key: string]: any;
 }
 
+export interface LSNChainStatus {
+  database_name: string;
+  recovery_model: string;
+  is_chain_healthy: boolean;
+  total_logs_checked: number;
+  gap_detected: boolean;
+  broken_lsn_details?: string | null;
+  latest_full_time?: string | null;
+  latest_log_time?: string | null;
+  status: 'HEALTHY_CHAIN' | 'BROKEN_CHAIN' | 'NO_LOG_BACKUP' | string;
+}
+
+export interface RestoreStep {
+  step_number: number;
+  backup_type: 'FULL' | 'DIFF' | 'LOG' | string;
+  backup_file: string;
+  backup_time: string;
+  first_lsn: string;
+  last_lsn: string;
+  file_size_mb: number;
+  tsql_command: string;
+}
+
+export interface RestoreSimulationRequest {
+  database_name: string;
+  target_time_iso?: string | null;
+}
+
+export interface RestoreSimulationResult {
+  database_name: string;
+  target_time: string;
+  is_recoverable: boolean;
+  chain_status: string;
+  estimated_data_loss_minutes: number;
+  estimated_restore_duration_sec: number;
+  steps: RestoreStep[];
+  full_restore_tsql: string;
+  warnings: string[];
+}
+
 // ── Schema Diff ───────────────────────────────────────────────
 export interface SchemaDiffConfig {
   source_db: string;

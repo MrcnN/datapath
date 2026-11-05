@@ -48,6 +48,9 @@ import type {
   ServerPingResponse,
   AlertsAndMailSummary,
   IntegrityAndCorruptionSummary,
+  LSNChainStatus,
+  RestoreSimulationRequest,
+  RestoreSimulationResult,
   MemoryGrantsSummary,
   TempDBContentionSummary,
   HealthScoreResponse,
@@ -264,6 +267,19 @@ export async function getRecoveryReadiness(): Promise<RecoveryReadiness[]> {
 
 export async function getDatabaseIntegrityChecks(): Promise<DatabaseIntegrityCheck[]> {
   return apiFetch<DatabaseIntegrityCheck[]>('/api/backups/integrity');
+}
+
+export async function getLSNChains(): Promise<LSNChainStatus[]> {
+  return apiFetch<LSNChainStatus[]>('/api/backups/lsn-chains');
+}
+
+export async function simulatePointInTimeRestore(
+  req: RestoreSimulationRequest
+): Promise<RestoreSimulationResult> {
+  return apiFetch<RestoreSimulationResult>('/api/backups/simulate-restore', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
 }
 
 // ── Schema Diff ───────────────────────────────────────────────

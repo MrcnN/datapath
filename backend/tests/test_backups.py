@@ -44,3 +44,35 @@ def test_integrity_summary_endpoint():
     assert "suspect_pages" in data
     assert isinstance(data["suspect_pages"], list)
 
+
+def test_lsn_chains_endpoint():
+    response = client.get("/api/backups/lsn-chains")
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list)
+    assert len(data) >= 2
+    first = data[0]
+    assert "database_name" in first
+    assert "recovery_model" in first
+    assert "is_chain_healthy" in first
+    assert "total_logs_checked" in first
+    assert "status" in first
+
+
+def test_simulate_restore_endpoint():
+    payload = {
+        "database_name": "FinansDB",
+        "target_time_iso": "2026-11-05 14:15:00",
+    }
+    response = client.post("/api/backups/simulate-restore", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["database_name"] == "FinansDB"
+    assert data["is_recoverable"] is True
+    assert "chain_status" in data
+    assert len(data["steps"]) >= 3
+    assert "full_restore_tsql" in data
+    assert "RESTORE DATABASE [FinansDB]" in data["full_restore_tsql"]
+    assert "WITH STOPAT = '2026-11-05 14:15:00', RECOVERY" in data["full_restore_tsql"]
+
+

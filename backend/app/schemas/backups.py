@@ -69,3 +69,43 @@ class IntegrityAndCorruptionSummary(BaseModel):
     suspect_pages: List[SuspectPageRecord] = []
     is_demo: bool = False
 
+
+
+class LSNChainStatus(BaseModel):
+    database_name: str
+    recovery_model: str
+    is_chain_healthy: bool
+    total_logs_checked: int
+    gap_detected: bool
+    broken_lsn_details: Optional[str] = None
+    latest_full_time: Optional[str] = None
+    latest_log_time: Optional[str] = None
+    status: str  # 'HEALTHY_CHAIN', 'BROKEN_CHAIN', 'NO_LOG_BACKUP'
+
+
+class RestoreStep(BaseModel):
+    step_number: int
+    backup_type: str  # 'FULL', 'DIFF', 'LOG'
+    backup_file: str
+    backup_time: str
+    first_lsn: str
+    last_lsn: str
+    file_size_mb: float
+    tsql_command: str
+
+
+class RestoreSimulationRequest(BaseModel):
+    database_name: str
+    target_time_iso: Optional[str] = None
+
+
+class RestoreSimulationResult(BaseModel):
+    database_name: str
+    target_time: str
+    is_recoverable: bool
+    chain_status: str  # 'VALID', 'BROKEN_CHAIN', 'NO_FULL_BACKUP'
+    estimated_data_loss_minutes: float
+    estimated_restore_duration_sec: int
+    steps: List[RestoreStep] = []
+    full_restore_tsql: str
+    warnings: List[str] = []
