@@ -20,6 +20,10 @@ from app.schemas.tempdb_memory import (
     TempDBContentionSummary,
     BufferPoolDrilldownItem,
     BufferPoolDrilldownResponse,
+    ActiveSnapshotTransaction,
+    VersionStoreDatabaseUsage,
+    TopVersionGenerator,
+    VersionStoreAnalysis,
 )
 from app.services.demo_data import (
     DEMO_TEMPDB_MEMORY_SUMMARY,
@@ -848,3 +852,281 @@ def get_buffer_pool_drilldown(
             checkpoint_urgency="HEALTHY",
             items=[],
         )
+
+
+def get_version_store_analysis(params: Optional[ConnectionParams] = None) -> VersionStoreAnalysis:
+    """Detects version store size in TempDB, snapshot isolation / RCSI leaks, and identifies the oldest active transaction blocking the purge."""
+    if params:
+        try:
+            with get_db_connection(params) as conn:
+                cursor = conn.cursor()
+                # 1. Total TempDB size & Version store size
+                cursor.execute("""
+                SELECT 
+                    SUM(size * 8.0 / 1024.0) AS total_tempdb_mb
+                FROM tempdb.sys.database_files;
+                """)
+                row = cursor.fetchone()
+                total_tempdb_mb = float(row[0] or 1024.0)
+
+                # 2. Version store per DB
+                cursor.execute("""
+                SELECT 
+                    d.name AS db_name,
+                    ISNULL(v.version_store_mb, 0.0) AS version_store_mb,
+                    d.is_read_committed_snapshot_on,
+                    d.snapshot_isolation_state_desc
+                FROM sys.databases d
+                LEFT JOIN (
+                    SELECT 
+                        database_id,
+                        SUM(reserved_page_count * 8.0 / 1024.0) AS version_store_mb
+                    FROM sys.dm_tran_version_store_space_usage
+                    GROUP BY database_id
+                ) v ON d.database_id = v.database_id
+                WHERE d.database_id > 4 OR v.version_store_mb > 0
+                ORDER BY version_store_mb DESC;
+                """)
+                db_rows = rows_to_dicts(cursor)
+                db_usages: List[VersionStoreDatabaseUsage] = []
+                total_vs_mb = 0.0
+                for r in db_rows:
+                    mb = float(r.get("version_store_mb") or 0.0)
+                    total_vs_mb += mb
+                    db_usages.append(
+                        VersionStoreDatabaseUsage(
+                            database_name=str(r.get("db_name") or "Unknown"),
+                            version_store_mb=round(mb, 2),
+                            rcsi_enabled=bool(r.get("is_read_committed_snapshot_on")),
+                            snapshot_isolation_state=str(r.get("snapshot_isolation_state_desc") or "OFF"),
+                        )
+                    )
+
+                # 3. Active snapshot transactions
+                cursor.execute("""
+                SELECT 
+                    s_sn.session_id,
+                    s_sn.transaction_id,
+                    s_sn.transaction_sequence_num,
+                    s_sn.first_snapshot_sequence_num,
+                    s_sn.elapsed_time_seconds,
+                    s.login_name,
+                    s.host_name,
+                    s.program_name,
+                    DB_NAME(s_sn.database_id) AS database_name,
+                    s_sn.is_snapshot,
+                    s_sn.max_version_chain_traversed
+                FROM sys.dm_tran_active_snapshot_database_transactions s_sn
+                JOIN sys.dm_exec_sessions s ON s_sn.session_id = s.session_id
+                ORDER BY s_sn.elapsed_time_seconds DESC;
+                """)
+                tx_rows = rows_to_dicts(cursor)
+                active_txs: List[ActiveSnapshotTransaction] = []
+                for idx, t in enumerate(tx_rows):
+                    sec = int(t.get("elapsed_time_seconds") or 0)
+                    h = sec // 3600
+                    m = (sec % 3600) // 60
+                    s = sec % 60
+                    time_fmt = f"{h}s {m}d {s}sn" if h > 0 else f"{m}d {s}sn"
+                    active_txs.append(
+                        ActiveSnapshotTransaction(
+                            session_id=int(t.get("session_id") or 0),
+                            transaction_id=int(t.get("transaction_id") or 0),
+                            transaction_sequence_num=int(t.get("transaction_sequence_num") or 0),
+                            first_snapshot_sequence_num=int(t.get("first_snapshot_sequence_num") or 0),
+                            elapsed_time_seconds=sec,
+                            elapsed_time_formatted=time_fmt,
+                            login_name=str(t.get("login_name") or "unknown"),
+                            host_name=t.get("host_name"),
+                            program_name=t.get("program_name"),
+                            database_name=str(t.get("database_name") or "tempdb"),
+                            is_snapshot=bool(t.get("is_snapshot")),
+                            max_version_chain_traversed=int(t.get("max_version_chain_traversed") or 0),
+                            is_blocking_purge=(idx == 0 and sec > 300),
+                        )
+                    )
+
+                oldest = active_txs[0] if active_txs else None
+                pct_vs = (total_vs_mb / total_tempdb_mb) * 100.0 if total_tempdb_mb > 0 else 0.0
+
+                purge_status = "NORMAL"
+                if pct_vs > 40 or (oldest and oldest.elapsed_time_seconds > 3600):
+                    purge_status = "CRITICAL_GROWTH"
+                elif pct_vs > 20 or (oldest and oldest.elapsed_time_seconds > 900):
+                    purge_status = "PURGE_BLOCKED_WARNING"
+
+                remed_sql = ""
+                if oldest and oldest.elapsed_time_seconds > 600:
+                    remed_sql = f"""-- [REVIEW-ONLY] TempDB Version Store Purge Engelleyici Oturum Teşhisi
+-- Kök Neden Oturum: SPID {oldest.session_id} ({oldest.login_name} @ {oldest.host_name or 'N/A'})
+-- Çalışma Süresi: {oldest.elapsed_time_formatted}
+
+-- 1. Oturumun çalıştırdığı son SQL ifadesini inceleyin:
+DBCC INPUTBUFFER({oldest.session_id});
+
+-- 2. Aktif transaction ve kilit durumunu doğrulayın:
+SELECT * FROM sys.dm_tran_active_transactions WHERE transaction_id = {oldest.transaction_id};
+SELECT * FROM sys.dm_tran_locks WHERE request_session_id = {oldest.session_id};
+
+-- 3. Gerekirse güvenli review-only sonlandırma (rollback süresi dikkate alınmalıdır):
+-- KILL {oldest.session_id};
+"""
+
+                return VersionStoreAnalysis(
+                    total_version_store_mb=round(total_vs_mb, 2),
+                    tempdb_total_size_mb=round(total_tempdb_mb, 2),
+                    version_store_percent_of_tempdb=round(pct_vs, 1),
+                    purge_status=purge_status,
+                    oldest_active_transaction=oldest,
+                    active_transactions_count=len(active_txs),
+                    active_transactions=active_txs,
+                    database_usage=db_usages,
+                    top_generators=[],
+                    remediation_sql=remed_sql,
+                    warnings=[
+                        f"TempDB içinde {round(total_vs_mb, 1)} MB sürüm deposu tespit edildi.",
+                    ] if total_vs_mb > 500 else [],
+                    is_demo=False,
+                )
+        except Exception as exc:
+            logger.warning("Could not query live version store: %s", exc)
+
+    # Demo Fallback
+    oldest_demo = ActiveSnapshotTransaction(
+        session_id=68,
+        transaction_id=10488219,
+        transaction_sequence_num=584210,
+        first_snapshot_sequence_num=584100,
+        elapsed_time_seconds=15480,
+        elapsed_time_formatted="4s 18d 0sn",
+        login_name="report_etl_svc",
+        host_name="BI-APP-PROD-02",
+        program_name="Python-DataPump-Pipeline",
+        database_name="ECommerce_PROD",
+        is_snapshot=True,
+        max_version_chain_traversed=42,
+        is_blocking_purge=True,
+    )
+
+    demo_txs = [
+        oldest_demo,
+        ActiveSnapshotTransaction(
+            session_id=94,
+            transaction_id=10492104,
+            transaction_sequence_num=589400,
+            first_snapshot_sequence_num=584100,
+            elapsed_time_seconds=4320,
+            elapsed_time_formatted="1s 12d 0sn",
+            login_name="crm_app",
+            host_name="CRM-SRV-01",
+            program_name="EntityFramework Core 8.0",
+            database_name="FinansDB",
+            is_snapshot=False,
+            max_version_chain_traversed=18,
+            is_blocking_purge=False,
+        ),
+        ActiveSnapshotTransaction(
+            session_id=105,
+            transaction_id=10501140,
+            transaction_sequence_num=594100,
+            first_snapshot_sequence_num=584100,
+            elapsed_time_seconds=1840,
+            elapsed_time_formatted="30d 40sn",
+            login_name="analyst_murat",
+            host_name="WORKSTATION-M",
+            program_name="DBeaver 24.1",
+            database_name="ECommerce_PROD",
+            is_snapshot=True,
+            max_version_chain_traversed=5,
+            is_blocking_purge=False,
+        ),
+    ]
+
+    demo_db_usage = [
+        VersionStoreDatabaseUsage(
+            database_name="ECommerce_PROD",
+            version_store_mb=18420.0,
+            rcsi_enabled=True,
+            snapshot_isolation_state="ON",
+        ),
+        VersionStoreDatabaseUsage(
+            database_name="FinansDB",
+            version_store_mb=8950.0,
+            rcsi_enabled=False,
+            snapshot_isolation_state="ON",
+        ),
+        VersionStoreDatabaseUsage(
+            database_name="AuditArchive",
+            version_store_mb=1050.0,
+            rcsi_enabled=True,
+            snapshot_isolation_state="OFF",
+        ),
+    ]
+
+    demo_top_generators = [
+        TopVersionGenerator(
+            database_name="ECommerce_PROD",
+            schema_name="dbo",
+            table_name="Orders",
+            version_record_count=1240000,
+            version_size_mb=8420.0,
+        ),
+        TopVersionGenerator(
+            database_name="ECommerce_PROD",
+            schema_name="dbo",
+            table_name="InventoryStock",
+            version_record_count=950000,
+            version_size_mb=6200.0,
+        ),
+        TopVersionGenerator(
+            database_name="FinansDB",
+            schema_name="dbo",
+            table_name="AccountLedger",
+            version_record_count=740000,
+            version_size_mb=5100.0,
+        ),
+    ]
+
+    remed_sql = """-- ====================================================================
+-- [REVIEW-ONLY] TempDB Version Store Temizleme & Purge Teşhisi
+-- Hedef Problem: SPID 68 (report_etl_svc) 4 saattir açık ve TempDB temizliğini bloke ediyor!
+-- ====================================================================
+USE [master];
+
+-- 1. Bloke eden oturumun yürüttüğü son sorguyu ve kilitlerini inceleyin:
+DBCC INPUTBUFFER(68);
+
+SELECT 
+    t.session_id,
+    s.login_name,
+    s.host_name,
+    t.elapsed_time_seconds / 60 AS elapsed_minutes,
+    t.is_snapshot
+FROM sys.dm_tran_active_snapshot_database_transactions t
+JOIN sys.dm_exec_sessions s ON t.session_id = s.session_id
+WHERE t.session_id = 68;
+
+-- 2. Gerekirse oturumu kontrollü olarak sonlandırın (İnceleme sonrası yürütülebilir):
+-- KILL 68;
+-- NOT: KILL sonrasında oturumun yaptığı değişikliklerin rollback süresini 
+-- sys.dm_exec_requests (percent_complete) üzerinden takip ediniz.
+"""
+
+    return VersionStoreAnalysis(
+        total_version_store_mb=28420.0,
+        tempdb_total_size_mb=65536.0,
+        version_store_percent_of_tempdb=43.4,
+        purge_status="PURGE_BLOCKED_WARNING",
+        oldest_active_transaction=oldest_demo,
+        active_transactions_count=len(demo_txs),
+        active_transactions=demo_txs,
+        database_usage=demo_db_usage,
+        top_generators=demo_top_generators,
+        remediation_sql=remed_sql,
+        warnings=[
+            "TempDB disk alanının %43.4'ü (28.4 GB) Sürüm Deposu (Version Store) tarafından doldurulmuştur!",
+            "SPID 68 (report_etl_svc) oturumu 4 saat 18 dakikadır açık bir snapshot transaction tutmaktadır. Bu işlem sonlanmadan TempDB eski satır sürümlerini temizleyemez (Purge Blocked).",
+            "TempDB diskinde tükenme (Out-of-Space) riski bulunmaktadır.",
+        ],
+        is_demo=True,
+    )

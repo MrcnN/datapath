@@ -35,3 +35,42 @@ class HAStatusResponse(BaseModel):
     available: bool
     reason: Optional[str] = None
     groups: List[AvailabilityGroup] = []
+
+
+class AGReplicaLagMetric(BaseModel):
+    replica_name: str
+    role: str
+    database_name: str
+    synchronization_state: str
+    availability_mode: str
+    is_suspended: bool
+    suspend_reason_desc: Optional[str] = None
+    log_send_queue_size_kb: float
+    log_send_rate_kb_sec: float
+    redo_queue_size_kb: float
+    redo_rate_kb_sec: float
+    estimated_data_loss_sec: float
+    estimated_recovery_time_sec: float
+    last_commit_time: Optional[str] = None
+    failover_readiness: str  # "READY_NO_DATA_LOSS" | "POTENTIAL_DATA_LOSS" | "NOT_READY_SUSPENDED"
+
+
+class AGTelemetrySummary(BaseModel):
+    ag_name: str
+    primary_replica: str
+    secondary_replicas: List[str] = []
+    total_log_send_queue_mb: float
+    total_redo_queue_mb: float
+    max_rpo_seconds: float
+    max_rto_seconds: float
+    overall_health: str  # "OPTIMAL" | "LAG_WARNING" | "CRITICAL_DESYNC"
+    replica_metrics: List[AGReplicaLagMetric] = []
+    remediation_sql: str
+    warnings: List[str] = []
+    is_demo: bool = False
+
+
+class AGLagAnalysisResponse(BaseModel):
+    available: bool
+    reason: Optional[str] = None
+    groups: List[AGTelemetrySummary] = []

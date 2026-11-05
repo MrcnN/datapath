@@ -12,12 +12,14 @@ from app.schemas.tempdb_memory import (
     MemoryGrantsSummary,
     TempDBContentionSummary,
     BufferPoolDrilldownResponse,
+    VersionStoreAnalysis,
 )
 from app.services.tempdb_memory_service import (
     get_tempdb_memory_summary,
     get_memory_grants_summary,
     get_tempdb_contention_summary,
     get_buffer_pool_drilldown,
+    get_version_store_analysis,
 )
 
 logger = logging.getLogger(__name__)
@@ -66,3 +68,11 @@ def read_buffer_pool_drilldown(
     """Retrieve detailed Buffer Pool cache breakdown for specific database down to table and index level."""
     params = _get_connection_params()
     return get_buffer_pool_drilldown(params, database)
+
+
+@router.get("/tempdb-memory/version-store", response_model=VersionStoreAnalysis)
+@router.get("/tempdb/version-store", response_model=VersionStoreAnalysis)
+def read_version_store_analysis():
+    """Retrieve TempDB version store space breakdown, snapshot isolation transactions, and purge blockages."""
+    params = _get_connection_params()
+    return get_version_store_analysis(params)

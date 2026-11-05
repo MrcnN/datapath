@@ -130,10 +130,16 @@
 ## 🔵 ALTYAPI & KALİTE (CI/CD, Test Kapsamı & Doğrulama)
 
 - [x] **[INFRA-01] Backend Birim ve Entegrasyon Testleri (pytest)**
-  - 78 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
+  - 81 adet otomatik test ile tüm API router ve servislerinin %100 doğrulanması.
 
 - [x] **[FEAT-15] Canlı Felaket Kurtarma & Point-in-Time Restore Simülatörü**
   - LSN süreklilik denetimi (Broken Chain tespiti), sıralı Full/Diff/Log kurtarma reçetesi ve review-only T-SQL STOPAT komut üretimi.
+
+- [x] **[FEAT-16] TempDB Sürüm Deposu (Version Store) & Snapshot Sızıntı Radarı**
+  - Purge engelleyici açık transaction (SPID) tespiti, RCSI/Snapshot tüketimi ve kontrollü KILL/DBCC reçeteleri.
+
+- [x] **[FEAT-17] AlwaysOn AG İkincil Gecikme & RPO/RTO Telemetrisi**
+  - Log send queue, redo queue, RPO saniye veri kaybı riski ve yük devretme hazırlık matrisi.
 
 - [x] **[FEAT-07] Akıllı T-SQL Sorgu Yeniden Yazıcı (Query Rewriter Studio)**
   - Anti-pattern tespiti, SARGable dönüşümler ve yan yana T-SQL diff editörü.

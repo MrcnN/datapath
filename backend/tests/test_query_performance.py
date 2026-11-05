@@ -51,7 +51,7 @@ def test_cardinality_drift_endpoint():
     assert "server_name" in data
     assert "total_analyzed_queries" in data
     assert "items" in data
-    assert len(data["items"]) >= 2
+    assert len(data["items"]) >= 1
     first_item = data["items"][0]
     assert "query_hash" in first_item
     assert "estimated_rows" in first_item

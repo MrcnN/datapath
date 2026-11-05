@@ -1718,3 +1718,92 @@ export interface SwitchRoleResponse {
   active_role: UserRoleType;
   message: string;
 }
+
+
+// ── Version Store & Snapshot Isolation Leak Radar ───────────
+export interface ActiveSnapshotTransaction {
+  session_id: number;
+  transaction_id: number;
+  transaction_sequence_num: number;
+  first_snapshot_sequence_num: number;
+  elapsed_time_seconds: number;
+  elapsed_time_formatted: string;
+  login_name: string;
+  host_name?: string | null;
+  program_name?: string | null;
+  database_name: string;
+  is_snapshot: boolean;
+  max_version_chain_traversed: number;
+  is_blocking_purge: boolean;
+}
+
+export interface VersionStoreDatabaseUsage {
+  database_name: string;
+  version_store_mb: number;
+  rcsi_enabled: boolean;
+  snapshot_isolation_state: string;
+}
+
+export interface TopVersionGenerator {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  version_record_count: number;
+  version_size_mb: number;
+}
+
+export interface VersionStoreAnalysis {
+  total_version_store_mb: number;
+  tempdb_total_size_mb: number;
+  version_store_percent_of_tempdb: number;
+  purge_status: 'NORMAL' | 'PURGE_BLOCKED_WARNING' | 'CRITICAL_GROWTH' | string;
+  oldest_active_transaction?: ActiveSnapshotTransaction | null;
+  active_transactions_count: number;
+  active_transactions: ActiveSnapshotTransaction[];
+  database_usage: VersionStoreDatabaseUsage[];
+  top_generators: TopVersionGenerator[];
+  remediation_sql: string;
+  warnings: string[];
+  is_demo: boolean;
+}
+
+
+// ── AlwaysOn Availability Groups Lag & Telemetry ─────────────
+export interface AGReplicaLagMetric {
+  replica_name: string;
+  role: string;
+  database_name: string;
+  synchronization_state: string;
+  availability_mode: string;
+  is_suspended: boolean;
+  suspend_reason_desc?: string | null;
+  log_send_queue_size_kb: number;
+  log_send_rate_kb_sec: number;
+  redo_queue_size_kb: number;
+  redo_rate_kb_sec: number;
+  estimated_data_loss_sec: number;
+  estimated_recovery_time_sec: number;
+  last_commit_time?: string | null;
+  failover_readiness: 'READY_NO_DATA_LOSS' | 'POTENTIAL_DATA_LOSS' | 'NOT_READY_SUSPENDED' | string;
+}
+
+export interface AGTelemetrySummary {
+  ag_name: string;
+  primary_replica: string;
+  secondary_replicas: string[];
+  total_log_send_queue_mb: number;
+  total_redo_queue_mb: number;
+  max_rpo_seconds: number;
+  max_rto_seconds: number;
+  overall_health: 'OPTIMAL' | 'LAG_WARNING' | 'CRITICAL_DESYNC' | string;
+  replica_metrics: AGReplicaLagMetric[];
+  remediation_sql: string;
+  warnings: string[];
+  is_demo: boolean;
+}
+
+export interface AGLagAnalysisResponse {
+  available: boolean;
+  reason?: string | null;
+  groups: AGTelemetrySummary[];
+}

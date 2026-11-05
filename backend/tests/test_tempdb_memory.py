@@ -103,3 +103,23 @@ def test_tempdb_contention_endpoint():
 
 
 
+
+
+def test_version_store_endpoint():
+    response = client.get("/api/tempdb-memory/version-store")
+    assert response.status_code == 200
+    data = response.json()
+    assert "total_version_store_mb" in data
+    assert "tempdb_total_size_mb" in data
+    assert "version_store_percent_of_tempdb" in data
+    assert "purge_status" in data
+    assert data["purge_status"] in ("NORMAL", "PURGE_BLOCKED_WARNING", "CRITICAL_GROWTH")
+    assert "oldest_active_transaction" in data
+    assert data["oldest_active_transaction"] is not None
+    assert "session_id" in data["oldest_active_transaction"]
+    assert "elapsed_time_seconds" in data["oldest_active_transaction"]
+    assert "database_usage" in data
+    assert len(data["database_usage"]) > 0
+    assert "top_generators" in data
+    assert "remediation_sql" in data
+    assert "DBCC INPUTBUFFER" in data["remediation_sql"]

@@ -6,8 +6,8 @@ from fastapi import APIRouter
 
 from app.core.config import settings
 from app.db.connection import ConnectionParams
-from app.schemas.high_availability import HAStatusResponse
-from app.services.ha_service import get_ha_status
+from app.schemas.high_availability import HAStatusResponse, AGLagAnalysisResponse
+from app.services.ha_service import get_ha_status, get_ag_lag_telemetry
 
 logger = logging.getLogger(__name__)
 
@@ -40,3 +40,16 @@ def read_ha_status():
             reason=f"Yüksek erişilebilirlik durumu alınamadı: {str(exc)}",
             groups=[],
         )
+
+
+@router.get("/high-availability/lag-telemetry", response_model=AGLagAnalysisResponse)
+@router.get("/ha/lag-telemetry", response_model=AGLagAnalysisResponse)
+def read_ag_lag_telemetry():
+    """Retrieve AlwaysOn AG log send queue, redo lag, RPO (data loss) and RTO (recovery time) metrics."""
+    params = _get_connection_params()
+    try:
+        return get_ag_lag_telemetry(params)
+    except Exception as exc:
+        logger.error("AG lag telemetry error: %s", exc)
+        from app.services.ha_service import _get_demo_ag_telemetry
+        return _get_demo_ag_telemetry(is_live_unavailable=True)

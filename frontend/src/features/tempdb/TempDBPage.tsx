@@ -22,6 +22,7 @@ import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import MemoryGrantsViewer from './components/MemoryGrantsViewer';
 import TempDBContentionViewer from './components/TempDBContentionViewer';
 import BufferPoolTomographyViewer from './components/BufferPoolTomographyViewer';
+import VersionStoreRadar from './components/VersionStoreRadar';
 import { getTempDBMemorySummary } from '../../lib/api';
 import type {
   TempDBMemorySummary,
@@ -614,6 +615,9 @@ export default function TempDBPage() {
           </div>
         </div>
       )}
+
+      {/* Section: TempDB Version Store & Snapshot Isolation Leak Radar */}
+      <VersionStoreRadar />
 
       {/* Section: TempDB PFS/GAM/SGAM Latch Contention & Session Space Leaks */}
       <TempDBContentionViewer />

@@ -7,6 +7,7 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import { getHAStatus } from '../../lib/api';
 import type { HAStatus, AGReplica, AGDatabase } from '../../lib/types';
+import AGLagTelemetryViewer from './components/AGLagTelemetryViewer';
 import styles from './HAPage.module.css';
 
 export default function HAPage() {
@@ -177,6 +178,9 @@ export default function HAPage() {
               </div>
             </div>
           </div>
+
+          {/* AlwaysOn Lag & RPO/RTO Telemetry */}
+          <AGLagTelemetryViewer />
 
           {/* Group Content or Structured Standalone Views */}
           {groups.length === 0 ? (

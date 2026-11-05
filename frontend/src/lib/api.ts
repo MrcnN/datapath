@@ -26,6 +26,7 @@ import type {
   Role,
   SecurityAuditSummary,
   HAStatus,
+  AGLagAnalysisResponse,
   Database,
   MissingIndex,
   UnusedIndex,
@@ -51,6 +52,7 @@ import type {
   LSNChainStatus,
   RestoreSimulationRequest,
   RestoreSimulationResult,
+  VersionStoreAnalysis,
   MemoryGrantsSummary,
   TempDBContentionSummary,
   HealthScoreResponse,
@@ -330,6 +332,10 @@ export async function getSecurityAudit(): Promise<SecurityAuditSummary> {
 
 export async function getHAStatus(): Promise<HAStatus> {
   return apiFetch<HAStatus>('/api/high-availability/status');
+}
+
+export async function getAGLagTelemetry(): Promise<AGLagAnalysisResponse> {
+  return apiFetch<AGLagAnalysisResponse>('/api/high-availability/lag-telemetry');
 }
 
 // ── Index Intelligence ────────────────────────────────────────
@@ -612,4 +618,10 @@ export async function switchUserRole(newRole: UserRoleType): Promise<SwitchRoleR
     method: 'POST',
     body: JSON.stringify({ new_role: newRole }),
   });
+}
+
+
+// ── Version Store & Snapshot Isolation Leak Radar ───────────
+export async function getVersionStoreAnalysis(): Promise<VersionStoreAnalysis> {
+  return apiFetch<VersionStoreAnalysis>('/api/tempdb-memory/version-store');
 }

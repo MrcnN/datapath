@@ -187,3 +187,49 @@ class BufferPoolDrilldownResponse(BaseModel):
     clean_pages_mb: float
     checkpoint_urgency: str
     items: List[BufferPoolDrilldownItem]
+
+
+class ActiveSnapshotTransaction(BaseModel):
+    session_id: int
+    transaction_id: int
+    transaction_sequence_num: int
+    first_snapshot_sequence_num: int
+    elapsed_time_seconds: int
+    elapsed_time_formatted: str
+    login_name: str
+    host_name: Optional[str] = None
+    program_name: Optional[str] = None
+    database_name: str
+    is_snapshot: bool
+    max_version_chain_traversed: int
+    is_blocking_purge: bool
+
+
+class VersionStoreDatabaseUsage(BaseModel):
+    database_name: str
+    version_store_mb: float
+    rcsi_enabled: bool
+    snapshot_isolation_state: str
+
+
+class TopVersionGenerator(BaseModel):
+    database_name: str
+    schema_name: str
+    table_name: str
+    version_record_count: int
+    version_size_mb: float
+
+
+class VersionStoreAnalysis(BaseModel):
+    total_version_store_mb: float
+    tempdb_total_size_mb: float
+    version_store_percent_of_tempdb: float
+    purge_status: str  # "NORMAL" | "PURGE_BLOCKED_WARNING" | "CRITICAL_GROWTH"
+    oldest_active_transaction: Optional[ActiveSnapshotTransaction] = None
+    active_transactions_count: int
+    active_transactions: List[ActiveSnapshotTransaction] = []
+    database_usage: List[VersionStoreDatabaseUsage] = []
+    top_generators: List[TopVersionGenerator] = []
+    remediation_sql: str
+    warnings: List[str] = []
+    is_demo: bool = False
