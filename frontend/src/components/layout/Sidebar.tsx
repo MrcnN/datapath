@@ -4,6 +4,7 @@ import {
   LayoutDashboard,
   Server,
   TrendingUp,
+  GitCompare,
   Wand2,
   GitPullRequest,
   Hourglass,
@@ -11,17 +12,17 @@ import {
   FlaskConical,
   Wrench,
   BarChart3,
+  HardDrive,
   Cpu,
   PieChart,
-  HardDrive,
   AlertTriangle,
   Radio,
   Database,
   Activity,
   ShieldCheck,
   Shield,
+  ShieldAlert,
   CalendarClock,
-  GitCompare,
   Terminal,
   PanelLeftClose,
   PanelLeftOpen,
@@ -43,33 +44,39 @@ interface NavSection {
   items: NavItem[];
 }
 
-const navSections: NavSection[] = [
+export const navSections: NavSection[] = [
   {
-    title: 'Genel Bakış',
+    title: 'Gözlem & Canlı Kokpit',
     items: [
       {
         path: '/',
         label: 'Gösterge Paneli',
         icon: LayoutDashboard,
-        description: 'Genel sağlık skoru, kriz durumu ve sistem kaynaklarının anlık birleşik özeti.',
+        description: 'Sistem sağlık skoru, kriz durumu, Z-Score anomali radarı ve birleşik sistem telemetrisi.',
         exact: true,
       },
       {
         path: '/instances',
         label: 'Canlı Oturumlar & Sunucular',
         icon: Server,
-        description: 'Canlı sp_whoisactive seviyesinde çalışan sorgular, kök kilit bloklayıcıları ve çoklu sunucu profilleri.',
+        description: 'Canlı sp_whoisactive seviyesinde çalışan oturumlar, kök kilit bloklayıcıları ve çoklu sunucular.',
       },
     ],
   },
   {
-    title: 'Sorgu & Performans',
+    title: 'Sorgu & Performans Zekâsı',
     items: [
       {
         path: '/query-performance',
         label: 'Ağır Sorgular & Query Store',
         icon: TrendingUp,
-        description: 'En çok CPU, süre ve mantıksal I/O tüketen ağır sorgular ve plan gerilemeleri.',
+        description: 'En çok CPU, süre ve mantıksal I/O tüketen ağır sorgular ve plan gerilemeleri (regressions).',
+      },
+      {
+        path: '/cardinality-drift',
+        label: 'Kardinalite & Parameter Sniffing',
+        icon: GitCompare,
+        description: 'Estimated vs Actual satır sayısı sapmaları (10x-500.000x), şişkin bellek ve sniffing analizi.',
       },
       {
         path: '/query-rewriter',
@@ -79,24 +86,24 @@ const navSections: NavSection[] = [
       },
       {
         path: '/execution-plan',
-        label: 'Sorgu Yürütme Planı',
+        label: 'Sorgu Yürütme Planı (.sqlplan)',
         icon: GitPullRequest,
-        description: 'SSMS gerektirmeden .sqlplan / XML sorgu planlarını operatör ağacı olarak gösterir.',
+        description: 'SSMS gerektirmeden .sqlplan / XML sorgu planlarını operatör ağacı olarak interaktif gösterir.',
       },
       {
         path: '/waits',
-        label: 'Bekleme İstatistikleri',
+        label: 'Bekleme İstatistikleri (Waits)',
         icon: Hourglass,
-        description: 'SQL Server\'ı yavaşlatan bekleme türlerini ve CPU kuyruk baskısını (Signal Wait) analiz eder.',
+        description: 'SQL Server darboğazlarını, kaynak beklemelerini ve CPU kuyruk baskısını (Signal Wait) analiz eder.',
       },
     ],
   },
   {
-    title: 'İndeks & Bakım',
+    title: 'İndeks & Kardinalite Bakımı',
     items: [
       {
         path: '/indexes',
-        label: 'İndeks Analizi',
+        label: 'İndeks Analizi & Parçalanma',
         icon: Layers,
         description: 'Eksik, kullanılmayan, mükerrer ve parçalanmış indeksleri detaylıca listeler.',
       },
@@ -116,16 +123,28 @@ const navSections: NavSection[] = [
         path: '/statistics',
         label: 'İstatistik Sağlığı & Bayatlık',
         icon: BarChart3,
-        description: 'Sorgu planı kardinalite tahminini bozan bayatlamış istatistikler ve otomatik güncelleme reçeteleri.',
+        description: 'Kardinalite tahminini bozan bayatlamış istatistikler ve otomatik güncelleme reçeteleri.',
       },
     ],
   },
   {
-    title: 'Bellek & Depolama',
+    title: 'Bellek & Depolama Analitiği',
     items: [
       {
+        path: '/capacity-runway',
+        label: 'Kapasite & Runway Tahminleme',
+        icon: HardDrive,
+        description: 'Lineer regresyon ile disk dolum takvimi, tükenme gün sayısı (Runway Days) ve proaktif pre-sizing.',
+      },
+      {
+        path: '/storage',
+        label: 'Disk Dosyaları & VLF Mimarisi',
+        icon: Database,
+        description: 'MDF/LDF disk alanı, okuma/yazma gecikmeleri (stall ms) ve Virtual Log File (VLF) şişmesi.',
+      },
+      {
         path: '/tempdb',
-        label: 'TempDB & RAM Durumu',
+        label: 'TempDB & Çekişme Analizi',
         icon: Cpu,
         description: 'TempDB sayfa çekişmesi (GAM/SGAM/PFS), PLE, bellek dağılımı ve Plan Cache şişmesi analizi.',
       },
@@ -133,13 +152,7 @@ const navSections: NavSection[] = [
         path: '/buffer-pool',
         label: 'Tablo RAM Dağılımı (Buffer Pool)',
         icon: PieChart,
-        description: 'Veritabanı bazında RAM\'de tutulan tablolar, kirli sayfalar (dirty pages) ve Checkpoint durumu.',
-      },
-      {
-        path: '/storage',
-        label: 'Disk & Log Dosyaları (VLF)',
-        icon: HardDrive,
-        description: 'MDF/LDF disk alanı, okuma/yazma disk gecikmeleri (stall ms) ve Virtual Log File (VLF) şişmesi.',
+        description: "Veritabanı bazında RAM'de tutulan tablolar, kirli sayfalar (dirty pages) ve Checkpoint durumu.",
       },
     ],
   },
@@ -148,7 +161,7 @@ const navSections: NavSection[] = [
     items: [
       {
         path: '/incidents',
-        label: 'Kilitlenmeler & Deadlock',
+        label: 'Kilitlenmeler & Deadlock Radarı',
         icon: AlertTriangle,
         description: 'Canlı kilitlenme olayları, interaktif SVG Deadlock grafiği ve Olay Kök Neden (RCA) raporlayıcısı.',
       },
@@ -156,36 +169,42 @@ const navSections: NavSection[] = [
         path: '/extended-events',
         label: 'Genişletilmiş Olaylar (XE)',
         icon: Radio,
-        description: 'SQL Server Extended Events oturum yönetimi ve ring_buffer / event_file hedef izleyicisi.',
+        description: 'SQL Server Extended Events oturum yönetimi ve system_health ring_buffer olay izleyicisi.',
       },
       {
         path: '/backups',
         label: 'Yedekleme & Disk Sağlığı',
         icon: Database,
-        description: 'Son yedekleme geçmişi, RPO veri kaybı riski ve suspect_pages bozuk disk sayfası radarı.',
+        description: 'Yedekleme geçmişi, RPO riski, son temiz CHECKDB tarihi ve suspect_pages bozuk sayfa radarı.',
       },
       {
         path: '/high-availability',
         label: 'AlwaysOn & Replikalar',
         icon: Activity,
-        description: 'AlwaysOn Availability Groups replika durumları, senkronizasyon kuyruğu ve gecikme analizi.',
+        description: 'AlwaysOn AG replika sağlık durumları, senkronizasyon gecikmesi ve yük devretme hazırlığı.',
       },
     ],
   },
   {
-    title: 'Güvenlik & Yönetim',
+    title: 'Güvenlik, Yönetim & Betikler',
     items: [
       {
-        path: '/best-practices',
-        label: 'Sistem Uygunluk Karnesi',
+        path: '/rbac',
+        label: 'RBAC & Yetki Matrisi',
         icon: ShieldCheck,
-        description: 'MAXDOP, Cost Threshold ve TempDB dahil 16 kritik mimari kurala göre sunucuyu puanlar.',
+        description: 'Viewer (Salt Okunur), Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi ve rol seçici.',
       },
       {
         path: '/permissions',
         label: 'Kullanıcılar & Yetkiler',
         icon: Shield,
         description: 'Sunucu loginleri, sysadmin rol üyeleri, yetim kullanıcılar ve veritabanı rol izinleri denetimi.',
+      },
+      {
+        path: '/best-practices',
+        label: 'Sistem Uygunluk Karnesi',
+        icon: ShieldAlert,
+        description: 'MAXDOP, Cost Threshold ve TempDB dahil 16 kritik mimari kurala göre sunucuyu puanlar.',
       },
       {
         path: '/agent-jobs',
@@ -195,13 +214,13 @@ const navSections: NavSection[] = [
       },
       {
         path: '/schema-diff',
-        label: 'Şema Karşılaştırma',
+        label: 'Şema Karşılaştırma (Diff)',
         icon: GitCompare,
         description: 'İki veritabanı arasındaki tablo, kolon ve indeks farklarını karşılaştırır; güvenli DDL üretir.',
       },
       {
         path: '/toolkit',
-        label: 'T-SQL Betik Kütüphanesi',
+        label: 'DBA T-SQL Betik Kütüphanesi',
         icon: Terminal,
         description: 'Kategorize edilmiş, salt-okunur güvenli acil durum müdahale ve performans teşhis T-SQL betikleri.',
       },

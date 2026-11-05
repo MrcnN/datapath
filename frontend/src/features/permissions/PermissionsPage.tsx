@@ -36,8 +36,12 @@ import RBACMatrixViewer from './components/RBACMatrixViewer';
 
 type TabType = 'logins' | 'users' | 'roles' | 'audit' | 'rbac';
 
-export default function PermissionsPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('audit');
+interface PermissionsPageProps {
+  initialTab?: TabType;
+}
+
+export default function PermissionsPage({ initialTab }: PermissionsPageProps = {}) {
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'audit');
   const [logins, setLogins] = useState<Login[]>([]);
   const [users, setUsers] = useState<DbUser[]>([]);
   const [roles, setRoles] = useState<Role[]>([]);

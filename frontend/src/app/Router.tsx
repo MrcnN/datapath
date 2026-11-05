@@ -32,6 +32,7 @@ export default function Router() {
 
       {/* 2. Sorgu & Performans */}
       <Route path="/query-performance" element={<QueryPerformancePage />} />
+      <Route path="/cardinality-drift" element={<QueryPerformancePage initialTab="CARDINALITY_DRIFT" />} />
       <Route path="/query-rewriter" element={<QueryRewriterPage />} />
       <Route path="/execution-plan" element={<ExecutionPlanPage />} />
       <Route path="/waits" element={<WaitStatsPage />} />
@@ -46,6 +47,7 @@ export default function Router() {
       <Route path="/tempdb" element={<TempDBPage />} />
       <Route path="/buffer-pool" element={<BufferPoolPage />} />
       <Route path="/storage" element={<StoragePage />} />
+      <Route path="/capacity-runway" element={<StoragePage initialTab="growth" />} />
 
       {/* 5. Kilitlenme & Güvenilirlik */}
       <Route path="/incidents" element={<IncidentCenterPage />} />
@@ -54,6 +56,7 @@ export default function Router() {
       <Route path="/high-availability" element={<HAPage />} />
 
       {/* 6. Güvenlik & Yönetim */}
+      <Route path="/rbac" element={<PermissionsPage initialTab="rbac" />} />
       <Route path="/best-practices" element={<BestPracticesPage />} />
       <Route path="/permissions" element={<PermissionsPage />} />
       <Route path="/agent-jobs" element={<AgentJobsPage />} />

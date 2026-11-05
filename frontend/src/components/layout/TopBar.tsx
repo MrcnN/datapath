@@ -58,7 +58,7 @@ interface ModuleSection {
 export const MODULE_SECTIONS: ModuleSection[] = [
   {
     id: 'genel-bakis',
-    title: 'Genel Bakış',
+    title: 'Gözlem & Canlı Kokpit',
     icon: LayoutDashboard,
     items: [
       { path: '/', label: 'Gösterge Paneli', icon: LayoutDashboard },
@@ -67,10 +67,11 @@ export const MODULE_SECTIONS: ModuleSection[] = [
   },
   {
     id: 'sorgu-performans',
-    title: 'Sorgu & Performans',
+    title: 'Sorgu & Performans Zekâsı',
     icon: TrendingUp,
     items: [
       { path: '/query-performance', label: 'Ağır Sorgular & Query Store', icon: TrendingUp },
+      { path: '/cardinality-drift', label: 'Kardinalite & Parameter Sniffing', icon: GitCompare },
       { path: '/query-rewriter', label: 'Sorgu Düzeltici', icon: Wand2 },
       { path: '/execution-plan', label: 'Yürütme Planı (.sqlplan)', icon: GitPullRequest },
       { path: '/waits', label: 'Bekleme İstatistikleri', icon: Hourglass },
@@ -78,23 +79,24 @@ export const MODULE_SECTIONS: ModuleSection[] = [
   },
   {
     id: 'indeks-bakim',
-    title: 'İndeks & Bakım',
+    title: 'İndeks & Kardinalite Bakımı',
     icon: Layers,
     items: [
-      { path: '/indexes', label: 'İndeks Analizi', icon: Layers },
-      { path: '/statistics', label: 'İstatistik Sağlığı & Bayatlık', icon: BarChart3 },
+      { path: '/indexes', label: 'İndeks Analizi & Parçalanma', icon: Layers },
       { path: '/hypothetical-indexes', label: 'Sanal İndeks Simülatörü', icon: FlaskConical },
       { path: '/maintenance-planner', label: 'Bakım Planlayıcı', icon: Wrench },
+      { path: '/statistics', label: 'İstatistik Sağlığı & Bayatlık', icon: BarChart3 },
     ],
   },
   {
     id: 'bellek-depolama',
-    title: 'Bellek & Depolama',
+    title: 'Bellek & Depolama Analitiği',
     icon: Cpu,
     items: [
-      { path: '/tempdb', label: 'TempDB & RAM Durumu', icon: Cpu },
+      { path: '/capacity-runway', label: 'Kapasite & Runway Tahminleme', icon: HardDrive },
+      { path: '/storage', label: 'Disk & VLF Mimarisi', icon: Database },
+      { path: '/tempdb', label: 'TempDB & Çekişme Analizi', icon: Cpu },
       { path: '/buffer-pool', label: 'Tablo RAM (Buffer Pool)', icon: PieChart },
-      { path: '/storage', label: 'Disk & Log Dosyaları (VLF)', icon: HardDrive },
     ],
   },
   {
@@ -110,11 +112,12 @@ export const MODULE_SECTIONS: ModuleSection[] = [
   },
   {
     id: 'guvenlik-yonetim',
-    title: 'Güvenlik & Yönetim',
+    title: 'Güvenlik, Yönetim & Betikler',
     icon: ShieldCheck,
     items: [
-      { path: '/best-practices', label: 'Sistem Uygunluk Karnesi', icon: ShieldCheck },
+      { path: '/rbac', label: 'RBAC & Yetki Matrisi', icon: ShieldCheck },
       { path: '/permissions', label: 'Kullanıcılar & Yetkiler', icon: Shield },
+      { path: '/best-practices', label: 'Sistem Uygunluk Karnesi', icon: ShieldCheck },
       { path: '/agent-jobs', label: 'SQL Agent & Alarmlar', icon: CalendarClock },
       { path: '/schema-diff', label: 'Şema Karşılaştırma', icon: GitCompare },
       { path: '/toolkit', label: 'T-SQL Betik Kütüphanesi', icon: Terminal },

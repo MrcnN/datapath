@@ -48,11 +48,15 @@ const LOG_REUSE_EXPLANATIONS: Record<string, string> = {
   DATABASE_SNAPSHOT_CREATION: 'Veritabanı anlık görüntüsü (Snapshot) oluşturuluyor.',
 };
 
-export default function StoragePage() {
+interface StoragePageProps {
+  initialTab?: 'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs';
+}
+
+export default function StoragePage({ initialTab }: StoragePageProps = {}) {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs'>('files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs'>(initialTab || 'files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
   const [selectedVlfForSql, setSelectedVlfForSql] = useState<DatabaseVLFInfo | null>(null);

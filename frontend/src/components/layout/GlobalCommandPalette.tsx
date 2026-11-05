@@ -70,6 +70,15 @@ export const ALL_COMMAND_ITEMS: CommandItem[] = [
     keywords: ['ağır sorgu', 'query store', 'expensive', 'yavaş', 'cpu', 'reads', 'gerileme', 'regression'],
   },
   {
+    id: 'cardinality-drift',
+    path: '/cardinality-drift',
+    label: 'Kardinalite & Parameter Sniffing',
+    category: 'Sorgu & Performans Zekâsı',
+    description: 'Estimated vs Actual satır sayısı sapmaları (10x-500.000x), şişkin bellek ve sniffing analizi.',
+    icon: GitCompare,
+    keywords: ['kardinalite', 'cardinality', 'drift', 'sniffing', 'parameter', 'tahmin', 'actual', 'estimated', 'recompile'],
+  },
+  {
     id: 'query-rewriter',
     path: '/query-rewriter',
     label: 'Sorgu Düzeltici & İyileştirici',
@@ -135,7 +144,16 @@ export const ALL_COMMAND_ITEMS: CommandItem[] = [
     keywords: ['bakım', 'maintenance', 'reorganize', 'rebuild', 'job', 'parçalanma', 'fragmentation'],
   },
 
-  // 4. Bellek & Depolama
+  // 4. Bellek & Depolama Analitiği
+  {
+    id: 'capacity-runway',
+    path: '/capacity-runway',
+    label: 'Kapasite & Runway Tahminleme',
+    category: 'Bellek & Depolama Analitiği',
+    description: 'Lineer regresyon ile disk dolum takvimi, tükenme gün sayısı (Runway Days) ve proaktif pre-sizing.',
+    icon: HardDrive,
+    keywords: ['kapasite', 'runway', 'disk', 'tükenme', 'forecasting', 'regresyon', 'büyüme', 'growth', 'pre-sizing'],
+  },
   {
     id: 'tempdb',
     path: '/tempdb',
@@ -202,7 +220,16 @@ export const ALL_COMMAND_ITEMS: CommandItem[] = [
     keywords: ['alwayson', 'ha', 'ag', 'availability group', 'replica', 'failover', 'senkronizasyon'],
   },
 
-  // 6. Güvenlik & Yönetim
+  // 6. Güvenlik, Yönetim & Betikler
+  {
+    id: 'rbac',
+    path: '/rbac',
+    label: 'RBAC & Güvenlik Yetki Matrisi',
+    category: 'Güvenlik, Yönetim & Betikler',
+    description: 'Viewer (Salt Okunur), Operator ve Senior DBA rolleri için fonksiyonel yetki matrisi ve rol seçici.',
+    icon: ShieldCheck,
+    keywords: ['rbac', 'rol', 'yetki', 'role', 'viewer', 'operator', 'senior dba', 'güvenlik', 'izin'],
+  },
   {
     id: 'best-practices',
     path: '/best-practices',
