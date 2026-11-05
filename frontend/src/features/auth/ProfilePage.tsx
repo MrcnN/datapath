@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import {
   User,
   Shield,
@@ -301,7 +302,39 @@ export default function ProfilePage() {
 
         {/* Tab 2: Permissions Matrix Breakdown */}
         {activeTab === 'permissions' && (
-          <div className={styles.permissionsGrid}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 16px',
+              background: 'rgba(56, 189, 248, 0.08)',
+              border: '1px solid rgba(56, 189, 248, 0.25)',
+              borderRadius: '6px'
+            }}>
+              <div>
+                <strong style={{ color: '#ffffff', fontSize: '13px' }}>👑 Tüm Rollerin İzinlerini Yönetmek İster misiniz?</strong>
+                <p style={{ margin: '2px 0 0 0', fontSize: '11.5px', color: '#94a3b8' }}>
+                  Kıdemli DBA (Senior DBA) olarak tüm rollerin 18 granüler iznini açıp kapatabilir ve kullanıcılara rol atayabilirsiniz.
+                </p>
+              </div>
+              <Link
+                to="/role-management"
+                style={{
+                  background: 'var(--accent)',
+                  color: '#080d1a',
+                  fontWeight: 700,
+                  fontSize: '11.5px',
+                  padding: '7px 14px',
+                  borderRadius: '4px',
+                  textDecoration: 'none',
+                  whiteSpace: 'nowrap'
+                }}
+              >
+                Yetki &amp; İzin Yönetim Merkezi &rarr;
+              </Link>
+            </div>
+            <div className={styles.permissionsGrid}>
             <div className={styles.permCard}>
               <Terminal size={22} className={styles.permIcon} />
               <div>
@@ -354,6 +387,7 @@ export default function ProfilePage() {
               </div>
             </div>
           </div>
+        </div>
         )}
 
         {/* Tab 3: Security & Password */}

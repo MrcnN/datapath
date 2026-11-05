@@ -11,6 +11,7 @@ import SchemaDiffPage from '../features/schema-diff/SchemaDiffPage';
 import ToolkitPage from '../features/toolkit/ToolkitPage';
 import BestPracticesPage from '../features/toolkit/BestPracticesPage';
 import PermissionsPage from '../features/permissions/PermissionsPage';
+import RoleManagementPage from '../features/permissions/RoleManagementPage';
 import HAPage from '../features/high-availability/HAPage';
 import IndexesPage from '../features/indexes/IndexesPage';
 import HypotheticalIndexPage from '../features/indexes/HypotheticalIndexPage';
@@ -61,6 +62,7 @@ export default function Router() {
       {/* 6. Güvenlik & Yönetim */}
       <Route path="/best-practices" element={<BestPracticesPage />} />
       <Route path="/permissions" element={<PermissionsPage />} />
+      <Route path="/role-management" element={<RoleManagementPage />} />
       <Route path="/agent-jobs" element={<AgentJobsPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/toolkit" element={<ToolkitPage initialTab="scripts" />} />

@@ -1,0 +1,270 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+  padding: 16px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 440px;
+  background: #0d1527;
+  border: 1px solid #1e293b;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: #f1f5f9;
+}
+
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.providerBadge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.providerTitle {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.closeBtn {
+  background: transparent;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.closeBtn:hover {
+  color: #ffffff;
+  background: #1e293b;
+}
+
+.modalSubtitle {
+  font-size: 12px;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0;
+}
+
+.errorBox {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  color: #fca5a5;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11.5px;
+}
+
+.accountSelector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.defaultAccountCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #141f36;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.defaultAccountCard:hover {
+  background: #192744;
+  border-color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+.accountAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #38bdf8;
+}
+
+.accountMeta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.accountName {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accountEmail {
+  font-size: 11px;
+  color: #94a3b8;
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.accountBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  color: #38bdf8;
+  margin-top: 2px;
+}
+
+.cardArrow {
+  color: #64748b;
+  transition: all 0.15s ease;
+}
+
+.defaultAccountCard:hover .cardArrow {
+  color: #38bdf8;
+  transform: translateX(3px);
+}
+
+.useOtherBtn {
+  background: transparent;
+  border: 1px dashed #334155;
+  border-radius: 6px;
+  color: #94a3b8;
+  padding: 10px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.useOtherBtn:hover {
+  border-color: #38bdf8;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.05);
+}
+
+.customForm {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.inputLabel {
+  font-size: 11px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.textInput {
+  background: #080d1a;
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12px;
+  color: #ffffff;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.textInput:focus {
+  border-color: #38bdf8;
+}
+
+.formActionRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.backBtn {
+  flex: 0 0 70px;
+  background: #141f36;
+  border: 1px solid #1e293b;
+  color: #94a3b8;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 11.5px;
+  cursor: pointer;
+}
+
+.backBtn:hover {
+  background: #1e293b;
+  color: #ffffff;
+}
+
+.submitBtn {
+  flex: 1;
+  background: #38bdf8;
+  border: none;
+  color: #080d1a;
+  font-weight: 700;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: #7dd3fc;
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.securityNote {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding-top: 10px;
+  border-top: 1px solid #1e293b;
+  font-size: 10px;
+  color: #64748b;
+}
+
+.secIcon {
+  color: #10b981;
+}

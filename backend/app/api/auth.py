@@ -1,8 +1,8 @@
-"""api/auth.py — Authentication, OAuth, and Profile Management endpoints."""
+"""api/auth.py — Authentication, OAuth, Profile, and Super-Admin Role Permission Management endpoints."""
 from __future__ import annotations
 
 import logging
-from typing import Optional
+from typing import Optional, List
 from fastapi import APIRouter, HTTPException, Header
 
 from app.schemas.auth import (
@@ -13,12 +13,21 @@ from app.schemas.auth import (
     ProfileUpdateRequest,
     PasswordChangeRequest,
     AuthResponse,
+    RolePermissionMatrixResponse,
+    UpdateRolePermissionsRequest,
+    UpdateUserRoleRequest,
 )
 from app.services import auth_service
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(tags=["Authentication & Profile"])
+router = APIRouter(tags=["Authentication & Role Management"])
+
+
+def _extract_token(authorization: Optional[str]) -> Optional[str]:
+    if authorization and authorization.startswith("Bearer "):
+        return authorization[7:]
+    return None
 
 
 @router.post("/auth/login", response_model=AuthResponse)
@@ -58,18 +67,14 @@ def oauth_login(req: OAuthLoginRequest):
 @router.get("/auth/me", response_model=UserProfile)
 def get_current_user(authorization: Optional[str] = Header(None)):
     """Retrieve profile of the currently active authenticated user."""
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization[7:]
+    token = _extract_token(authorization)
     return auth_service.get_current_user(token)
 
 
 @router.put("/auth/profile", response_model=UserProfile)
 def update_profile(req: ProfileUpdateRequest, authorization: Optional[str] = Header(None)):
     """Update profile details (name, title, department, bio, phone, avatar)."""
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization[7:]
+    token = _extract_token(authorization)
     current_user = auth_service.get_current_user(token)
     return auth_service.update_profile(current_user.id, req)
 
@@ -77,9 +82,7 @@ def update_profile(req: ProfileUpdateRequest, authorization: Optional[str] = Hea
 @router.post("/auth/change-password")
 def change_password(req: PasswordChangeRequest, authorization: Optional[str] = Header(None)):
     """Change user account password."""
-    token = None
-    if authorization and authorization.startswith("Bearer "):
-        token = authorization[7:]
+    token = _extract_token(authorization)
     current_user = auth_service.get_current_user(token)
     try:
         auth_service.change_password(current_user.id, req)
@@ -92,3 +95,60 @@ def change_password(req: PasswordChangeRequest, authorization: Optional[str] = H
 def logout():
     """Terminate current user session."""
     return {"success": True, "message": "Oturum başarıyla sonlandırıldı."}
+
+
+# =====================================================================
+# Role & Permission Policy Management Endpoints (En Üst Yetki Merkezi)
+# =====================================================================
+
+@router.get("/auth/permissions-matrix", response_model=RolePermissionMatrixResponse)
+def get_permissions_matrix(authorization: Optional[str] = Header(None)):
+    """Retrieve all permission definitions, role mappings, and audit trail."""
+    token = _extract_token(authorization)
+    current_user = auth_service.get_current_user(token)
+    return auth_service.get_permission_matrix(current_user)
+
+
+@router.put("/auth/role-permissions", response_model=RolePermissionMatrixResponse)
+def update_role_permissions(req: UpdateRolePermissionsRequest, authorization: Optional[str] = Header(None)):
+    """Allow Senior DBA (highest authority) to toggle/update permissions for any role."""
+    token = _extract_token(authorization)
+    current_user = auth_service.get_current_user(token)
+    try:
+        return auth_service.update_role_permissions(current_user, req)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.get("/auth/users", response_model=List[UserProfile])
+def get_all_users(authorization: Optional[str] = Header(None)):
+    """Retrieve all platform registered users for role delegation."""
+    token = _extract_token(authorization)
+    auth_service.get_current_user(token)  # Ensure token validation
+    return auth_service.get_all_users()
+
+
+@router.put("/auth/users/role", response_model=UserProfile)
+def update_user_role(req: UpdateUserRoleRequest, authorization: Optional[str] = Header(None)):
+    """Allow Senior DBA to promote or demote user operational roles."""
+    token = _extract_token(authorization)
+    current_user = auth_service.get_current_user(token)
+    try:
+        return auth_service.update_user_role(current_user, req)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.post("/auth/reset-permissions", response_model=RolePermissionMatrixResponse)
+def reset_permissions(authorization: Optional[str] = Header(None)):
+    """Reset all role permissions to standard corporate defaults (Senior DBA only)."""
+    token = _extract_token(authorization)
+    current_user = auth_service.get_current_user(token)
+    try:
+        return auth_service.reset_permissions_to_default(current_user)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))

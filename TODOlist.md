@@ -116,6 +116,7 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 - [x] **5.29** TempDB Sürüm Deposu & Snapshot İzolasyonu Sızıntı Radarı (Version Store & Snapshot Leak Radar): sys.dm_tran_version_store_space_usage ve sys.dm_tran_active_snapshot_database_transactions üzerinden en eski açık transaction'ı (Purge Blocker SPID), veritabanı bazlı RCSI/Snapshot tüketimini ve en çok sürüm üreten tabloları yakalayıp güvenli T-SQL reçeteleri sunan optimizasyon motoru (/tempdb).
 - [x] **5.30** AlwaysOn AG İkincil Gecikme, Kuyruk & RPO/RTO Telemetrisi (AlwaysOn AG Lag & RPO/RTO Telemetry): sys.dm_hadr_database_replica_states üzerinden birincil ve ikincil replikalar arasındaki log gönderim kuyruğu, redo gecikmesi, ani kaza anında kaybedilecek veri süresi (RPO saniye) ve yük devretme hazırlık matrisi (/high-availability).
 - [x] **5.31** Kurumsal Kimlik Doğrulama, Profil Yönetimi ve Sosyal Giriş (Google & GitHub OAuth): Tam donanımlı kullanıcı profili düzenleme sayfası (`/profile`), kurumsal giriş (`/login`) ve kayıt (`/register`) ekranları, Google ve GitHub ile tek tıkla OAuth kayıt/giriş entegrasyonu, TopBar kullanıcı avatarı ve açılır profil menüsü (`TopBar`), 4 kademeli DBA operasyonel rol matrisi (Senior DBA, DB Engineer, Operator, Viewer) ve parola yönetimi.
+- [x] **5.32** En Üst Yetki & Granüler İzin Yönetim Merkezi (Role Policy Matrix & User Delegation Studio): Kıdemli DBA (`SENIOR_DBA`) rolüne özel kurumsal yetki kontrol paneli (`/role-management`), 6 kategoride 18 granüler operasyonel iznin tüm roller için interaktif açılıp kapatılması, canlıya kaydetme, fabrika ayarlarına sıfırlama, kullanıcı rol atama/delegasyon tablosu, güvenlik denetim günlüğü (Audit Trail), yenilenen iki panelli kurumsal split-screen giriş sayfası (`/login`), interaktif Google/GitHub OAuth diyalog modalı ve demo giriş butonlarının tamamen kaldırılması.
 
 ---
 
@@ -136,8 +137,9 @@ Bu defter; projenin mimari temellerinden (Tier 0) en derin kurumsal teşhis moto
 | **SQL Agent İşleri** | `/agent-jobs` | Zamanlanmış işler, adım hata detayları, kritik alarmlar ve Database Mail | ✅ Tamamlandı |
 | **Şema Karşılaştırması** | `/schema-diff` | İki veritabanı arası nesne farklılıkları ve güvenli DDL üretimi | ✅ Tamamlandı |
 | **Kullanıcılar & Yetkiler** | `/permissions` | Login denetimi, sysadmin hesapları, yetim kullanıcılar | ✅ Tamamlandı |
+| **Yetki & İzin Yönetimi** | `/role-management` | Senior DBA yetki kontrol paneli, 18 granüler izin matrisi, kullanıcı delegasyonu ve denetim günlüğü | ✅ Tamamlandı |
 | **Kullanıcı Profili & Yetkiler** | `/profile` | DBA rol yönetimi (Senior DBA, DB Engineer, Operator), profil düzenleme, parola ve Google/GitHub hesap bağlama | ✅ Tamamlandı |
-| **Giriş & Kayıt Ekranları** | `/login`, `/register` | Kurumsal e-posta/kullanıcı adı ile giriş, demo hesaplar ve Google/GitHub OAuth ile kayıt | ✅ Tamamlandı |
+| **Giriş & Kayıt Ekranları** | `/login`, `/register` | Kurumsal iki panelli split-screen giriş, Google/GitHub OAuth diyalog modalı, parola gizle/göster | ✅ Tamamlandı |
 | **DBA Araç Seti** | `/toolkit` | Kategorize, aranabilir, kopyalanabilir T-SQL teşhis betikleri | ✅ Tamamlandı |
 | **İstatistik Sağlığı** | `/statistics` | Bayat istatistikler, kardinalite sapması ve otomatik T-SQL reçeteleri | ✅ Tamamlandı |
 | **Teşhis Dosyası Modalı** | `TopBar` | Tek tıkla tüm sağlık ve olay verilerini derleyip dışa aktarma (Export) | ✅ Tamamlandı |
@@ -157,9 +159,12 @@ Bir özelliğin veya modülün tamamlandı sayılması için şu 5 şartın eksi
 
 ## Bölüm 4 — Doğrulama ve Test Matrisi
 
-- **Mevcut pytest Test Sayısı:** 88 Test (Tamamı Başarılı, 100% Geçiş)
+- **Mevcut pytest Test Sayısı:** 92 Test (Tamamı Başarılı, 100% Geçiş)
 - **Frontend Derleme Durumu:** `tsc && vite build` (0 Hata)
 - **Kapsanan Kritik Uç Noktalar:**
+  - `GET /api/auth/permissions-matrix` & `PUT /api/auth/role-permissions` ✅
+  - `GET /api/auth/users` & `PUT /api/auth/users/role` ✅
+  - `POST /api/auth/reset-permissions` ✅
   - `POST /api/auth/login` & `POST /api/auth/register` ✅
   - `POST /api/auth/oauth` (Google & GitHub) ✅
   - `GET /api/auth/me` & `PUT /api/auth/profile` ✅

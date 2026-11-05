@@ -60,6 +60,9 @@ import type {
   ProfileUpdateRequest,
   PasswordChangeRequest,
   AuthResponse,
+  RolePermissionMatrixResponse,
+  UpdateRolePermissionsRequest,
+  UpdateUserRoleRequest,
   MemoryGrantsSummary,
   TempDBContentionSummary,
   HealthScoreResponse,
@@ -677,6 +680,36 @@ export async function changeUserPassword(req: PasswordChangeRequest): Promise<{ 
 
 export async function logoutUser(): Promise<{ success: boolean; message: string }> {
   return apiFetch<{ success: boolean; message: string }>('/api/auth/logout', {
+    method: 'POST',
+  });
+}
+
+
+// ── Role & Permission Policy Management ───────────────────────
+export async function getPermissionsMatrix(): Promise<RolePermissionMatrixResponse> {
+  return apiFetch<RolePermissionMatrixResponse>('/api/auth/permissions-matrix');
+}
+
+export async function updateRolePermissions(req: UpdateRolePermissionsRequest): Promise<RolePermissionMatrixResponse> {
+  return apiFetch<RolePermissionMatrixResponse>('/api/auth/role-permissions', {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function getAllUsers(): Promise<UserProfile[]> {
+  return apiFetch<UserProfile[]>('/api/auth/users');
+}
+
+export async function updateUserRole(req: UpdateUserRoleRequest): Promise<UserProfile> {
+  return apiFetch<UserProfile>('/api/auth/users/role', {
+    method: 'PUT',
+    body: JSON.stringify(req),
+  });
+}
+
+export async function resetPermissionsToDefault(): Promise<RolePermissionMatrixResponse> {
+  return apiFetch<RolePermissionMatrixResponse>('/api/auth/reset-permissions', {
     method: 'POST',
   });
 }

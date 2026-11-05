@@ -99,3 +99,50 @@ def test_change_password():
     })
     assert res.status_code == 200
     assert res.json()["success"] is True
+
+
+def test_permissions_matrix_endpoint():
+    res = client.get("/api/auth/permissions-matrix")
+    assert res.status_code == 200
+    data = res.json()
+    assert "permissions" in data
+    assert "role_policies" in data
+    assert len(data["permissions"]) >= 15
+    assert "SENIOR_DBA" in data["role_policies"]
+    assert "DB_ENGINEER" in data["role_policies"]
+
+
+def test_update_role_permissions():
+    # 1. Update DB_ENGINEER permissions
+    res = client.put("/api/auth/role-permissions", json={
+        "role": "DB_ENGINEER",
+        "permissions": ["sessions.view", "deadlocks.resolve", "queries.rewrite"],
+    })
+    assert res.status_code == 200
+    data = res.json()
+    assert "queries.rewrite" in data["role_policies"]["DB_ENGINEER"]
+    assert len(data["audit_logs"]) > 0
+
+
+def test_get_all_users_and_update_role():
+    # 1. Get users
+    res = client.get("/api/auth/users")
+    assert res.status_code == 200
+    users = res.json()
+    assert len(users) >= 2
+
+    # 2. Update user role
+    target_user = users[1]
+    update_res = client.put("/api/auth/users/role", json={
+        "user_id": target_user["id"],
+        "new_role": "OPERATOR",
+    })
+    assert update_res.status_code == 200
+    assert update_res.json()["role"] == "OPERATOR"
+
+
+def test_reset_permissions():
+    res = client.post("/api/auth/reset-permissions")
+    assert res.status_code == 200
+    data = res.json()
+    assert "ha.failover" in data["role_policies"]["SENIOR_DBA"]

@@ -35,6 +35,7 @@ import {
   User,
   LogOut,
   Settings,
+  Crown,
   type LucideIcon,
 } from 'lucide-react';
 import DossierReportModal from '../report/DossierReportModal';
@@ -119,6 +120,7 @@ export const MODULE_SECTIONS: ModuleSection[] = [
     title: 'Güvenlik, Yönetim & Betikler',
     icon: ShieldCheck,
     items: [
+      { path: '/role-management', label: 'Yetki & İzin Yönetimi', icon: Crown },
       { path: '/profile', label: 'Profilim & Yetkiler', icon: ShieldCheck },
       { path: '/permissions', label: 'Kullanıcılar & Yetkiler', icon: Shield },
       { path: '/best-practices', label: 'Sistem Uygunluk Karnesi', icon: ShieldCheck },
@@ -676,6 +678,22 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                   </div>
 
                   <div className={styles.userMenuItems}>
+                    {user.role === 'SENIOR_DBA' && (
+                      <button
+                        type="button"
+                        role="menuitem"
+                        className={styles.userMenuItem}
+                        style={{ color: 'var(--accent)', fontWeight: 600 }}
+                        onClick={() => {
+                          setUserDropdownOpen(false);
+                          navigate('/role-management');
+                        }}
+                      >
+                        <Crown size={13} className={styles.userMenuIcon} aria-hidden="true" />
+                        <span>👑 Tüm Rol & Yetkileri Yönet</span>
+                      </button>
+                    )}
+
                     <button
                       type="button"
                       role="menuitem"

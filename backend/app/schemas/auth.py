@@ -1,7 +1,7 @@
-"""schemas/auth.py — Authentication, Authorization, OAuth, and User Profile models."""
+"""schemas/auth.py — Authentication, Authorization, OAuth, User Profile and Permission Management models."""
 from __future__ import annotations
 
-from typing import Optional, List
+from typing import Optional, List, Dict
 from pydantic import BaseModel, EmailStr
 
 
@@ -64,3 +64,43 @@ class AuthResponse(BaseModel):
     token: str
     user: UserProfile
     message: str
+
+
+# =====================================================================
+# Role & Permission Policy Management Models (En Üst Yetki Merkezi)
+# =====================================================================
+
+class PermissionDefinition(BaseModel):
+    id: str
+    code: str
+    name: str
+    category: str
+    description: str
+    risk_level: str  # "CRITICAL" | "HIGH" | "MEDIUM" | "LOW"
+
+
+class PermissionAuditLog(BaseModel):
+    id: str
+    timestamp: str
+    operator_name: str
+    operator_role: str
+    action: str
+    details: str
+
+
+class RolePermissionMatrixResponse(BaseModel):
+    is_senior_dba: bool
+    permissions: List[PermissionDefinition]
+    role_policies: Dict[str, List[str]]  # e.g. {"SENIOR_DBA": ["sessions.kill", ...], ...}
+    role_labels: Dict[str, str]
+    audit_logs: List[PermissionAuditLog]
+
+
+class UpdateRolePermissionsRequest(BaseModel):
+    role: str
+    permissions: List[str]
+
+
+class UpdateUserRoleRequest(BaseModel):
+    user_id: str
+    new_role: str

@@ -16,7 +16,10 @@ interface AuthContextType {
   loading: boolean;
   login: (req: UserLoginRequest) => Promise<void>;
   register: (req: UserRegisterRequest) => Promise<void>;
-  loginOAuth: (provider: 'google' | 'github') => Promise<void>;
+  loginOAuth: (
+    provider: 'google' | 'github',
+    customPayload?: { email?: string; full_name?: string; avatar_url?: string }
+  ) => Promise<void>;
   logout: () => Promise<void>;
   updateProfile: (req: ProfileUpdateRequest) => Promise<UserProfile>;
   changePassword: (curr: string, next: string) => Promise<void>;
@@ -64,13 +67,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('datapath_user', JSON.stringify(res.user));
   };
 
-  const loginOAuth = async (provider: 'google' | 'github') => {
-    // In browser/demo environment, simulate OAuth sign-in flow with realistic provider profiles
-    const email = provider === 'google' ? 'erdim.dba@gmail.com' : 'erdim-architect@github.com';
-    const name = provider === 'google' ? 'Erdim (Google Workspace DBA)' : 'Erdim (GitHub Dev)';
-    const avatar = provider === 'google'
+  const loginOAuth = async (
+    provider: 'google' | 'github',
+    customPayload?: { email?: string; full_name?: string; avatar_url?: string }
+  ) => {
+    const email = customPayload?.email?.trim() || (provider === 'google' ? 'erdim.dba@gmail.com' : 'erdim-architect@github.com');
+    const name = customPayload?.full_name?.trim() || (provider === 'google' ? 'Erdim (Google Workspace Senior DBA)' : 'Erdim (GitHub Dev)');
+    const avatar = customPayload?.avatar_url || (provider === 'google'
       ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&auto=format&fit=crop&q=80'
-      : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80';
+      : 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80');
 
     const res = await oauthLoginUser({
       provider,

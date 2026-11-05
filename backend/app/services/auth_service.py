@@ -1,10 +1,11 @@
-"""services/auth_service.py — In-memory & JSON backed user identity, OAuth integration, and profile management."""
+"""services/auth_service.py — In-memory & JSON backed user identity, OAuth integration, profile management, and Super-Admin role permission policies."""
 from __future__ import annotations
 
 import logging
 import uuid
+import copy
 from datetime import datetime, timezone
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 from app.schemas.auth import (
     UserProfile,
@@ -14,6 +15,11 @@ from app.schemas.auth import (
     ProfileUpdateRequest,
     PasswordChangeRequest,
     AuthResponse,
+    PermissionDefinition,
+    PermissionAuditLog,
+    RolePermissionMatrixResponse,
+    UpdateRolePermissionsRequest,
+    UpdateUserRoleRequest,
 )
 
 logger = logging.getLogger(__name__)
@@ -78,6 +84,215 @@ _SESSIONS: Dict[str, str] = {
     "token_admin_demo": "usr_admin_01",
 }
 
+# =====================================================================
+# Permissions Catalog Definition
+# =====================================================================
+_PERMISSIONS_CATALOG: List[PermissionDefinition] = [
+    # 1. Kriz & Canlı Müdahale
+    PermissionDefinition(
+        id="perm_01",
+        code="sessions.kill",
+        name="Kilitlenen Oturumu Sonlandır (KILL SPID)",
+        category="Kriz & Canlı Müdahale",
+        description="Sistemi kilitleyen veya CPU'yu tüketen kaçak oturumları acil durumda sonlandırma T-SQL reçetesi oluşturur.",
+        risk_level="CRITICAL",
+    ),
+    PermissionDefinition(
+        id="perm_02",
+        code="sessions.view",
+        name="Canlı Oturumları ve sp_whoisactive İzle",
+        category="Kriz & Canlı Müdahale",
+        description="Sunucuda çalışan tüm aktif oturumları, bekleme türlerini ve kök kilit bloklayıcılarını canlı izler.",
+        risk_level="LOW",
+    ),
+    PermissionDefinition(
+        id="perm_03",
+        code="deadlocks.resolve",
+        name="Deadlock Analizi ve Kilit Zinciri Müdahalesi",
+        category="Kriz & Canlı Müdahale",
+        description="Oluşan kilitlenme döngülerini interaktif SVG grafiğinde inceler ve kilitlenen nesneye doğrudan müdahale eder.",
+        risk_level="HIGH",
+    ),
+
+    # 2. Sorgu & Performans Zekası
+    PermissionDefinition(
+        id="perm_04",
+        code="query_store.force_plan",
+        name="Query Store Planı Zorla (Force Plan)",
+        category="Sorgu & Performans",
+        description="Performansı gerileyen ağır sorgular için bilinen iyi sorgu planını Query Store üzerinden dondurur/zorlar.",
+        risk_level="HIGH",
+    ),
+    PermissionDefinition(
+        id="perm_05",
+        code="queries.rewrite",
+        name="Sorgu Düzeltici & Diff Analizi",
+        category="Sorgu & Performans",
+        description="SARGable olmayan kodları, implicit conversion hatalarını ve anti-pattern sorguları güvenli T-SQL ile yeniden yazar.",
+        risk_level="MEDIUM",
+    ),
+    PermissionDefinition(
+        id="perm_06",
+        code="execution_plan.analyze",
+        name="Yürütme Planı (.sqlplan) Derin Ağaç İncelemesi",
+        category="Sorgu & Performans",
+        description="XML sorgu planlarını operatör seviyesinde ayrıştırır, maliyet dağılımını ve TempDB dökülmelerini inceler.",
+        risk_level="LOW",
+    ),
+
+    # 3. İndeks & Bakım Operasyonları
+    PermissionDefinition(
+        id="perm_07",
+        code="indexes.rebuild",
+        name="İndeks REBUILD / REORGANIZE Operasyonu Planla",
+        category="İndeks & Bakım",
+        description="Parçalanma eşiklerine göre online/offline indeks bakım reçeteleri hazırlar ve SQL Agent Job üretir.",
+        risk_level="HIGH",
+    ),
+    PermissionDefinition(
+        id="perm_08",
+        code="hypothetical_indexes.simulate",
+        name="Sanal İndeks (WITH STATISTICS_ONLY) Simülatörü",
+        category="İndeks & Bakım",
+        description="Diske bayt yazmadan 'What-If' sanal indeksleri simüle eder ve maliyet iyileştirme oranını ölçer.",
+        risk_level="LOW",
+    ),
+    PermissionDefinition(
+        id="perm_09",
+        code="statistics.update",
+        name="Bayat İstatistikleri Güncelle (UPDATE STATISTICS)",
+        category="İndeks & Bakım",
+        description="Modifikasyon sayacı aşılmış ve kardinalite tahminini bozan bayat istatistikleri FULLSCAN ile tazeler.",
+        risk_level="MEDIUM",
+    ),
+
+    # 4. Bellek & Depolama Operasyonları
+    PermissionDefinition(
+        id="perm_10",
+        code="storage.autogrowth_modify",
+        name="Disk Dosya Boyutlandırma & VLF Küçültme",
+        category="Bellek & Depolama",
+        description="LDF ve MDF dosyalarının büyüme oranlarını düzenler, VLF şişmesini gidermek için kontrollü shrink T-SQL üretir.",
+        risk_level="HIGH",
+    ),
+    PermissionDefinition(
+        id="perm_11",
+        code="tempdb.purge_version_store",
+        name="TempDB Version Store & Purge Blocker Müdahalesi",
+        category="Bellek & Depolama",
+        description="Snapshot izolasyonunda en eski açık transaction'ı (Purge Blocker) tespit eder ve sürüm alanını rahatlatır.",
+        risk_level="HIGH",
+    ),
+    PermissionDefinition(
+        id="perm_12",
+        code="buffer_pool.checkpoint",
+        name="Kontrollü CHECKPOINT Çalıştırma Yönergesi",
+        category="Bellek & Depolama",
+        description="RAM'deki kirli sayfaların diske yazılmasını tetikleyen ve ani I/O patlamalarını önleyen yönerge hazırlar.",
+        risk_level="MEDIUM",
+    ),
+
+    # 5. Yüksek Erişilebilirlik & Kurtarma
+    PermissionDefinition(
+        id="perm_13",
+        code="ha.failover",
+        name="AlwaysOn AG Yük Devretme (Failover)",
+        category="Güvenilirlik & Kurtarma",
+        description="AlwaysOn Availability Group replikaları arasında kontrollü veya acil yük devretme komutlarını oluşturur.",
+        risk_level="CRITICAL",
+    ),
+    PermissionDefinition(
+        id="perm_14",
+        code="backups.restore_simulate",
+        name="LSN Point-in-Time Kurtarma Simülasyonu",
+        category="Güvenilirlik & Kurtarma",
+        description="Hedef dakikaya dönüş için ardışık Full -> Diff -> Log LSN zincirini doğrular ve STOPAT komutunu simüle eder.",
+        risk_level="MEDIUM",
+    ),
+    PermissionDefinition(
+        id="perm_15",
+        code="backups.take_backup",
+        name="Ad-hoc Veritabanı ve Log Yedeği Alma",
+        category="Güvenilirlik & Kurtarma",
+        description="Kritik bakım öncesinde ad-hoc COPY_ONLY tam yedek veya Tail-Log kurtarma yedeği T-SQL reçetesi oluşturur.",
+        risk_level="HIGH",
+    ),
+
+    # 6. Güvenlik & Yetki Politikası (Sadece En Üst Yetki)
+    PermissionDefinition(
+        id="perm_16",
+        code="roles.manage_permissions",
+        name="Tüm Rollerin Sistem İzinlerini Yönet ve Düzenle",
+        category="Yetki & Güvenlik Yönetimi",
+        description="Tüm platformdaki rollerin (Senior DBA, DB Engineer, Operator, Viewer) granüler izin matrisini açıp kapatır.",
+        risk_level="CRITICAL",
+    ),
+    PermissionDefinition(
+        id="perm_17",
+        code="users.assign_roles",
+        name="Kullanıcı Rollerini Değiştir & Yetkilendir",
+        category="Yetki & Güvenlik Yönetimi",
+        description="Platforma kayıtlı kullanıcıların operasyonel rollerini yükseltir, düşürür veya hesap durumunu günceller.",
+        risk_level="CRITICAL",
+    ),
+    PermissionDefinition(
+        id="perm_18",
+        code="security.audit_logs",
+        name="Güvenlik ve Yetki Denetim Günlüklerini İncele",
+        category="Yetki & Güvenlik Yönetimi",
+        description="Kimin hangi yetkiyi veya kullanıcı rolünü ne zaman değiştirdiğini gösteren kronolojik denetim loglarını listeler.",
+        risk_level="LOW",
+    ),
+]
+
+# Default Baseline Role Policies
+_DEFAULT_ROLE_POLICIES: Dict[str, List[str]] = {
+    "SENIOR_DBA": [p.code for p in _PERMISSIONS_CATALOG],  # Senior DBA has all permissions
+    "DB_ENGINEER": [
+        "sessions.view",
+        "deadlocks.resolve",
+        "query_store.force_plan",
+        "queries.rewrite",
+        "execution_plan.analyze",
+        "indexes.rebuild",
+        "hypothetical_indexes.simulate",
+        "statistics.update",
+        "tempdb.purge_version_store",
+        "backups.restore_simulate",
+    ],
+    "OPERATOR": [
+        "sessions.view",
+        "execution_plan.analyze",
+        "hypothetical_indexes.simulate",
+        "backups.restore_simulate",
+    ],
+    "VIEWER": [
+        "sessions.view",
+        "execution_plan.analyze",
+        "security.audit_logs",
+    ],
+}
+
+_ROLE_POLICIES: Dict[str, List[str]] = copy.deepcopy(_DEFAULT_ROLE_POLICIES)
+
+_ROLE_LABELS: Dict[str, str] = {
+    "SENIOR_DBA": "Kıdemli DBA (En Üst Yetki)",
+    "DB_ENGINEER": "Veritabanı Güvenilirlik Mühendisi",
+    "OPERATOR": "Sistem & NOC Operatörü",
+    "VIEWER": "Gözlemci & Denetçi",
+}
+
+_PERMISSION_AUDIT_LOGS: List[PermissionAuditLog] = [
+    PermissionAuditLog(
+        id="audit_init_01",
+        timestamp=datetime.now(timezone.utc).isoformat(),
+        operator_name="Erdim (Senior DBA)",
+        operator_role="SENIOR_DBA",
+        action="Sistem Başlangıç Politikası Yüklendi",
+        details="Tüm roller için varsayılan kurumsal DBA yetki matrisi aktif edildi.",
+    ),
+]
+
 
 def _user_dict_to_profile(u: dict) -> UserProfile:
     return UserProfile(
@@ -107,7 +322,6 @@ def login(req: UserLoginRequest) -> AuthResponse:
             break
 
     if not user_match:
-        # Check if generic demo password for instant access
         raise ValueError("Bu e-posta veya kullanıcı adına ait hesap bulunamadı.")
 
     if req.password != user_match["password"] and req.password != "demo" and req.password != "Password123!":
@@ -157,6 +371,19 @@ def register(req: UserRegisterRequest) -> AuthResponse:
     token = f"tok_{uuid.uuid4().hex}"
     _SESSIONS[token] = new_id
 
+    # Log user creation
+    _PERMISSION_AUDIT_LOGS.insert(
+        0,
+        PermissionAuditLog(
+            id=f"audit_{uuid.uuid4().hex[:6]}",
+            timestamp=now_iso,
+            operator_name=new_user["full_name"],
+            operator_role=new_user["role"],
+            action="Yeni Kullanıcı Kaydı",
+            details=f"{email_clean} adresiyle {new_user['role']} rolünde yeni hesap oluşturuldu.",
+        ),
+    )
+
     return AuthResponse(
         success=True,
         token=token,
@@ -187,14 +414,13 @@ def oauth_login(req: OAuthLoginRequest) -> AuthResponse:
         active_user = existing_user
         msg = f"{req.provider.capitalize()} ile başarıyla giriş yapıldı."
     else:
-        # Auto-provision new account via OAuth
         new_id = f"usr_{uuid.uuid4().hex[:8]}"
         username = email_clean.split("@")[0].replace(".", "_")
         active_user = {
             "id": new_id,
             "email": email_clean,
             "username": username,
-            "password": uuid.uuid4().hex,  # Random secure pass for OAuth
+            "password": uuid.uuid4().hex,
             "full_name": req.full_name.strip() or f"{req.provider.capitalize()} Kullanıcısı",
             "role": "DB_ENGINEER",
             "title": f"{req.provider.capitalize()} Yetkilendirilmiş Mühendis",
@@ -226,12 +452,10 @@ def get_current_user(token: Optional[str] = None) -> UserProfile:
         uid = _SESSIONS[token]
         if uid in _USERS_DB:
             return _user_dict_to_profile(_USERS_DB[uid])
-    # Fallback to default admin profile
     return _user_dict_to_profile(_USERS_DB["usr_admin_01"])
 
 
 def update_profile(user_id: str, req: ProfileUpdateRequest) -> UserProfile:
-    # If user_id not found, fallback to admin_01
     u = _USERS_DB.get(user_id) or _USERS_DB["usr_admin_01"]
     if req.full_name is not None:
         u["full_name"] = req.full_name.strip()
@@ -260,3 +484,111 @@ def change_password(user_id: str, req: PasswordChangeRequest) -> bool:
 
     u["password"] = req.new_password
     return True
+
+
+# =====================================================================
+# Role & Permission Policy Management Methods (En Üst Yetki Merkezi)
+# =====================================================================
+
+def get_permission_matrix(current_user: Optional[UserProfile] = None) -> RolePermissionMatrixResponse:
+    """Returns catalog of all permissions, current role policies, and audit logs."""
+    is_senior = bool(current_user and current_user.role == "SENIOR_DBA")
+    return RolePermissionMatrixResponse(
+        is_senior_dba=is_senior,
+        permissions=_PERMISSIONS_CATALOG,
+        role_policies=_ROLE_POLICIES,
+        role_labels=_ROLE_LABELS,
+        audit_logs=_PERMISSION_AUDIT_LOGS[:20],
+    )
+
+
+def update_role_permissions(current_user: UserProfile, req: UpdateRolePermissionsRequest) -> RolePermissionMatrixResponse:
+    """Only Senior DBA can change what permissions each role possesses."""
+    if current_user.role != "SENIOR_DBA":
+        raise PermissionError("Yetkisiz Erişim: Rol izinlerini yalnızca En Üst Yetkili (Senior DBA) yönetebilir.")
+
+    if req.role not in _ROLE_POLICIES:
+        raise ValueError(f"Tanımsız rol: {req.role}")
+
+    # Senior DBA always retains roles.manage_permissions and core permissions
+    new_perms = list(req.permissions)
+    if req.role == "SENIOR_DBA" and "roles.manage_permissions" not in new_perms:
+        new_perms.append("roles.manage_permissions")
+
+    old_count = len(_ROLE_POLICIES[req.role])
+    _ROLE_POLICIES[req.role] = new_perms
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    _PERMISSION_AUDIT_LOGS.insert(
+        0,
+        PermissionAuditLog(
+            id=f"audit_{uuid.uuid4().hex[:6]}",
+            timestamp=now_iso,
+            operator_name=current_user.full_name,
+            operator_role=current_user.role,
+            action=f"{_ROLE_LABELS.get(req.role, req.role)} İzinleri Güncellendi",
+            details=f"{old_count} olan izin sayısı {len(new_perms)} olarak yeniden düzenlendi.",
+        ),
+    )
+
+    return get_permission_matrix(current_user)
+
+
+def get_all_users() -> List[UserProfile]:
+    """Returns list of all registered users in the platform."""
+    return [_user_dict_to_profile(u) for u in _USERS_DB.values()]
+
+
+def update_user_role(current_user: UserProfile, req: UpdateUserRoleRequest) -> UserProfile:
+    """Senior DBA can promote/demote user roles."""
+    if current_user.role != "SENIOR_DBA":
+        raise PermissionError("Yetkisiz Erişim: Kullanıcı rolünü yalnızca En Üst Yetkili (Senior DBA) değiştirebilir.")
+
+    if req.user_id not in _USERS_DB:
+        raise ValueError("Belirtilen kullanıcı bulunamadı.")
+
+    if req.new_role not in _ROLE_LABELS:
+        raise ValueError(f"Geçersiz rol: {req.new_role}")
+
+    u = _USERS_DB[req.user_id]
+    old_role = u["role"]
+    u["role"] = req.new_role
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    _PERMISSION_AUDIT_LOGS.insert(
+        0,
+        PermissionAuditLog(
+            id=f"audit_{uuid.uuid4().hex[:6]}",
+            timestamp=now_iso,
+            operator_name=current_user.full_name,
+            operator_role=current_user.role,
+            action=f"Kullanıcı Rolü Değiştirildi ({u['full_name']})",
+            details=f"Eski Rol: {old_role} -> Yeni Rol: {req.new_role}",
+        ),
+    )
+
+    return _user_dict_to_profile(u)
+
+
+def reset_permissions_to_default(current_user: UserProfile) -> RolePermissionMatrixResponse:
+    """Restores baseline enterprise role policies."""
+    if current_user.role != "SENIOR_DBA":
+        raise PermissionError("Yetkisiz Erişim: Fabrika ayarlarına yalnızca En Üst Yetkili (Senior DBA) dönebilir.")
+
+    global _ROLE_POLICIES
+    _ROLE_POLICIES = copy.deepcopy(_DEFAULT_ROLE_POLICIES)
+
+    now_iso = datetime.now(timezone.utc).isoformat()
+    _PERMISSION_AUDIT_LOGS.insert(
+        0,
+        PermissionAuditLog(
+            id=f"audit_{uuid.uuid4().hex[:6]}",
+            timestamp=now_iso,
+            operator_name=current_user.full_name,
+            operator_role=current_user.role,
+            action="Fabrika Ayarlarına Sıfırlandı",
+            details="Tüm rollerin izinleri varsayılan kurumsal DBA politikasına döndürüldü.",
+        ),
+    )
+
+    return get_permission_matrix(current_user)

@@ -24,6 +24,7 @@ import {
   ShieldAlert,
   CalendarClock,
   Terminal,
+  Crown,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -188,6 +189,12 @@ export const navSections: NavSection[] = [
   {
     title: 'Güvenlik, Yönetim & Betikler',
     items: [
+      {
+        path: '/role-management',
+        label: 'Yetki & İzin Yönetim Merkezi',
+        icon: Crown,
+        description: 'Kıdemli DBA (Senior DBA) kontrol konsolu. Tüm rollerin izin matrisini ve kullanıcı delegasyonunu yönetir.',
+      },
       {
         path: '/profile',
         label: 'Profil & Operasyon Rolü',

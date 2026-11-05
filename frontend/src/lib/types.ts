@@ -1870,3 +1870,41 @@ export interface AuthResponse {
   user: UserProfile;
   message: string;
 }
+
+
+// ── Role & Permission Policy Management Types ────────────────
+export interface PermissionDefinition {
+  id: string;
+  code: string;
+  name: string;
+  category: string;
+  description: string;
+  risk_level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface PermissionAuditLog {
+  id: string;
+  timestamp: string;
+  operator_name: string;
+  operator_role: string;
+  action: string;
+  details: string;
+}
+
+export interface RolePermissionMatrixResponse {
+  is_senior_dba: boolean;
+  permissions: PermissionDefinition[];
+  role_policies: Record<string, string[]>;
+  role_labels: Record<string, string>;
+  audit_logs: PermissionAuditLog[];
+}
+
+export interface UpdateRolePermissionsRequest {
+  role: string;
+  permissions: string[];
+}
+
+export interface UpdateUserRoleRequest {
+  user_id: string;
+  new_role: string;
+}

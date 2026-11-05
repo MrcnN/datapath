@@ -89,6 +89,14 @@
   - Senior DBA, DB Engineer, Operator ve Viewer 4 kademeli rol ve yetki matrisi.
   - TopBar kullanıcı avatarı, profil kartı açılır penceresi ve güvenli parola yönetimi.
 
+- [x] **[FEAT-12] En Üst Yetki & Granüler İzin Yönetim Merkezi (Role Management & Policy Studio)**
+  - Kıdemli DBA (`SENIOR_DBA`) rolüne özel kurumsal yetki kontrol paneli (`/role-management`).
+  - 6 kategoride 18 granüler iznin tüm roller için interaktif açılıp kapatılması ve canlıya kaydedilmesi.
+  - Kullanıcı rol atama/delegasyon tablosu (promote/demote user roles).
+  - Kronolojik güvenlik denetim günlüğü (Audit Trail).
+  - İki panelli kurumsal split-screen giriş sayfası tasarımı (Görsel referanslı koyu tema, diagonal geometrik sanat, göz ikonu parola gizleme/gösterme).
+  - İnteraktif Google/GitHub OAuth diyalog modalı (`OAuthModal`) ve demo butonlarının kaldırılması.
+
 - [x] **[INFRA-02] Frontend Sıfır-Hata Derleme Kapısı (TypeScript & Vite)**
   - `tsc && vite build` komutunun sıfır hata ve temiz bundle ile tamamlanması.
 
