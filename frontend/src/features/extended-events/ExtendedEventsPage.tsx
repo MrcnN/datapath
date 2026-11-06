@@ -34,7 +34,7 @@ import styles from './ExtendedEventsPage.module.css';
 
 type TabType = 'sessions' | 'events' | 'templates';
 
-export default function ExtendedEventsPage() {
+export default function ExtendedEventsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [summary, setSummary] = useState<ExtendedEventsSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -282,10 +282,10 @@ GO`,
 
   return (
     <div className={styles.container}>
-      <PageHeader
+      {!embedded && <PageHeader
         title="Genişletilmiş Olaylar (XE)"
         subtitle="SQL Server Extended Events oturum yönetimi, ring_buffer ve event_file hedef ayrıştırıcısı ile derin kernel düzeyinde izleme."
-      />
+      />}
 
       {summary?.is_demo && <DemoDataBanner />}
 

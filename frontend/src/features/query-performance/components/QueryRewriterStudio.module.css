@@ -379,3 +379,153 @@
   line-height: 1.5;
   margin: 0;
 }
+
+/* Mode Switcher Tabs */
+.modeTabs {
+  display: flex;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  width: fit-content;
+}
+
+.modeTabBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modeTabBtn:hover {
+  color: var(--text-primary);
+}
+
+.modeTabBtnActive {
+  background: var(--bg-hover, #1f2937);
+  color: var(--accent, #38bdf8);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* Plan Guide Layout */
+.planGuideContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.planGuideConfigCard {
+  background: var(--bg-surface, var(--bg-card));
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.configRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.configLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+  min-width: 140px;
+}
+
+.guideNameInput {
+  background: #090d16;
+  border: 1px solid var(--border-color);
+  color: #a5f3fc;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: var(--font-mono, monospace);
+  font-size: 13px;
+  min-width: 280px;
+}
+
+.hintsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 10px;
+}
+
+.hintCard {
+  background: #0d121f;
+  border: 1px solid #1f2937;
+  border-radius: 6px;
+  padding: 10px 12px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+
+.hintCard:hover {
+  border-color: rgba(56, 189, 248, 0.4);
+}
+
+.hintCardActive {
+  border-color: var(--accent, #38bdf8);
+  background: rgba(56, 189, 248, 0.08);
+}
+
+.hintCode {
+  font-size: 12px;
+  font-weight: 600;
+  color: #38bdf8;
+  font-family: var(--font-mono, monospace);
+}
+
+.hintDesc {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.generatedScriptBlock {
+  background: #090d16;
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.scriptHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 14px;
+  background: #0d121f;
+  border-bottom: 1px solid #1f2937;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.scriptPre {
+  margin: 0;
+  padding: 14px;
+  font-size: 12px;
+  font-family: var(--font-mono, monospace);
+  color: #34d399;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre-wrap;
+}

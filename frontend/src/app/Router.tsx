@@ -55,7 +55,7 @@ export default function Router() {
 
       {/* 5. Kilitlenme & Güvenilirlik */}
       <Route path="/incidents" element={<IncidentCenterPage />} />
-      <Route path="/extended-events" element={<ExtendedEventsPage />} />
+      <Route path="/extended-events" element={<IncidentCenterPage initialTab="extended-events" />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
       <Route path="/high-availability" element={<HAPage />} />
 

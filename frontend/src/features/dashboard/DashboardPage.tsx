@@ -626,9 +626,9 @@ export default function DashboardPage() {
                               borderColor: 'rgba(56, 189, 248, 0.3)',
                               fontWeight: 600,
                             }}
-                            title="Veritabanı 360 Röntgeni"
+                            title="Veritabanı Detay ve Oturumları"
                           >
-                            360 Röntgen →
+                            İncele →
                           </button>
                           <button
                             type="button"

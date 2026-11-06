@@ -71,9 +71,9 @@ export default function DatabaseTable() {
             fontWeight: 600,
             cursor: 'pointer',
           }}
-          title="Veritabanı 360 Röntgeni"
+          title="Veritabanı Detay ve Oturumları"
         >
-          360 Röntgen →
+          İncele →
         </button>
       ),
     },

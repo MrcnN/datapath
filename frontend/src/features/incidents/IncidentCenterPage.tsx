@@ -36,11 +36,13 @@ import type {
 import RCAReportModal from './components/RCAReportModal';
 import HAPage from '../high-availability/HAPage';
 import BackupRecoveryPage from '../backups/BackupRecoveryPage';
-import { Shield, Database } from 'lucide-react';
+import ExtendedEventsPage from '../extended-events/ExtendedEventsPage';
+import PredictiveAnomalyRadar from './components/PredictiveAnomalyRadar';
+import { Shield, Database, Radio, Layers } from 'lucide-react';
 
 import styles from './IncidentCenterPage.module.css';
 
-type TabType = 'sessions' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'agent-jobs' | 'error-log' | 'timeline';
+type TabType = 'sessions' | 'radar' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
 
 interface TabItem {
   key: TabType;
@@ -49,11 +51,13 @@ interface TabItem {
 }
 
 const tabs: TabItem[] = [
-  { key: 'sessions', label: 'Canlı Süreç & Oturumlar (WhoIsActive)', icon: Activity },
+  { key: 'sessions', label: 'Canlı Süreç & Oturumlar', icon: Activity },
+  { key: 'radar', label: 'Anomali Radarı & Darboğaz', icon: Radio },
   { key: 'blocking', label: 'Engelleme Zincirleri', icon: AlertTriangle },
   { key: 'deadlocks', label: 'Kilitlenme Analizi', icon: Flame },
   { key: 'alwayson', label: 'AlwaysOn & Replikalar', icon: Shield },
   { key: 'backups', label: 'Yedekleme & RPO Riski', icon: Database },
+  { key: 'extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Layers },
   { key: 'agent-jobs', label: 'Agent İşleri', icon: Briefcase },
   { key: 'error-log', label: 'Hata Günlüğü', icon: FileText },
   { key: 'timeline', label: 'Zaman Çizelgesi', icon: GitCommit },
@@ -77,7 +81,7 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
     setLoading(true);
     setError(null);
     try {
-      if (tab === 'sessions') {
+      if (tab === 'sessions' || tab === 'radar' || tab === 'extended-events') {
         // SessionsTable manages its own live data and auto-refresh interval
         setLoading(false);
         return;
@@ -168,9 +172,11 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
                 onRefresh={() => fetchTabData('blocking')}
               />
             )}
-                        {activeTab === 'deadlocks' && <DeadlockViewer />}
+                        {activeTab === 'radar' && <PredictiveAnomalyRadar />}
+            {activeTab === 'deadlocks' && <DeadlockViewer />}
             {activeTab === 'alwayson' && <HAPage embedded />}
             {activeTab === 'backups' && <BackupRecoveryPage embedded />}
+            {activeTab === 'extended-events' && <ExtendedEventsPage embedded />}
             {activeTab === 'agent-jobs' && <AgentJobsTable jobs={agentJobs} />}
             {activeTab === 'error-log' && <ErrorLogViewer entries={errorLogs} />}
             {activeTab === 'timeline' && <IncidentTimeline events={timeline} />}
