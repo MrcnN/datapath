@@ -49,7 +49,7 @@ export default function RootCauseDiagnosticBanner({
         isCritical ? styles.containerCritical : styles.containerHealthy
       }`}
       role="region"
-      aria-label="Cerrahi Kök Neden Teşhisi"
+      aria-label="Kök Neden ve Teşhis Özeti"
     >
       <div className={styles.headerRow}>
         <div className={styles.headerLeft}>
@@ -60,7 +60,7 @@ export default function RootCauseDiagnosticBanner({
               <CheckCircle2 size={14} className={styles.iconHealthy} />
             )}
             <span className={styles.badgeText}>
-              {isCritical ? 'CERRAHİ TEŞHİS BRİFİNGİ' : 'SİSTEM SAĞLIKLI & SERBEST AKIŞ'}
+              {isCritical ? 'KÖK NEDEN & TEŞHİS ÖZETİ' : 'SİSTEM SAĞLIKLI & SERBEST AKIŞ'}
             </span>
           </div>
           <span className={styles.headerSub}>

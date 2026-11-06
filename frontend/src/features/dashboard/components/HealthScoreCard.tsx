@@ -177,7 +177,7 @@ export default function HealthScoreCard() {
       {/* Expandable Diagnostic Findings & Recommendations */}
       {showDetails && data?.pillars && (
         <div className={styles.detailsDrawer}>
-          <div className={styles.detailsHeader}>Bileşen Bazlı Cerrahi Teşhis ve Bulgular</div>
+          <div className={styles.detailsHeader}>Bileşen Bazlı Sağlık Teşhisi ve Bulgular</div>
           <div className={styles.detailsList}>
             {data.pillars.map((p) => (
               <div key={p.id} className={styles.detailItem}>

@@ -282,7 +282,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 2. Cerrahi Kök Neden Teşhis Brifingi */}
+      {/* 2. Kök Neden & Teşhis Özeti */}
       <RootCauseDiagnosticBanner
         blocking={blocking}
         readiness={readiness}
