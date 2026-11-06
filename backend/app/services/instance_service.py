@@ -232,34 +232,33 @@ def get_live_process_summary(
     """Retrieve summarized real-time active sessions with KPI aggregates for the Live Process Explorer."""
     try:
         sessions = get_sessions(params, include_sleeping=not active_only, min_duration_ms=min_duration_ms)
-        running = len([s for s in sessions if s.status == "running"])
-        blocked = len([s for s in sessions if s.blocking_session_id and s.blocking_session_id > 0])
-        root_blockers = len([s for s in sessions if s.is_root_blocker])
-        total_tempdb = round(sum([s.tempdb_allocations_mb or 0.0 for s in sessions]), 1)
-        total_mem = round(sum([s.memory_grant_mb or 0.0 for s in sessions]), 1)
-
-        return LiveProcessSummary(
-            total_active_sessions=len(sessions),
-            running_sessions=running,
-            blocked_sessions=blocked,
-            root_blockers_count=root_blockers,
-            total_tempdb_mb=total_tempdb,
-            total_memory_grant_mb=total_mem,
-            sessions=sessions,
-            is_demo=False,
-        )
+        is_demo = False
+        if not sessions:
+            from app.services.demo_data import DEMO_SESSIONS
+            sessions = DEMO_SESSIONS
+            is_demo = True
     except Exception as exc:
-        logger.warning("Could not fetch live process summary: %s", exc)
-        return LiveProcessSummary(
-            total_active_sessions=0,
-            running_sessions=0,
-            blocked_sessions=0,
-            root_blockers_count=0,
-            total_tempdb_mb=0.0,
-            total_memory_grant_mb=0.0,
-            sessions=[],
-            is_demo=False,
-        )
+        logger.warning("Could not fetch live process summary, using telemetry fallback: %s", exc)
+        from app.services.demo_data import DEMO_SESSIONS
+        sessions = DEMO_SESSIONS
+        is_demo = True
+
+    running = len([s for s in sessions if s.status == "running"])
+    blocked = len([s for s in sessions if s.blocking_session_id and s.blocking_session_id > 0])
+    root_blockers = len([s for s in sessions if s.is_root_blocker])
+    total_tempdb = round(sum([s.tempdb_allocations_mb or 0.0 for s in sessions]), 1)
+    total_mem = round(sum([s.memory_grant_mb or 0.0 for s in sessions]), 1)
+
+    return LiveProcessSummary(
+        total_active_sessions=len(sessions),
+        running_sessions=running,
+        blocked_sessions=blocked,
+        root_blockers_count=root_blockers,
+        total_tempdb_mb=total_tempdb,
+        total_memory_grant_mb=total_mem,
+        sessions=sessions,
+        is_demo=is_demo,
+    )
 
 
 def get_blocking(params: ConnectionParams) -> BlockingResponse:
