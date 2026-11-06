@@ -16,14 +16,14 @@
 
 /* Tier 1: Main Global Cockpit Bar */
 .topBarMain {
-  height: 48px;
+  height: var(--topbar-height);
+  min-height: var(--topbar-height);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 var(--space-5);
   gap: var(--space-4);
   background-color: var(--bg-surface);
-  border-bottom: 1px solid var(--border-subtle);
 }
 
 .leftSection {
@@ -215,89 +215,6 @@
   background-color: var(--bg-hover);
   color: var(--accent);
   border-color: var(--border-hover);
-}
-
-/* Tier 2: Contextual Module Sub-Navigation Bar */
-.subNavBar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 var(--space-5);
-  background-color: var(--bg-subtle);
-  overflow-x: auto;
-  scrollbar-width: none;
-  min-height: 38px;
-}
-
-.subNavBar::-webkit-scrollbar {
-  display: none;
-}
-
-.subnavTabsList {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 100%;
-}
-
-.subnavTab {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 12px;
-  font-size: 12px;
-  font-weight: 500;
-  color: var(--text-secondary);
-  background: transparent;
-  border: none;
-  border-bottom: 2px solid transparent;
-  cursor: pointer;
-  text-decoration: none;
-  white-space: nowrap;
-  transition: all var(--transition-fast);
-}
-
-.subnavTab:hover {
-  color: var(--text-primary);
-  background-color: var(--bg-hover);
-  text-decoration: none;
-}
-
-.subnavTabActive {
-  color: var(--text-primary);
-  font-weight: 600;
-  border-bottom-color: var(--accent);
-  background-color: var(--bg-surface);
-}
-
-.subnavIcon {
-  color: var(--text-muted);
-  transition: color var(--transition-fast);
-}
-
-.subnavTabActive .subnavIcon {
-  color: var(--accent);
-}
-
-.subnavBadge {
-  font-size: 9.5px;
-  font-family: var(--font-mono);
-  background-color: var(--bg-elevated);
-  border: 1px solid var(--border);
-  padding: 1px 5px;
-  border-radius: 4px;
-  color: var(--text-muted);
-  font-weight: 600;
-}
-
-.subnavRightMeta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: var(--text-muted);
-  flex-shrink: 0;
-  padding-left: 12px;
 }
 
 /* Category Switcher Popover Dropdown */

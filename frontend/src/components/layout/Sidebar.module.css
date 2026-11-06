@@ -1,17 +1,21 @@
+/* ============================================
+   Clean Modern Corporate Sidebar (helt360 inspired)
+   Deep Slate Navy, Minimalist, Uncluttered
+   ============================================ */
+
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   width: var(--sidebar-width);
   height: 100vh;
-  background-color: rgba(10, 16, 31, 0.88);
-  backdrop-filter: blur(18px);
-  border-right: 1px solid rgba(56, 189, 248, 0.1);
-  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.25);
+  background-color: #0b132b;
+  border-right: 1px solid #1e293b;
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.35);
   display: flex;
   flex-direction: column;
   z-index: 100;
-  overflow-y: auto;
+  overflow: hidden;
   user-select: none;
   transition: width var(--transition-base);
 }
@@ -20,48 +24,50 @@
   width: var(--sidebar-width-collapsed);
 }
 
+/* Header with Brand Logo & Collapse Toggle */
 .logoHeader {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  padding: 0 var(--space-3);
-  border-bottom: 1px solid rgba(56, 189, 248, 0.1);
+  justify-content: space-between;
+  padding: 0 14px;
   height: var(--topbar-height);
   min-height: var(--topbar-height);
+  border-bottom: 1px solid #1e293b;
+  background-color: #090e1f;
   flex-shrink: 0;
-  background-color: rgba(13, 21, 39, 0.65);
-  backdrop-filter: blur(12px);
 }
 
 .sidebarCollapsed .logoHeader {
   justify-content: center;
-  padding: 0;
+  padding: 0 8px;
 }
 
-.collapseToggleBtn {
-  width: 30px;
-  height: 30px;
-  background-color: rgba(26, 38, 65, 0.6);
-  border: 1px solid rgba(56, 189, 248, 0.18);
-  border-radius: var(--radius-sm);
+.brandBox {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.sidebarCollapsed .brandBox {
+  display: none;
+}
+
+.brandIconBox {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.2) 0%, rgba(37, 99, 235, 0.2) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
-  cursor: pointer;
+  color: #38bdf8;
   flex-shrink: 0;
-  transition: all var(--transition-fast);
 }
 
-.collapseToggleBtn:hover {
-  background-color: rgba(56, 189, 248, 0.15);
-  border-color: var(--accent);
-  color: #ffffff;
-  
-}
-
-.toggleIcon {
-  stroke-width: 2;
+.brandIcon {
+  stroke-width: 2.2;
 }
 
 .logoText {
@@ -72,131 +78,155 @@
 }
 
 .logoName {
-  font-size: 14.5px;
+  font-size: 14px;
   font-weight: 700;
   color: #ffffff;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
+  white-space: nowrap;
 }
 
-.versionBadge {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  color: var(--text-secondary);
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  padding: 1px 4px;
-  border-radius: var(--radius-xs);
-  font-weight: 500;
+.brandBadge {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background-color: rgba(56, 189, 248, 0.12);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
+.collapseToggleBtn {
+  width: 26px;
+  height: 26px;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid #1e293b;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.collapseToggleBtn:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.toggleIcon {
+  stroke-width: 2;
+}
+
+/* Nav Container */
 .nav {
   flex: 1;
-  padding: var(--space-3) var(--space-2);
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  padding: 12px 0;
   overflow-y: auto;
   overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #1e293b transparent;
 }
 
-.sidebarCollapsed .nav {
-  padding: var(--space-3) 6px;
-  align-items: center;
+.nav::-webkit-scrollbar {
+  width: 4px;
 }
 
-.sectionGroup {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  width: 100%;
+.nav::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
 }
 
 .navSectionLabel {
   font-size: 9.5px;
+  font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.8px;
-  color: #64748b;
-  padding: 6px 10px 3px 10px;
-  font-weight: 700;
+  color: #475569;
+  padding: 8px 16px 4px 16px;
 }
 
-.collapsedDivider {
-  height: 1px;
-  background-color: rgba(56, 189, 248, 0.1);
-  margin: 6px 4px;
+.sidebarCollapsed .navSectionLabel {
+  display: none;
 }
 
-.sectionItems {
+.hubList {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  width: 100%;
+  gap: 3px;
+  padding: 0 8px;
 }
 
+.sidebarCollapsed .hubList {
+  padding: 0 6px;
+}
+
+/* Hub Navigation Item */
 .navItem {
   display: flex;
   align-items: center;
-  gap: 9px;
-  padding: 7px 10px;
+  gap: 10px;
+  padding: 8px 10px;
   color: #94a3b8;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 500;
-  border-radius: var(--radius-sm);
+  border-radius: 6px;
   text-decoration: none;
   transition: all var(--transition-fast);
   outline: none;
-  width: 100%;
-  border-left: 3px solid transparent;
+  position: relative;
 }
 
 .sidebarCollapsed .navItem {
   justify-content: center;
-  padding: 8px;
+  padding: 9px 0;
   gap: 0;
-  border-left: none;
 }
 
 .navItem:hover {
-  background-color: rgba(56, 189, 248, 0.06);
+  background-color: rgba(255, 255, 255, 0.05);
   color: #ffffff;
   text-decoration: none;
 }
 
 .navItem:hover .navIcon {
-  color: var(--accent);
+  color: #38bdf8;
 }
 
 .navItem.active {
-  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, rgba(56, 189, 248, 0.02) 100%);
+  background: linear-gradient(90deg, rgba(56, 189, 248, 0.14) 0%, rgba(56, 189, 248, 0.03) 100%);
   color: #ffffff;
   font-weight: 600;
-  border-left-color: var(--accent);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border-left: 3px solid #38bdf8;
+  padding-left: 7px;
 }
 
 .sidebarCollapsed .navItem.active {
   border-left: none;
-  background: rgba(56, 189, 248, 0.15);
-  
+  background: rgba(56, 189, 248, 0.16);
+  padding-left: 0;
 }
 
 .navIconBox {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   flex-shrink: 0;
 }
 
 .navIcon {
   color: #64748b;
-  transition: color var(--transition-fast), filter var(--transition-fast);
+  transition: color var(--transition-fast);
 }
 
 .navItem.active .navIcon {
-  color: var(--accent);
-  
+  color: #38bdf8;
 }
 
 .navLabel {
@@ -204,30 +234,40 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: -0.1px;
 }
 
-.footer {
-  padding: var(--space-2) var(--space-3);
-  border-top: 1px solid rgba(56, 189, 248, 0.1);
-  background: rgba(13, 21, 39, 0.65);
+.activeDot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #38bdf8;
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.8);
+  flex-shrink: 0;
 }
 
-.sidebarCollapsed .footer {
-  padding: var(--space-2) 6px;
-  display: flex;
-  justify-content: center;
+.sidebarCollapsed .activeDot {
+  display: none;
 }
 
+/* Footer Section */
+.footerNav {
+  border-top: 1px solid #1e293b;
+  padding: 10px 0;
+  background-color: #080d1e;
+  flex-shrink: 0;
+}
+
+/* Floating Tooltip */
 .floatingTooltip {
-  background-color: rgba(14, 22, 41, 0.95);
-  border: 1px solid rgba(56, 189, 248, 0.25);
-  border-radius: var(--radius-sm);
+  background-color: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 8px;
   padding: 8px 12px;
-  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.55);
-  max-width: 290px;
-  min-width: 200px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.6);
+  max-width: 260px;
+  min-width: 180px;
   animation: tooltipFadeIn 120ms ease-out forwards;
-  backdrop-filter: blur(16px);
 }
 
 @keyframes tooltipFadeIn {
@@ -245,11 +285,11 @@
   font-size: 12px;
   font-weight: 700;
   color: #ffffff;
-  margin-bottom: 4px;
+  margin-bottom: 3px;
 }
 
 .tooltipDesc {
   font-size: 11px;
   color: #94a3b8;
-  line-height: 1.45;
+  line-height: 1.4;
 }

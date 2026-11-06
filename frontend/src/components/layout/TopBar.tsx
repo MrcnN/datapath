@@ -778,34 +778,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
         </div>
       </div>
 
-      {/* Tier 2: Contextual Module Sub-Navigation Bar (Sibling Pages in Active Module) */}
-      <nav className={styles.subNavBar} aria-label="Modül Alt Menüsü">
-        <div className={styles.subnavTabsList} role="tablist">
-          {currentSection.items.map((subItem) => {
-            const SubIcon = subItem.icon;
-            const isTabActive = pathname === subItem.path;
-            return (
-              <Link
-                key={subItem.path}
-                to={subItem.path}
-                role="tab"
-                aria-selected={isTabActive}
-                aria-current={isTabActive ? 'page' : undefined}
-                className={`${styles.subnavTab} ${isTabActive ? styles.subnavTabActive : ''}`}
-              >
-                <SubIcon size={13} className={styles.subnavIcon} aria-hidden="true" />
-                <span>{subItem.label}</span>
-                {subItem.badge && <span className={styles.subnavBadge}>{subItem.badge}</span>}
-              </Link>
-            );
-          })}
-        </div>
-
-        <div className={styles.subnavRightMeta} aria-hidden="true">
-          <span>{currentSection.items.length} Araç</span>
-        </div>
-      </nav>
-
       {/* Modals */}
       {showReportModal && <DossierReportModal onClose={() => setShowReportModal(false)} />}
       {showTriageModal && <EmergencyTriageModal onClose={() => setShowTriageModal(false)} />}

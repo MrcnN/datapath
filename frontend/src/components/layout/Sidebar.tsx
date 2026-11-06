@@ -1,237 +1,152 @@
 import React, { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  Server,
-  TrendingUp,
-  GitCompare,
-  Wand2,
-  GitPullRequest,
-  Hourglass,
-  Layers,
-  FlaskConical,
-  Wrench,
-  BarChart3,
-  HardDrive,
-  Cpu,
-  PieChart,
-  AlertTriangle,
-  Radio,
-  Database,
   Activity,
+  TrendingUp,
+  Layers,
+  HardDrive,
+  AlertTriangle,
   ShieldCheck,
-  Shield,
-  ShieldAlert,
-  CalendarClock,
   Terminal,
-  Crown,
+  Shield,
+  User,
   PanelLeftClose,
   PanelLeftOpen,
+  Database,
   type LucideIcon,
 } from 'lucide-react';
 import { brand } from '../../config/brand';
 import styles from './Sidebar.module.css';
 
-interface NavItem {
+export interface HubItem {
+  id: string;
   path: string;
   label: string;
   icon: LucideIcon;
   description: string;
   exact?: boolean;
+  matchPrefixes: string[];
 }
 
-interface NavSection {
+export const primaryHubs: HubItem[] = [
+  {
+    id: 'dashboard',
+    path: '/',
+    label: 'Gösterge Paneli',
+    icon: LayoutDashboard,
+    exact: true,
+    description: 'Sistem sağlık skoru, kriz durumu, Z-Score anomali radarı ve birleşik sistem telemetrisi.',
+    matchPrefixes: ['/'],
+  },
+  {
+    id: 'instances',
+    path: '/instances',
+    label: 'Canlı Kokpit & Süreçler',
+    icon: Activity,
+    description: 'Canlı sp_WhoIsActive oturumları, kök kilit bloklayıcılar, sunucu profilleri ve yapılandırma.',
+    matchPrefixes: ['/instances'],
+  },
+  {
+    id: 'queries',
+    path: '/query-performance',
+    label: 'Sorgu Zekâsı & Planlar',
+    icon: TrendingUp,
+    description: 'Query Store ağır sorgular, kardinalite sapması, sorgu düzeltici, .sqlplan ve bekleme istatistikleri.',
+    matchPrefixes: ['/query-performance', '/cardinality-drift', '/query-rewriter', '/execution-plan', '/waits'],
+  },
+  {
+    id: 'indexes',
+    path: '/indexes',
+    label: 'İndeks & Bakım Merkezi',
+    icon: Layers,
+    description: 'Eksik, kullanılmayan, parçalanmış indeksler, sanal indeks simülatörü ve akıllı bakım planlayıcı.',
+    matchPrefixes: ['/indexes', '/hypothetical-indexes', '/maintenance-planner', '/statistics'],
+  },
+  {
+    id: 'storage',
+    path: '/storage',
+    label: 'Depolama & Bellek',
+    icon: HardDrive,
+    description: 'MDF/LDF disk alanı, capacity runway disk dolum tahminleme, VLF, TempDB ve Buffer Pool.',
+    matchPrefixes: ['/storage', '/capacity-runway', '/tempdb', '/buffer-pool'],
+  },
+  {
+    id: 'incidents',
+    path: '/incidents',
+    label: 'Kriz & Güvenilirlik',
+    icon: AlertTriangle,
+    description: 'Canlı kilitlenmeler, Deadlock grafiği, AlwaysOn replikaları, yedekleme geçmişi ve Extended Events.',
+    matchPrefixes: ['/incidents', '/extended-events', '/backups', '/high-availability'],
+  },
+  {
+    id: 'best-practices',
+    path: '/best-practices',
+    label: 'Uygunluk & Güvenlik',
+    icon: ShieldCheck,
+    description: '16 kural mimari uygunluk karnesi, kullanıcı yetkileri, SQL Agent alarmları ve şema karşılaştırma.',
+    matchPrefixes: ['/best-practices', '/permissions', '/agent-jobs', '/schema-diff'],
+  },
+];
+
+export const footerHubs: HubItem[] = [
+  {
+    id: 'toolkit',
+    path: '/toolkit',
+    label: 'T-SQL Betikleri & Araçlar',
+    icon: Terminal,
+    description: 'Kategorize edilmiş, salt-okunur acil durum ve performans teşhis T-SQL betikleri.',
+    matchPrefixes: ['/toolkit'],
+  },
+  {
+    id: 'roles',
+    path: '/role-management',
+    label: 'Yetki & İzin Yönetimi',
+    icon: Shield,
+    description: 'Kıdemli DBA kontrol konsolu, rol izin matrisi ve yetki delegasyonu.',
+    matchPrefixes: ['/role-management'],
+  },
+  {
+    id: 'profile',
+    path: '/profile',
+    label: 'Profil & Ayarlar',
+    icon: User,
+    description: 'DBA operasyonel rolü, hesap ayarları ve parola güvenliği.',
+    matchPrefixes: ['/profile'],
+  },
+];
+
+// Backward-compatibility export
+export interface NavSection {
   title: string;
-  items: NavItem[];
+  items: Array<{
+    path: string;
+    label: string;
+    icon: LucideIcon;
+    description: string;
+    exact?: boolean;
+  }>;
 }
 
 export const navSections: NavSection[] = [
   {
-    title: 'Gözlem & Canlı Kokpit',
-    items: [
-      {
-        path: '/',
-        label: 'Gösterge Paneli',
-        icon: LayoutDashboard,
-        description: 'Sistem sağlık skoru, kriz durumu, Z-Score anomali radarı ve birleşik sistem telemetrisi.',
-        exact: true,
-      },
-      {
-        path: '/instances',
-        label: 'Canlı Oturumlar & Sunucular',
-        icon: Server,
-        description: 'Canlı sp_whoisactive seviyesinde çalışan oturumlar, kök kilit bloklayıcıları ve çoklu sunucular.',
-      },
-    ],
+    title: 'Ana Modüller',
+    items: primaryHubs.map((h) => ({
+      path: h.path,
+      label: h.label,
+      icon: h.icon,
+      description: h.description,
+      exact: h.exact,
+    })),
   },
   {
-    title: 'Sorgu & Performans Zekâsı',
-    items: [
-      {
-        path: '/query-performance',
-        label: 'Ağır Sorgular & Query Store',
-        icon: TrendingUp,
-        description: 'En çok CPU, süre ve mantıksal I/O tüketen ağır sorgular ve plan gerilemeleri (regressions).',
-      },
-      {
-        path: '/cardinality-drift',
-        label: 'Kardinalite & Parameter Sniffing',
-        icon: GitCompare,
-        description: 'Estimated vs Actual satır sayısı sapmaları (10x-500.000x), şişkin bellek ve sniffing analizi.',
-      },
-      {
-        path: '/query-rewriter',
-        label: 'Sorgu Düzeltici & İyileştirici',
-        icon: Wand2,
-        description: 'SARGable olmayan sorguları (YEAR, LEFT, COUNT, SELECT *) optimize edilmiş T-SQL koduna dönüştürür.',
-      },
-      {
-        path: '/execution-plan',
-        label: 'Sorgu Yürütme Planı (.sqlplan)',
-        icon: GitPullRequest,
-        description: 'SSMS gerektirmeden .sqlplan / XML sorgu planlarını operatör ağacı olarak interaktif gösterir.',
-      },
-      {
-        path: '/waits',
-        label: 'Bekleme İstatistikleri (Waits)',
-        icon: Hourglass,
-        description: 'SQL Server darboğazlarını, kaynak beklemelerini ve CPU kuyruk baskısını (Signal Wait) analiz eder.',
-      },
-    ],
-  },
-  {
-    title: 'İndeks & Kardinalite Bakımı',
-    items: [
-      {
-        path: '/indexes',
-        label: 'İndeks Analizi & Parçalanma',
-        icon: Layers,
-        description: 'Eksik, kullanılmayan, mükerrer ve parçalanmış indeksleri detaylıca listeler.',
-      },
-      {
-        path: '/hypothetical-indexes',
-        label: 'Sanal İndeks Simülatörü',
-        icon: FlaskConical,
-        description: 'Diske yazmadan (WITH STATISTICS_ONLY = -1) sanal indeks test eder ve maliyet kazanımını ölçer.',
-      },
-      {
-        path: '/maintenance-planner',
-        label: 'İndeks Bakım Planlayıcı',
-        icon: Wrench,
-        description: 'Parçalanma oranına göre REORGANIZE/REBUILD operasyonlarını belirler ve hazır Agent Job üretir.',
-      },
-      {
-        path: '/statistics',
-        label: 'İstatistik Sağlığı & Bayatlık',
-        icon: BarChart3,
-        description: 'Kardinalite tahminini bozan bayatlamış istatistikler ve otomatik güncelleme reçeteleri.',
-      },
-    ],
-  },
-  {
-    title: 'Bellek & Depolama Analitiği',
-    items: [
-      {
-        path: '/capacity-runway',
-        label: 'Kapasite & Runway Tahminleme',
-        icon: HardDrive,
-        description: 'Lineer regresyon ile disk dolum takvimi, tükenme gün sayısı (Runway Days) ve proaktif pre-sizing.',
-      },
-      {
-        path: '/storage',
-        label: 'Disk Dosyaları & VLF Mimarisi',
-        icon: Database,
-        description: 'MDF/LDF disk alanı, okuma/yazma gecikmeleri (stall ms) ve Virtual Log File (VLF) şişmesi.',
-      },
-      {
-        path: '/tempdb',
-        label: 'TempDB & Çekişme Analizi',
-        icon: Cpu,
-        description: 'TempDB sayfa çekişmesi (GAM/SGAM/PFS), PLE, bellek dağılımı ve Plan Cache şişmesi analizi.',
-      },
-      {
-        path: '/buffer-pool',
-        label: 'Tablo RAM Dağılımı (Buffer Pool)',
-        icon: PieChart,
-        description: "Veritabanı bazında RAM'de tutulan tablolar, kirli sayfalar (dirty pages) ve Checkpoint durumu.",
-      },
-    ],
-  },
-  {
-    title: 'Kilitlenme & Güvenilirlik',
-    items: [
-      {
-        path: '/incidents',
-        label: 'Kilitlenmeler & Deadlock Radarı',
-        icon: AlertTriangle,
-        description: 'Canlı kilitlenme olayları, interaktif SVG Deadlock grafiği ve Olay Kök Neden (RCA) raporlayıcısı.',
-      },
-      {
-        path: '/extended-events',
-        label: 'Genişletilmiş Olaylar (XE)',
-        icon: Radio,
-        description: 'SQL Server Extended Events oturum yönetimi ve system_health ring_buffer olay izleyicisi.',
-      },
-      {
-        path: '/backups',
-        label: 'Yedekleme & Disk Sağlığı',
-        icon: Database,
-        description: 'Yedekleme geçmişi, RPO riski, son temiz CHECKDB tarihi ve suspect_pages bozuk sayfa radarı.',
-      },
-      {
-        path: '/high-availability',
-        label: 'AlwaysOn & Replikalar',
-        icon: Activity,
-        description: 'AlwaysOn AG replika sağlık durumları, senkronizasyon gecikmesi ve yük devretme hazırlığı.',
-      },
-    ],
-  },
-  {
-    title: 'Güvenlik, Yönetim & Betikler',
-    items: [
-      {
-        path: '/role-management',
-        label: 'Yetki & İzin Yönetim Merkezi',
-        icon: Crown,
-        description: 'Kıdemli DBA (Senior DBA) kontrol konsolu. Tüm rollerin izin matrisini ve kullanıcı delegasyonunu yönetir.',
-      },
-      {
-        path: '/profile',
-        label: 'Profil & Operasyon Rolü',
-        icon: ShieldCheck,
-        description: 'DBA operasyonel rolü, Google & GitHub hesap bağlama, bio ve parola güvenlik ayarları.',
-      },
-      {
-        path: '/permissions',
-        label: 'Kullanıcılar & Yetkiler',
-        icon: Shield,
-        description: 'Sunucu loginleri, sysadmin rol üyeleri, yetim kullanıcılar ve veritabanı rol izinleri denetimi.',
-      },
-      {
-        path: '/best-practices',
-        label: 'Sistem Uygunluk Karnesi',
-        icon: ShieldAlert,
-        description: 'MAXDOP, Cost Threshold ve TempDB dahil 16 kritik mimari kurala göre sunucuyu puanlar.',
-      },
-      {
-        path: '/agent-jobs',
-        label: 'SQL Agent & Sistem Alarmları',
-        icon: CalendarClock,
-        description: 'Zamanlanmış işler, başarısız adımlar, sysalerts kritik sistem alarmları ve Database Mail durumu.',
-      },
-      {
-        path: '/schema-diff',
-        label: 'Şema Karşılaştırma (Diff)',
-        icon: GitCompare,
-        description: 'İki veritabanı arasındaki tablo, kolon ve indeks farklarını karşılaştırır; güvenli DDL üretir.',
-      },
-      {
-        path: '/toolkit',
-        label: 'DBA T-SQL Betik Kütüphanesi',
-        icon: Terminal,
-        description: 'Kategorize edilmiş, salt-okunur güvenli acil durum müdahale ve performans teşhis T-SQL betikleri.',
-      },
-    ],
+    title: 'Sistem & Araçlar',
+    items: footerHubs.map((h) => ({
+      path: h.path,
+      label: h.label,
+      icon: h.icon,
+      description: h.description,
+    })),
   },
 ];
 
@@ -241,6 +156,7 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
+  const { pathname } = useLocation();
   const [hoveredItem, setHoveredItem] = useState<{
     label: string;
     description: string;
@@ -266,13 +182,36 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
     setHoveredItem(null);
   };
 
+  const isHubActive = (hub: HubItem): boolean => {
+    if (hub.exact) {
+      return pathname === hub.path;
+    }
+    return hub.matchPrefixes.some((prefix) => {
+      if (prefix === '/') return pathname === '/';
+      return pathname === prefix || pathname.startsWith(prefix + '/');
+    });
+  };
+
   return (
     <>
       <aside
         className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}
+        aria-label="Ana Gezinti Çubuğu"
       >
-        {/* Top Header: Collapse Toggle button in place of logo */}
+        {/* Brand Header */}
         <div className={styles.logoHeader}>
+          <div className={styles.brandBox}>
+            <div className={styles.brandIconBox}>
+              <Database size={16} className={styles.brandIcon} />
+            </div>
+            {!collapsed && (
+              <div className={styles.logoText}>
+                <span className={styles.logoName}>{brand.name}</span>
+                <span className={styles.brandBadge}>DBA 360</span>
+              </div>
+            )}
+          </div>
+
           <button
             type="button"
             className={styles.collapseToggleBtn}
@@ -281,52 +220,67 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             aria-label={collapsed ? 'Menüyü Genişlet' : 'Menüyü Daralt'}
           >
             {collapsed ? (
-              <PanelLeftOpen size={18} className={styles.toggleIcon} />
+              <PanelLeftOpen size={16} className={styles.toggleIcon} />
             ) : (
-              <PanelLeftClose size={18} className={styles.toggleIcon} />
+              <PanelLeftClose size={16} className={styles.toggleIcon} />
             )}
           </button>
-
-          {!collapsed && (
-            <div className={styles.logoText}>
-              <span className={styles.logoName}>{brand.name}</span>
-            </div>
-          )}
         </div>
 
-        {/* Categorized Navigation */}
-        <nav className={styles.nav}>
-          {navSections.map((section, idx) => (
-            <div key={section.title} className={styles.sectionGroup}>
-              {!collapsed ? (
-                <div className={styles.navSectionLabel}>{section.title}</div>
-              ) : (
-                idx > 0 && <div className={styles.collapsedDivider} />
-              )}
-
-              <div className={styles.sectionItems}>
-                {section.items.map(({ path, label, icon: Icon, description, exact }) => (
-                  <NavLink
-                    key={path}
-                    to={path}
-                    end={exact}
-                    title={`${label} — ${description}`}
-                    onMouseEnter={(e) => handleMouseEnter(e, label, description)}
-                    onMouseLeave={handleMouseLeave}
-                    className={({ isActive }) =>
-                      `${styles.navItem}${isActive ? ` ${styles.active}` : ''}`
-                    }
-                  >
-                    <div className={styles.navIconBox}>
-                      <Icon size={15} className={styles.navIcon} />
-                    </div>
-                    {!collapsed && <span className={styles.navLabel}>{label}</span>}
-                  </NavLink>
-                ))}
-              </div>
-            </div>
-          ))}
+        {/* Primary Hubs Navigation */}
+        <nav className={styles.nav} aria-label="Merkezi Modüller">
+          {!collapsed && <div className={styles.navSectionLabel}>YÖNETİM & TEŞHİS</div>}
+          <div className={styles.hubList}>
+            {primaryHubs.map((hub) => {
+              const Icon = hub.icon;
+              const active = isHubActive(hub);
+              return (
+                <NavLink
+                  key={hub.id}
+                  to={hub.path}
+                  end={hub.exact}
+                  className={`${styles.navItem} ${active ? styles.active : ''}`}
+                  onMouseEnter={(e) => handleMouseEnter(e, hub.label, hub.description)}
+                  onMouseLeave={handleMouseLeave}
+                  title={collapsed ? `${hub.label} — ${hub.description}` : undefined}
+                >
+                  <div className={styles.navIconBox}>
+                    <Icon size={16} className={styles.navIcon} />
+                  </div>
+                  {!collapsed && <span className={styles.navLabel}>{hub.label}</span>}
+                  {active && <span className={styles.activeDot} />}
+                </NavLink>
+              );
+            })}
+          </div>
         </nav>
+
+        {/* Footer Utility Hubs */}
+        <div className={styles.footerNav} aria-label="Sistem ve Ayarlar">
+          {!collapsed && <div className={styles.navSectionLabel}>SİSTEM & ARAÇLAR</div>}
+          <div className={styles.hubList}>
+            {footerHubs.map((hub) => {
+              const Icon = hub.icon;
+              const active = isHubActive(hub);
+              return (
+                <NavLink
+                  key={hub.id}
+                  to={hub.path}
+                  className={`${styles.navItem} ${active ? styles.active : ''}`}
+                  onMouseEnter={(e) => handleMouseEnter(e, hub.label, hub.description)}
+                  onMouseLeave={handleMouseLeave}
+                  title={collapsed ? `${hub.label} — ${hub.description}` : undefined}
+                >
+                  <div className={styles.navIconBox}>
+                    <Icon size={16} className={styles.navIcon} />
+                  </div>
+                  {!collapsed && <span className={styles.navLabel}>{hub.label}</span>}
+                  {active && <span className={styles.activeDot} />}
+                </NavLink>
+              );
+            })}
+          </div>
+        </div>
       </aside>
 
       {/* Floating Hover Tooltip */}
