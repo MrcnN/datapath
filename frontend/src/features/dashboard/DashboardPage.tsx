@@ -46,6 +46,7 @@ import type {
   BlockingResult,
   RecoveryReadiness,
 } from '../../lib/types';
+import RootCauseDiagnosticBanner from './components/RootCauseDiagnosticBanner';
 import HealthScoreCard from './components/HealthScoreCard';
 import styles from './DashboardPage.module.css';
 
@@ -281,44 +282,12 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 2. Alert Banners (Data-Driven) */}
-      {criticalBackups.length > 0 && (
-        <div className={styles.alertBanner}>
-          <div className={styles.alertLeft}>
-            <ShieldAlert size={15} className={styles.alertIconCritical} />
-            <span>
-              <strong>Yedekleme Uyarısı:</strong> {criticalBackups.length} veritabanında RPO riski veya eksik tam yedek mevcut ({criticalBackups.map((c) => c.database_name).join(', ')}).
-            </span>
-          </div>
-          <button
-            type="button"
-            className={styles.alertBtn}
-            onClick={() => navigate('/backups')}
-          >
-            <span>Yedekleme Durumu</span>
-            <ArrowRight size={12} />
-          </button>
-        </div>
-      )}
-
-      {blockedCount > 0 && (
-        <div className={`${styles.alertBanner} ${styles.alertBannerWarning}`}>
-          <div className={styles.alertLeft}>
-            <AlertTriangle size={15} className={styles.alertIconWarning} />
-            <span>
-              <strong>Engelleme (Blocking) Uyarısı:</strong> Sunucuda şu an {blockedCount} oturum bir kilit kaynağı bekliyor.
-            </span>
-          </div>
-          <button
-            type="button"
-            className={styles.alertBtn}
-            onClick={() => navigate('/incidents')}
-          >
-            <span>Olay Merkezi</span>
-            <ArrowRight size={12} />
-          </button>
-        </div>
-      )}
+      {/* 2. Cerrahi Kök Neden Teşhis Brifingi */}
+      <RootCauseDiagnosticBanner
+        blocking={blocking}
+        readiness={readiness}
+        activeSessionsCount={activeSessionsCount}
+      />
 
       {/* 2.5 Cumulative Database Health Scorecard */}
       <HealthScoreCard />

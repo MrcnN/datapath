@@ -11,7 +11,7 @@ import { getWaitStatistics } from '../../lib/api';
 import type { WaitStatsSummary, WaitStatEntry } from '../../lib/types';
 import styles from './WaitStatsPage.module.css';
 
-export default function WaitStatsPage() {
+export default function WaitStatsPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [summary, setSummary] = useState<WaitStatsSummary | null>(null);
   const [search, setSearch] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
@@ -137,11 +137,13 @@ export default function WaitStatsPage() {
   ];
 
   return (
-    <div className={styles.container}>
-      <PageHeader
-        title="Bekleme İstatistikleri"
-        subtitle="SQL Server'ı yavaşlatan bekleme türlerini, kaynak darboğazlarını ve CPU baskısını (Signal Wait) analiz eder."
-      />
+    <div className={embedded ? undefined : styles.container}>
+      {!embedded && (
+        <PageHeader
+          title="Bekleme İstatistikleri"
+          subtitle="SQL Server'ı yavaşlatan bekleme türlerini, kaynak darboğazlarını ve CPU baskısını (Signal Wait) analiz eder."
+        />
+      )}
 
       {summary?.is_demo && <DemoDataBanner />}
 

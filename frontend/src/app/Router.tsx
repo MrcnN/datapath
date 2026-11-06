@@ -39,7 +39,7 @@ export default function Router() {
       <Route path="/cardinality-drift" element={<QueryPerformancePage initialTab="CARDINALITY_DRIFT" />} />
       <Route path="/query-rewriter" element={<QueryRewriterPage />} />
       <Route path="/execution-plan" element={<ExecutionPlanPage />} />
-      <Route path="/waits" element={<WaitStatsPage />} />
+      <Route path="/waits" element={<QueryPerformancePage initialTab="WAITS" />} />
 
       {/* 3. İndeks & Bakım */}
       <Route path="/indexes" element={<IndexesPage />} />
@@ -48,8 +48,8 @@ export default function Router() {
       <Route path="/maintenance-planner" element={<MaintenancePlannerPage />} />
 
       {/* 4. Bellek & Depolama */}
-      <Route path="/tempdb" element={<TempDBPage />} />
-      <Route path="/buffer-pool" element={<BufferPoolPage />} />
+      <Route path="/tempdb" element={<StoragePage initialTab="tempdb" />} />
+      <Route path="/buffer-pool" element={<StoragePage initialTab="buffer_pool" />} />
       <Route path="/storage" element={<StoragePage />} />
       <Route path="/capacity-runway" element={<StoragePage initialTab="growth" />} />
 

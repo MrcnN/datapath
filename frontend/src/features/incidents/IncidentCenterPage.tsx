@@ -34,9 +34,13 @@ import type {
   TimelineEvent,
 } from '../../lib/types';
 import RCAReportModal from './components/RCAReportModal';
+import HAPage from '../high-availability/HAPage';
+import BackupRecoveryPage from '../backups/BackupRecoveryPage';
+import { Shield, Database } from 'lucide-react';
+
 import styles from './IncidentCenterPage.module.css';
 
-type TabType = 'sessions' | 'blocking' | 'deadlocks' | 'agent-jobs' | 'error-log' | 'timeline';
+type TabType = 'sessions' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'agent-jobs' | 'error-log' | 'timeline';
 
 interface TabItem {
   key: TabType;
@@ -48,13 +52,15 @@ const tabs: TabItem[] = [
   { key: 'sessions', label: 'Canlı Süreç & Oturumlar (WhoIsActive)', icon: Activity },
   { key: 'blocking', label: 'Engelleme Zincirleri', icon: AlertTriangle },
   { key: 'deadlocks', label: 'Kilitlenme Analizi', icon: Flame },
+  { key: 'alwayson', label: 'AlwaysOn & Replikalar', icon: Shield },
+  { key: 'backups', label: 'Yedekleme & RPO Riski', icon: Database },
   { key: 'agent-jobs', label: 'Agent İşleri', icon: Briefcase },
   { key: 'error-log', label: 'Hata Günlüğü', icon: FileText },
   { key: 'timeline', label: 'Zaman Çizelgesi', icon: GitCommit },
 ];
 
-export default function IncidentCenterPage() {
-  const [activeTab, setActiveTab] = useState<TabType>('sessions');
+export default function IncidentCenterPage({ initialTab }: { initialTab?: TabType } = {}) {
+  const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'sessions');
   const [showRcaModal, setShowRcaModal] = useState<boolean>(false);
 
   // Tab data states
@@ -162,7 +168,9 @@ export default function IncidentCenterPage() {
                 onRefresh={() => fetchTabData('blocking')}
               />
             )}
-            {activeTab === 'deadlocks' && <DeadlockViewer />}
+                        {activeTab === 'deadlocks' && <DeadlockViewer />}
+            {activeTab === 'alwayson' && <HAPage embedded />}
+            {activeTab === 'backups' && <BackupRecoveryPage embedded />}
             {activeTab === 'agent-jobs' && <AgentJobsTable jobs={agentJobs} />}
             {activeTab === 'error-log' && <ErrorLogViewer entries={errorLogs} />}
             {activeTab === 'timeline' && <IncidentTimeline events={timeline} />}

@@ -22,6 +22,9 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import OpenTransactionsViewer from './components/OpenTransactionsViewer';
+import TempDBPage from '../tempdb/TempDBPage';
+import BufferPoolPage from '../tempdb/BufferPoolPage';
+import { Cpu, PieChart } from 'lucide-react';
 import CapacityRunwayForecasting from './components/CapacityRunwayForecasting';
 import { getStorageSummary } from '../../lib/api';
 import type {
@@ -49,14 +52,14 @@ const LOG_REUSE_EXPLANATIONS: Record<string, string> = {
 };
 
 interface StoragePageProps {
-  initialTab?: 'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs';
+  initialTab?: 'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs' | 'tempdb' | 'buffer_pool';
 }
 
 export default function StoragePage({ initialTab }: StoragePageProps = {}) {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs'>(initialTab || 'files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs' | 'tempdb' | 'buffer_pool'>(initialTab || 'files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
   const [selectedVlfForSql, setSelectedVlfForSql] = useState<DatabaseVLFInfo | null>(null);
@@ -813,6 +816,18 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
         >
           <Layers size={16} /> Sanal Log (VLF) Sağlığı ({summary?.vlf_infos?.length || 0})
         </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'tempdb' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('tempdb')}
+        >
+          <Cpu size={16} /> TempDB &amp; PLE Bellek
+        </button>
+        <button
+          className={`${styles.tabBtn} ${activeTab === 'buffer_pool' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('buffer_pool')}
+        >
+          <PieChart size={16} /> Buffer Pool RAM
+        </button>
       </div>
 
       {/* Tab 1: Files */}
@@ -1039,6 +1054,8 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
           </div>
         </div>
       )}
+      {activeTab === 'tempdb' && <TempDBPage embedded />}
+      {activeTab === 'buffer_pool' && <BufferPoolPage embedded />}
     </div>
   );
 }

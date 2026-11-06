@@ -10,7 +10,7 @@ import type { HAStatus, AGReplica, AGDatabase } from '../../lib/types';
 import AGLagTelemetryViewer from './components/AGLagTelemetryViewer';
 import styles from './HAPage.module.css';
 
-export default function HAPage() {
+export default function HAPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [status, setStatus] = useState<HAStatus | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,11 +113,13 @@ export default function HAPage() {
   const groups = status?.groups ?? [];
 
   return (
-    <div className={styles.container}>
-      <PageHeader
-        title="AlwaysOn & Replikalar"
-        subtitle="AlwaysOn Availability Groups replika durumları, senkronizasyon kuyruğu (redo/log queue) ve failover hazırlık izleyicisi."
-      />
+    <div className={embedded ? undefined : styles.container}>
+      {!embedded && (
+        <PageHeader
+          title="AlwaysOn & Replikalar"
+          subtitle="AlwaysOn Availability Groups replika durumları, senkronizasyon kuyruğu (redo/log queue) ve failover hazırlık izleyicisi."
+        />
+      )}
 
       {loading && <LoadingSpinner message="Always On AG durumu denetleniyor..." />}
       {error && <ErrorState message={error} onRetry={() => setLoading(true)} />}

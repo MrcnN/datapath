@@ -1,0 +1,213 @@
+/* ============================================
+   Root Cause Diagnostic Banner (Executive Briefing)
+   Clean, Calm Corporate Styling (No Gimmicks)
+   ============================================ */
+
+.container {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: all var(--transition-fast);
+}
+
+.containerCritical {
+  border-left: 4px solid var(--status-critical);
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, rgba(13, 21, 39, 0) 100%), var(--bg-surface);
+}
+
+.containerHealthy {
+  border-left: 4px solid var(--status-success);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, rgba(13, 21, 39, 0) 100%), var(--bg-surface);
+}
+
+.headerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.badgeBox {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  padding: 3px 8px;
+}
+
+.iconCritical {
+  color: var(--status-critical);
+}
+
+.iconHealthy {
+  color: var(--status-success);
+}
+
+.badgeText {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--text-primary);
+  text-transform: uppercase;
+}
+
+.headerSub {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.triageQuickBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-secondary);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.triageQuickBtn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent);
+  color: #ffffff;
+}
+
+/* Findings List */
+.findingsList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  border-top: 1px solid var(--border-subtle);
+  padding-top: 10px;
+}
+
+.findingItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-xs);
+  position: relative;
+  overflow: hidden;
+}
+
+.findingIndicatorCritical {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--status-critical);
+}
+
+.findingIndicatorWarning {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: var(--status-warning);
+}
+
+.findingContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-left: 6px;
+}
+
+.findingTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.findingIconCrit {
+  color: var(--status-critical);
+}
+
+.findingIconWarn {
+  color: var(--status-warning);
+}
+
+.findingTitle {
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.findingTitle strong {
+  color: #ffffff;
+}
+
+.severityBadge {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: var(--status-critical-bg);
+  border: 1px solid var(--status-critical-border);
+  color: var(--status-critical);
+}
+
+.severityBadgeWarn {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: var(--status-warning-bg);
+  border: 1px solid var(--status-warning-border);
+  color: var(--status-warning);
+}
+
+.findingDesc {
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background-color: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xs);
+  color: var(--text-primary);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+}
+
+.actionBtn:hover {
+  background-color: rgba(56, 189, 248, 0.1);
+  border-color: var(--accent);
+  color: #ffffff;
+}

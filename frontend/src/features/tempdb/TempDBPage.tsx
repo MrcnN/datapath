@@ -34,7 +34,7 @@ import type {
 } from '../../lib/types';
 import styles from './TempDBPage.module.css';
 
-export default function TempDBPage() {
+export default function TempDBPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [summary, setSummary] = useState<TempDBMemorySummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -272,11 +272,13 @@ export default function TempDBPage() {
   const space = summary?.space_breakdown;
 
   return (
-    <div className={styles.container}>
-      <PageHeader
-        title="TempDB & RAM Durumu"
-        subtitle="TempDB GAM/SGAM/PFS sayfa tahsis çekişmesi, Page Life Expectancy (PLE), bellek dağılımı ve Plan Cache şişmesi analizi."
-      />
+    <div className={embedded ? undefined : styles.container}>
+      {!embedded && (
+        <PageHeader
+          title="TempDB & RAM Durumu"
+          subtitle="TempDB GAM/SGAM/PFS sayfa tahsis çekişmesi, Page Life Expectancy (PLE), bellek dağılımı ve Plan Cache şişmesi analizi."
+        />
+      )}
 
       {summary?.is_demo && <DemoDataBanner />}
 

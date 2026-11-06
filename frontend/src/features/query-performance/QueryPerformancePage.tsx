@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import {
   TrendingUp,
+  Hourglass,
   AlertTriangle,
   Flame,
   Cpu,
@@ -45,25 +46,29 @@ import type {
 import ExecutionPlanViewer from './components/ExecutionPlanViewer';
 import QueryRewriterStudio from './components/QueryRewriterStudio';
 import CardinalityDriftViewer from './components/CardinalityDriftViewer';
+import WaitStatsPage from '../wait-stats/WaitStatsPage';
 import styles from './QueryPerformancePage.module.css';
 
-export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' } = {}) {
+export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' } = {}) {
   const location = useLocation();
 
-  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' => {
+  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' => {
     if (initialTab) return initialTab;
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
     if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
+    if (location.pathname === '/waits') return 'WAITS';
     return 'QUERY_STORE';
   };
 
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT'>(resolveInitialTab);
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS'>(resolveInitialTab);
 
   useEffect(() => {
     if (location.pathname === '/query-rewriter') {
       setActiveTab('REWRITER_STUDIO');
     } else if (location.pathname === '/execution-plan') {
       setActiveTab('PLAN_VIEWER');
+    } else if (location.pathname === '/waits') {
+      setActiveTab('WAITS');
     }
   }, [location.pathname]);
   const [selectedPlanHandle, setSelectedPlanHandle] = useState<string | undefined>(undefined);
@@ -427,11 +432,22 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
           <GitCompare size={16} />
           Kardinalite & Parameter Sniffing
         </button>
+        <button
+          className={`${styles.tabButton} ${activeTab === 'WAITS' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('WAITS')}
+        >
+          <Hourglass size={16} />
+          Bekleme İstatistikleri (Waits)
+        </button>
 
       </div>
 
                   {activeTab === 'CARDINALITY_DRIFT' && (
         <CardinalityDriftViewer />
+      )}
+
+      {activeTab === 'WAITS' && (
+        <WaitStatsPage embedded />
       )}
 
       {activeTab === 'REWRITER_STUDIO' && (

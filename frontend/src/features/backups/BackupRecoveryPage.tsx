@@ -26,7 +26,7 @@ function formatAge(hours?: number | null, dateStr?: string | null): string {
   return `${days} gün önce`;
 }
 
-export default function BackupRecoveryPage() {
+export default function BackupRecoveryPage({ embedded = false }: { embedded?: boolean } = {}) {
   const [activeTab, setActiveTab] = useState<'history' | 'readiness' | 'integrity' | 'dr_simulator'>('history');
   const [history, setHistory] = useState<BackupEntry[]>([]);
   const [readiness, setReadiness] = useState<RecoveryReadiness[]>([]);
@@ -239,11 +239,13 @@ export default function BackupRecoveryPage() {
   ];
 
   return (
-    <div className={styles.container}>
-      <PageHeader
-        title="Yedekleme & Disk Sağlığı"
-        subtitle="Son Full/Diff/Log yedekleme geçmişi, RPO veri kaybı riski, DBCC CHECKDB tarihleri ve suspect_pages bozuk sayfa radarı."
-      />
+    <div className={embedded ? undefined : styles.container}>
+      {!embedded && (
+        <PageHeader
+          title="Yedekleme & Disk Sağlığı"
+          subtitle="Son Full/Diff/Log yedekleme geçmişi, RPO veri kaybı riski, DBCC CHECKDB tarihleri ve suspect_pages bozuk sayfa radarı."
+        />
+      )}
 
       {/* Tabs */}
       <div className={styles.tabBar}>
