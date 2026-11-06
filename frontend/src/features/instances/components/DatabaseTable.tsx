@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useApi } from '../../../lib/useApi';
-import { getDatabases } from '../../../lib/api';
+import { getDatabases, getSessions } from '../../../lib/api';
 import { formatMB, formatDate } from '../../../lib/utils';
 import DataTable from '../../../components/ui/DataTable';
 import StatusBadge from '../../../components/ui/StatusBadge';
+import DatabaseDetailDrawer from './DatabaseDetailDrawer';
 import type { Database } from '../../../lib/types';
 import type { BadgeStatus } from '../../../components/ui/StatusBadge';
 
@@ -16,6 +17,8 @@ function stateToStatus(state: string): BadgeStatus {
 
 export default function DatabaseTable() {
   const { data, loading, error, refetch } = useApi(getDatabases);
+  const { data: sessionsData } = useApi(getSessions);
+  const [selectedDb, setSelectedDb] = useState<Database | null>(null);
 
   const columns = [
     { key: 'name', label: 'Veritabanı', sortable: true },
@@ -51,6 +54,29 @@ export default function DatabaseTable() {
       secondary: true,
       render: (row: Database) => formatDate(row.create_date ?? ''),
     },
+    {
+      key: 'actions',
+      label: 'İşlem',
+      render: (row: Database) => (
+        <button
+          type="button"
+          onClick={() => setSelectedDb(row)}
+          style={{
+            background: 'rgba(56, 189, 248, 0.12)',
+            color: 'var(--accent)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            borderRadius: '4px',
+            padding: '3px 8px',
+            fontSize: '11px',
+            fontWeight: 600,
+            cursor: 'pointer',
+          }}
+          title="Veritabanı 360 Röntgeni"
+        >
+          360 Röntgen →
+        </button>
+      ),
+    },
   ];
 
   if (error) {
@@ -75,12 +101,21 @@ export default function DatabaseTable() {
   }
 
   return (
-    <DataTable
-      columns={columns}
-      data={data ?? []}
-      loading={loading}
-      emptyMessage="Veritabanı bulunamadı."
-      emptyTitle="Veritabanı Yok"
-    />
+    <>
+      <DataTable
+        columns={columns}
+        data={data ?? []}
+        loading={loading}
+        emptyMessage="Veritabanı bulunamadı."
+        emptyTitle="Veritabanı Yok"
+      />
+      {selectedDb && (
+        <DatabaseDetailDrawer
+          database={selectedDb}
+          sessions={sessionsData || []}
+          onClose={() => setSelectedDb(null)}
+        />
+      )}
+    </>
   );
 }

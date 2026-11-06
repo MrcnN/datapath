@@ -47,6 +47,7 @@ import type {
   RecoveryReadiness,
 } from '../../lib/types';
 import RootCauseDiagnosticBanner from './components/RootCauseDiagnosticBanner';
+import DatabaseDetailDrawer from '../instances/components/DatabaseDetailDrawer';
 import HealthScoreCard from './components/HealthScoreCard';
 import styles from './DashboardPage.module.css';
 
@@ -58,6 +59,7 @@ export default function DashboardPage() {
   // Real data state
   const [metadata, setMetadata] = useState<InstanceMetadata | null>(null);
   const [databases, setDatabases] = useState<DbType[]>([]);
+  const [selectedDbDetail, setSelectedDbDetail] = useState<DbType | null>(null);
   const [sessions, setSessions] = useState<Session[]>([]);
   const [blocking, setBlocking] = useState<BlockingResult | null>(null);
   const [readiness, setReadiness] = useState<RecoveryReadiness[]>([]);
@@ -556,7 +558,7 @@ export default function DashboardPage() {
                   const isSystem = systemDbNames.includes(db.name.toLowerCase());
 
                   return (
-                    <tr key={db.name} className={styles.tableRow}>
+                    <tr key={db.name} className={styles.tableRow} onClick={() => setSelectedDbDetail(db)} style={{ cursor: 'pointer' }}>
                       <td className={styles.dbNameCol}>
                         <Database size={13} className={styles.dbIcon} />
                         <span className={styles.dbNameText}>{db.name}</span>
@@ -614,7 +616,27 @@ export default function DashboardPage() {
                           <button
                             type="button"
                             className={styles.rowActionBtn}
-                            onClick={() => navigate('/query-performance')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedDbDetail(db);
+                            }}
+                            style={{
+                              background: 'rgba(56, 189, 248, 0.12)',
+                              color: 'var(--accent)',
+                              borderColor: 'rgba(56, 189, 248, 0.3)',
+                              fontWeight: 600,
+                            }}
+                            title="Veritabanı 360 Röntgeni"
+                          >
+                            360 Röntgen →
+                          </button>
+                          <button
+                            type="button"
+                            className={styles.rowActionBtn}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/query-performance');
+                            }}
                             title="Sorguları İncele"
                           >
                             Sorgular →
@@ -622,7 +644,10 @@ export default function DashboardPage() {
                           <button
                             type="button"
                             className={styles.rowActionBtn}
-                            onClick={() => navigate('/backups')}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/backups');
+                            }}
                             title="Yedek Geçmişi"
                           >
                             Yedekler →
@@ -643,6 +668,13 @@ export default function DashboardPage() {
           </table>
         </div>
       </div>
+      {selectedDbDetail && (
+        <DatabaseDetailDrawer
+          database={selectedDbDetail}
+          sessions={sessions}
+          onClose={() => setSelectedDbDetail(null)}
+        />
+      )}
     </div>
   );
 }
