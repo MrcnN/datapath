@@ -203,9 +203,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   const [showTriageModal, setShowTriageModal] = useState<boolean>(false);
   const [showCommandPalette, setShowCommandPalette] = useState<boolean>(false);
 
-  // Category Switcher Dropdown
-  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState<boolean>(false);
-  const categoryDropdownRef = useRef<HTMLDivElement>(null);
 
   // Multi-Server Profile State
   const [servers, setServers] = useState<ServerProfile[]>([]);
@@ -276,9 +273,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setDropdownOpen(false);
       }
-      if (categoryDropdownRef.current && !categoryDropdownRef.current.contains(e.target as Node)) {
-        setCategoryDropdownOpen(false);
-      }
       if (userDropdownRef.current && !userDropdownRef.current.contains(e.target as Node)) {
         setUserDropdownOpen(false);
       }
@@ -287,7 +281,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setDropdownOpen(false);
-        setCategoryDropdownOpen(false);
         setUserDropdownOpen(false);
       }
     };
@@ -359,66 +352,16 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
   }, [servers, searchFilter]);
 
   const RouteIcon = currentRoute.icon;
-  const CategoryIcon = currentSection.icon;
 
   return (
     <header className={styles.topBarContainer} role="banner">
       {/* Tier 1: Primary Cockpit Bar */}
       <div className={styles.topBarMain}>
-        {/* Left: Category Dropdown & Active Page Breadcrumb */}
+        {/* Left: Active Page Breadcrumb */}
         <div className={styles.leftSection}>
           <div className={styles.breadcrumbArea}>
-            {/* Quick Category Selector */}
-            <div className={styles.categoryDropdownWrapper} ref={categoryDropdownRef}>
-              <button
-                type="button"
-                aria-haspopup="menu"
-                aria-expanded={categoryDropdownOpen}
-                aria-label={`Modül Değiştir: ${currentSection.title}`}
-                className={`${styles.categoryBtn} ${categoryDropdownOpen ? styles.categoryBtnActive : ''}`}
-                onClick={() => setCategoryDropdownOpen((prev) => !prev)}
-                title="Modül Değiştir"
-              >
-                <CategoryIcon size={13} className={styles.categoryIcon} aria-hidden="true" />
-                <span>{currentSection.title}</span>
-                <ChevronDown size={11} aria-hidden="true" />
-              </button>
-
-              {categoryDropdownOpen && (
-                <div className={styles.categoryDropdownPopover} role="menu" aria-label="Modül Seçenekleri">
-                  {MODULE_SECTIONS.map((sec) => {
-                    const SecIcon = sec.icon;
-                    const isSecActive = sec.id === currentSection.id;
-                    return (
-                      <button
-                        key={sec.id}
-                        type="button"
-                        role="menuitem"
-                        className={`${styles.categoryDropdownItem} ${
-                          isSecActive ? styles.categoryDropdownItemActive : ''
-                        }`}
-                        onClick={() => {
-                          setCategoryDropdownOpen(false);
-                          navigate(sec.items[0].path);
-                        }}
-                      >
-                        <div className={styles.categoryDropdownItemLeft}>
-                          <SecIcon size={14} className={styles.categoryDropdownIcon} aria-hidden="true" />
-                          <span>{sec.title}</span>
-                        </div>
-                        {isSecActive && <Check size={13} color="var(--accent)" aria-hidden="true" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <span className={styles.breadcrumbSep} aria-hidden="true">/</span>
-
-            {/* Active View Label */}
             <div className={styles.activePageTitle}>
-              <RouteIcon size={14} className={styles.pageIcon} aria-hidden="true" />
+              <RouteIcon size={15} className={styles.pageIcon} aria-hidden="true" />
               <span>{currentRoute.label}</span>
             </div>
           </div>

@@ -13,7 +13,6 @@ import {
   User,
   PanelLeftClose,
   PanelLeftOpen,
-  Database,
   type LucideIcon,
 } from 'lucide-react';
 import { brand } from '../../config/brand';
@@ -198,20 +197,8 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
         className={`${styles.sidebar} ${collapsed ? styles.sidebarCollapsed : ''}`}
         aria-label="Ana Gezinti Çubuğu"
       >
-        {/* Brand Header */}
+        {/* Top Header: Collapse Toggle button in place of logo */}
         <div className={styles.logoHeader}>
-          <div className={styles.brandBox}>
-            <div className={styles.brandIconBox}>
-              <Database size={16} className={styles.brandIcon} />
-            </div>
-            {!collapsed && (
-              <div className={styles.logoText}>
-                <span className={styles.logoName}>{brand.name}</span>
-                <span className={styles.brandBadge}>DBA 360</span>
-              </div>
-            )}
-          </div>
-
           <button
             type="button"
             className={styles.collapseToggleBtn}
@@ -220,11 +207,17 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
             aria-label={collapsed ? 'Menüyü Genişlet' : 'Menüyü Daralt'}
           >
             {collapsed ? (
-              <PanelLeftOpen size={16} className={styles.toggleIcon} />
+              <PanelLeftOpen size={18} className={styles.toggleIcon} />
             ) : (
-              <PanelLeftClose size={16} className={styles.toggleIcon} />
+              <PanelLeftClose size={18} className={styles.toggleIcon} />
             )}
           </button>
+
+          {!collapsed && (
+            <div className={styles.logoText}>
+              <span className={styles.logoName}>{brand.name}</span>
+            </div>
+          )}
         </div>
 
         {/* Primary Hubs Navigation */}
@@ -248,7 +241,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     <Icon size={16} className={styles.navIcon} />
                   </div>
                   {!collapsed && <span className={styles.navLabel}>{hub.label}</span>}
-                  {active && <span className={styles.activeDot} />}
                 </NavLink>
               );
             })}
@@ -275,7 +267,6 @@ export default function Sidebar({ collapsed, onToggle }: SidebarProps) {
                     <Icon size={16} className={styles.navIcon} />
                   </div>
                   {!collapsed && <span className={styles.navLabel}>{hub.label}</span>}
-                  {active && <span className={styles.activeDot} />}
                 </NavLink>
               );
             })}
