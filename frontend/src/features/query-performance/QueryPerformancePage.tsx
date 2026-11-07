@@ -20,6 +20,7 @@ import {
   Clock,
   ArrowUpRight,
   Wand2,
+  Maximize2,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -87,6 +88,7 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
   const [regSearch, setRegSearch] = useState<string>('');
   const [selectedRegSql, setSelectedRegSql] = useState<{ title: string; sql: string } | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
+  const [selectedSqlDetail, setSelectedSqlDetail] = useState<{ id: number | string; sql: string; db?: string; cpu?: number | null; duration?: number | null } | null>(null);
 
   // Query Store State
   const [databases, setDatabases] = useState<Database[]>([]);
@@ -203,11 +205,86 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     {
       key: 'query_text_snippet',
       label: 'SQL Metni',
-      render: (q) => (
-        <span className={styles.snippet} title={q.query_text_snippet || undefined}>
-          {q.query_text_snippet}
-        </span>
-      ),
+      render: (q) => {
+        const rawSql = q.query_text_snippet || '';
+        const firstWord = rawSql.trim().split(/\s+/)[0]?.toUpperCase() || 'SQL';
+        const verb = ['SELECT', 'UPDATE', 'INSERT', 'DELETE', 'EXEC', 'WITH', 'ALTER'].includes(firstWord)
+          ? firstWord
+          : 'SQL';
+
+        const verbColor =
+          verb === 'SELECT'
+            ? { bg: 'rgba(56, 189, 248, 0.15)', text: '#38bdf8', border: 'rgba(56, 189, 248, 0.3)' }
+            : verb === 'UPDATE'
+            ? { bg: 'rgba(245, 158, 11, 0.15)', text: '#fbbf24', border: 'rgba(245, 158, 11, 0.3)' }
+            : verb === 'INSERT'
+            ? { bg: 'rgba(16, 185, 129, 0.15)', text: '#34d399', border: 'rgba(16, 185, 129, 0.3)' }
+            : verb === 'DELETE'
+            ? { bg: 'rgba(239, 68, 68, 0.15)', text: '#f87171', border: 'rgba(239, 68, 68, 0.3)' }
+            : { bg: 'rgba(148, 163, 184, 0.15)', text: '#cbd5e1', border: 'rgba(148, 163, 184, 0.3)' };
+
+        const singleLineSql = rawSql.replace(/\s+/g, ' ').trim();
+
+        return (
+          <div className={styles.sqlCell}>
+            <span
+              className={styles.verbBadge}
+              style={{
+                backgroundColor: verbColor.bg,
+                color: verbColor.text,
+                borderColor: verbColor.border,
+              }}
+            >
+              {verb}
+            </span>
+            <span
+              className={styles.sqlSnippetText}
+              title="Tam SQL sorgusunu görüntülemek için tıklayın"
+              onClick={() =>
+                setSelectedSqlDetail({
+                  id: q.query_id,
+                  sql: rawSql,
+                  db: selectedDb,
+                  cpu: q.avg_cpu_ms,
+                  duration: q.avg_duration_ms,
+                })
+              }
+            >
+              {singleLineSql}
+            </span>
+            <div className={styles.sqlActions}>
+              <button
+                type="button"
+                className={styles.iconBtn}
+                title="Panoya Kopyala"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCopy(rawSql);
+                }}
+              >
+                <Copy size={12} />
+              </button>
+              <button
+                type="button"
+                className={styles.iconBtn}
+                title="Tam SQL İncele"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedSqlDetail({
+                    id: q.query_id,
+                    sql: rawSql,
+                    db: selectedDb,
+                    cpu: q.avg_cpu_ms,
+                    duration: q.avg_duration_ms,
+                  });
+                }}
+              >
+                <Maximize2 size={12} />
+              </button>
+            </div>
+          </div>
+        );
+      },
     },
     {
       key: 'avg_cpu_ms',
@@ -823,6 +900,126 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
             </>
           )}
         </>
+      )}
+
+      {/* Full SQL Detail Modal */}
+      {selectedSqlDetail && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.75)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            backdropFilter: 'blur(4px)',
+          }}
+          onClick={() => setSelectedSqlDetail(null)}
+        >
+          <div
+            style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '12px',
+              width: '90%',
+              maxWidth: '750px',
+              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.6)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                borderBottom: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-primary)' }}>
+                  Sorgu #{selectedSqlDetail.id} • SQL Detayı
+                </div>
+                {selectedSqlDetail.db && (
+                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                    Veritabanı: <strong>{selectedSqlDetail.db}</strong>
+                    {selectedSqlDetail.cpu != null && (
+                      <span> • Ort. CPU: {selectedSqlDetail.cpu.toFixed(2)} ms</span>
+                    )}
+                    {selectedSqlDetail.duration != null && (
+                      <span> • Ort. Süre: {selectedSqlDetail.duration.toFixed(2)} ms</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setSelectedSqlDetail(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--text-secondary)',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
+              >
+                ✕
+              </button>
+            </div>
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                background: '#070b16',
+                fontFamily: 'var(--font-mono, monospace)',
+                fontSize: '12.5px',
+                lineHeight: 1.6,
+                color: '#38bdf8',
+                maxHeight: '420px',
+                overflowY: 'auto',
+              }}
+            >
+              <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                {selectedSqlDetail.sql}
+              </pre>
+            </div>
+            <div
+              style={{
+                padding: '1rem 1.5rem',
+                borderTop: '1px solid var(--border-color)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                * Query Store çalışma planı ve telemetrisinden derlenmiştir.
+              </span>
+              <button
+                onClick={() => handleCopy(selectedSqlDetail.sql)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  borderRadius: '6px',
+                  background: 'var(--primary, #0284c7)',
+                  color: '#fff',
+                  border: 'none',
+                  fontWeight: 500,
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                }}
+              >
+                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? 'Kopyalandı!' : 'SQL Metnini Kopyala'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Plan Forcing Modal */}

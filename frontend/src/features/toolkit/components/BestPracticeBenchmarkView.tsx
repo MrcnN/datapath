@@ -1,17 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
-  CheckCircle,
+  CheckCircle2,
   AlertTriangle,
   XCircle,
   RefreshCw,
   Copy,
   Check,
-  ShieldCheck,
-  Cpu,
-  HardDrive,
-  Database,
-  Layers,
+  Search,
+  ChevronDown,
+  ChevronUp,
   Wrench,
+  Server,
+  Layers,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 import CodeBlock from '../../../components/ui/CodeBlock';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
@@ -25,8 +27,10 @@ export default function BestPracticeBenchmarkView() {
   const [report, setReport] = useState<BestPracticeReport | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('ALL');
   const [selectedStatus, setSelectedStatus] = useState<string>('ALL');
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const loadData = async () => {
@@ -35,6 +39,15 @@ export default function BestPracticeBenchmarkView() {
       setError(null);
       const data = await getBestPractices();
       setReport(data);
+
+      // By default, expand only failed and warning rules so the user is not overwhelmed
+      const initialExpanded = new Set<string>();
+      data.items.forEach((item) => {
+        if (item.status === 'FAIL' || item.status === 'WARN') {
+          initialExpanded.add(item.id);
+        }
+      });
+      setExpandedIds(initialExpanded);
     } catch (err: any) {
       setError(err.message || 'Best practice denetimi gerçekleştirilemedi.');
     } finally {
@@ -54,6 +67,54 @@ export default function BestPracticeBenchmarkView() {
     }, 2500);
   };
 
+  const toggleExpand = (id: string) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const toggleAll = (expandAll: boolean) => {
+    if (!report) return;
+    if (expandAll) {
+      setExpandedIds(new Set(report.items.map((i) => i.id)));
+    } else {
+      setExpandedIds(new Set());
+    }
+  };
+
+  const categories = useMemo(() => {
+    if (!report) return ['ALL'];
+    const cats = Array.from(new Set(report.items.map((i) => i.category)));
+    return ['ALL', ...cats];
+  }, [report]);
+
+  const filteredItems = useMemo(() => {
+    if (!report) return [];
+    return report.items.filter((item) => {
+      const matchSearch =
+        !searchQuery ||
+        item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        item.category.toLowerCase().includes(searchQuery.toLowerCase());
+
+      const matchCategory = selectedCategory === 'ALL' || item.category === selectedCategory;
+
+      const matchStatus =
+        selectedStatus === 'ALL' ||
+        (selectedStatus === 'ISSUES' && (item.status === 'FAIL' || item.status === 'WARN')) ||
+        item.status === selectedStatus;
+
+      return matchSearch && matchCategory && matchStatus;
+    });
+  }, [report, searchQuery, selectedCategory, selectedStatus]);
+
   if (loading) {
     return <LoadingSpinner message="SQL Server mimarisi ve Best Practice kuralları denetleniyor..." />;
   }
@@ -71,235 +132,358 @@ export default function BestPracticeBenchmarkView() {
     );
   }
 
-  const categories = [
-    'ALL',
-    'Memory & CPU',
-    'Storage & I/O',
-    'TempDB Architecture',
-    'Database Engine',
-    'Reliability & Safety',
-  ];
+  const score = Math.round(report.readiness_score);
+  const scoreLevel =
+    score >= 85
+      ? { text: 'Mükemmel • Üretime Hazır', color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)' }
+      : score >= 65
+      ? { text: 'İyi • İyileştirme Gerekir', color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)' }
+      : { text: 'Kritik Eksikler Var', color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)' };
 
-  const filteredItems = report.items.filter((item) => {
-    const matchCategory = selectedCategory === 'ALL' || item.category === selectedCategory;
-    const matchStatus =
-      selectedStatus === 'ALL' ||
-      (selectedStatus === 'ISSUES' && (item.status === 'FAIL' || item.status === 'WARN')) ||
-      item.status === selectedStatus;
-    return matchCategory && matchStatus;
-  });
-
-  const getScoreCircleClass = (score: number) => {
-    if (score >= 85) return styles.scoreCircle;
-    if (score >= 60) return `${styles.scoreCircle} ${styles.scoreCircleWarn}`;
-    return `${styles.scoreCircle} ${styles.scoreCircleDanger}`;
-  };
-
-  const getImpactBadgeClass = (impact: string) => {
-    switch (impact) {
-      case 'CRITICAL':
-        return styles.impactCritical;
-      case 'HIGH':
-        return styles.impactHigh;
-      case 'MEDIUM':
-        return styles.impactMedium;
-      default:
-        return styles.impactLow;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'PASS':
-        return (
-          <span className={`${styles.statusBadge} ${styles.badgePass}`}>
-            <CheckCircle size={12} /> BAŞARILI
-          </span>
-        );
-      case 'WARN':
-        return (
-          <span className={`${styles.statusBadge} ${styles.badgeWarn}`}>
-            <AlertTriangle size={12} /> UYARI
-          </span>
-        );
-      case 'FAIL':
-        return (
-          <span className={`${styles.statusBadge} ${styles.badgeFail}`}>
-            <XCircle size={12} /> KRİTİK HATA
-          </span>
-        );
-      default:
-        return <span className={styles.statusBadge}>{status}</span>;
-    }
-  };
-
-  const getRuleCardClass = (status: string) => {
-    switch (status) {
-      case 'FAIL':
-        return `${styles.ruleCard} ${styles.ruleCardFail}`;
-      case 'WARN':
-        return `${styles.ruleCard} ${styles.ruleCardWarn}`;
-      default:
-        return `${styles.ruleCard} ${styles.ruleCardPass}`;
-    }
-  };
+  const allAreExpanded =
+    filteredItems.length > 0 && filteredItems.every((item) => expandedIds.has(item.id));
 
   return (
     <div className={styles.container}>
-      {/* Top Banner / Summary */}
-      <div className={styles.scoreBanner}>
-        <div className={styles.scoreLeft}>
-          <div className={getScoreCircleClass(report.readiness_score)}>
-            <span className={styles.scoreNumber}>{Math.round(report.readiness_score)}</span>
+      {/* 1. Executive Summary & Scorecard Hero */}
+      <div className={styles.scoreHero}>
+        <div className={styles.heroLeft}>
+          <div
+            className={styles.scoreCircle}
+            style={{
+              borderColor: scoreLevel.color,
+              backgroundColor: scoreLevel.bg,
+            }}
+          >
+            <span className={styles.scoreNumber} style={{ color: scoreLevel.color }}>
+              {score}
+            </span>
             <span className={styles.scoreOutOf}>/ 100</span>
           </div>
 
-          <div className={styles.scoreDetails}>
-            <h2 className={styles.bannerTitle}>
-              SQL Server Üretime Hazırlık & Mimarî Karnesi
-            </h2>
-            <p className={styles.bannerSubtitle}>
-              Sunucu: <strong>{report.server_name}</strong> • Son Değerlendirme: {report.evaluated_at}
-              <br />
-              16 kritik kurumsal kural, TempDB dağılımı, I/O ayarları ve bellek mimarisi denetlendi.
+          <div className={styles.heroDetails}>
+            <div className={styles.heroTitleRow}>
+              <h2 className={styles.heroTitle}>SQL Server Mimari Uygunluk Karnesi</h2>
+              <span
+                className={styles.scoreBadge}
+                style={{
+                  color: scoreLevel.color,
+                  backgroundColor: scoreLevel.bg,
+                  borderColor: scoreLevel.color,
+                }}
+              >
+                <ShieldCheck size={12} />
+                {scoreLevel.text}
+              </span>
+            </div>
+            <p className={styles.heroSubtitle}>
+              <Server size={12} className={styles.subIcon} />
+              <span>Sunucu: <strong>{report.server_name}</strong></span>
+              <span className={styles.dotSep}>•</span>
+              <span>Son Denetim: {report.evaluated_at}</span>
+              <span className={styles.dotSep}>•</span>
+              <span>16 Kritik Kural &amp; TempDB/Bellek Mimarisi</span>
             </p>
           </div>
         </div>
 
-        <div className={styles.scoreStats}>
-          <div className={`${styles.statPill} ${styles.statPillPass}`}>
-            <span className={`${styles.statVal} ${styles.statValPass}`}>{report.passed}</span>
+        <div className={styles.heroStats}>
+          <div className={styles.statChip}>
+            <span className={styles.statCount}>{report.total_rules}</span>
+            <span className={styles.statLabel}>Toplam Kural</span>
+          </div>
+          <div className={`${styles.statChip} ${styles.statChipPass}`}>
+            <span className={styles.statCountPass}>{report.passed}</span>
             <span className={styles.statLabel}>Başarılı</span>
           </div>
-          <div className={`${styles.statPill} ${styles.statPillWarn}`}>
-            <span className={`${styles.statVal} ${styles.statValWarn}`}>{report.warnings}</span>
+          <div className={`${styles.statChip} ${styles.statChipWarn}`}>
+            <span className={styles.statCountWarn}>{report.warnings}</span>
             <span className={styles.statLabel}>Uyarı</span>
           </div>
-          <div className={`${styles.statPill} ${styles.statPillFail}`}>
-            <span className={`${styles.statVal} ${styles.statValFail}`}>{report.failed}</span>
-            <span className={styles.statLabel}>Hatalı</span>
+          <div className={`${styles.statChip} ${styles.statChipFail}`}>
+            <span className={styles.statCountFail}>{report.failed}</span>
+            <span className={styles.statLabel}>Kritik</span>
           </div>
+
           <button
             type="button"
             className={styles.refreshBtn}
             onClick={loadData}
+            disabled={loading}
             title="Yeniden Değerlendir"
           >
-            <RefreshCw size={13} />
+            <RefreshCw size={13} className={loading ? 'spinning' : ''} />
             <span>Yenile</span>
           </button>
         </div>
       </div>
 
-      {/* Controls & Filter Bar */}
-      <div className={styles.controlsBar}>
-        <div className={styles.filterRow}>
-          <div className={styles.categoryPills}>
+      {/* 2. Unified Toolbar (Search, Status Filter, Category Filter, Expand All) */}
+      <div className={styles.toolbarCard}>
+        <div className={styles.toolbarMain}>
+          {/* Search Box */}
+          <div className={styles.searchBox}>
+            <Search size={14} className={styles.searchIcon} />
+            <input
+              type="text"
+              placeholder="Kural adı, ID veya açıklama ara (örn: MAXDOP, TempDB, I/O)..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={styles.searchInput}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className={styles.clearSearchBtn}
+                onClick={() => setSearchQuery('')}
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          {/* Status Filter Tabs */}
+          <div className={styles.statusSegment} role="tablist">
+            <button
+              type="button"
+              className={`${styles.segmentBtn} ${selectedStatus === 'ALL' ? styles.segmentBtnActive : ''}`}
+              onClick={() => setSelectedStatus('ALL')}
+            >
+              Tümü <span className={styles.counterBadge}>{report.total_rules}</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.segmentBtn} ${selectedStatus === 'ISSUES' ? styles.segmentBtnActive : ''}`}
+              onClick={() => setSelectedStatus('ISSUES')}
+            >
+              Sorunlar <span className={`${styles.counterBadge} ${styles.counterIssues}`}>{report.warnings + report.failed}</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.segmentBtn} ${selectedStatus === 'FAIL' ? styles.segmentBtnActive : ''}`}
+              onClick={() => setSelectedStatus('FAIL')}
+            >
+              Kritik <span className={`${styles.counterBadge} ${styles.counterFail}`}>{report.failed}</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.segmentBtn} ${selectedStatus === 'WARN' ? styles.segmentBtnActive : ''}`}
+              onClick={() => setSelectedStatus('WARN')}
+            >
+              Uyarılar <span className={`${styles.counterBadge} ${styles.counterWarn}`}>{report.warnings}</span>
+            </button>
+            <button
+              type="button"
+              className={`${styles.segmentBtn} ${selectedStatus === 'PASS' ? styles.segmentBtnActive : ''}`}
+              onClick={() => setSelectedStatus('PASS')}
+            >
+              Başarılı <span className={`${styles.counterBadge} ${styles.counterPass}`}>{report.passed}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Category Chips & Expand/Collapse Toggle */}
+        <div className={styles.toolbarSub}>
+          <div className={styles.categoryChips}>
+            <span className={styles.categoryLabel}>Kategori:</span>
             {categories.map((cat) => (
               <button
                 key={cat}
                 type="button"
-                className={`${styles.pillBtn} ${selectedCategory === cat ? styles.pillBtnActive : ''}`}
+                className={`${styles.catChipBtn} ${selectedCategory === cat ? styles.catChipActive : ''}`}
                 onClick={() => setSelectedCategory(cat)}
               >
-                {cat === 'ALL' ? 'Tüm Kategoriler' : cat}
+                {cat === 'ALL' ? 'Tümü' : cat}
               </button>
             ))}
           </div>
 
-          <div className={styles.statusPills}>
+          <div className={styles.toolbarActions}>
             <button
               type="button"
-              className={`${styles.statusPillBtn} ${selectedStatus === 'ALL' ? styles.statusPillBtnActive : ''}`}
-              onClick={() => setSelectedStatus('ALL')}
+              className={styles.toggleAllBtn}
+              onClick={() => toggleAll(!allAreExpanded)}
             >
-              Tümü ({report.total_rules})
-            </button>
-            <button
-              type="button"
-              className={`${styles.statusPillBtn} ${selectedStatus === 'ISSUES' ? styles.statusPillBtnActive : ''}`}
-              onClick={() => setSelectedStatus('ISSUES')}
-            >
-              Sorunlar ({report.warnings + report.failed})
-            </button>
-            <button
-              type="button"
-              className={`${styles.statusPillBtn} ${selectedStatus === 'FAIL' ? styles.statusPillBtnActive : ''}`}
-              onClick={() => setSelectedStatus('FAIL')}
-            >
-              Kritik ({report.failed})
-            </button>
-            <button
-              type="button"
-              className={`${styles.statusPillBtn} ${selectedStatus === 'PASS' ? styles.statusPillBtnActive : ''}`}
-              onClick={() => setSelectedStatus('PASS')}
-            >
-              Başarılı ({report.passed})
+              {allAreExpanded ? (
+                <>
+                  <ChevronUp size={13} /> Tümünü Daralt
+                </>
+              ) : (
+                <>
+                  <ChevronDown size={13} /> Tümünü Genişlet
+                </>
+              )}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Rules List */}
-      <div className={styles.rulesGrid}>
-        {filteredItems.map((item) => (
-          <div key={item.id} className={getRuleCardClass(item.status)}>
-            <div className={styles.ruleTop}>
-              <div className={styles.ruleHeaderLeft}>
-                <div className={styles.ruleBadges}>
-                  <span className={styles.ruleId}>{item.id}</span>
-                  <span className={styles.categoryTag}>{item.category}</span>
-                  <span className={`${styles.impactBadge} ${getImpactBadgeClass(item.impact)}`}>
-                    ÖNEM: {item.impact}
-                  </span>
-                </div>
-                <h3 className={styles.ruleTitle}>{item.title}</h3>
-              </div>
-              <div className={styles.ruleHeaderRight}>{getStatusBadge(item.status)}</div>
-            </div>
-
-            <p className={styles.ruleDesc}>{item.description}</p>
-
-            <div className={styles.comparisonGrid}>
-              <div className={styles.compCol}>
-                <span className={styles.compLabel}>Mevcut Değer</span>
-                <span className={styles.compValCurrent}>{item.current_value}</span>
-              </div>
-              <div className={styles.compCol}>
-                <span className={styles.compLabel}>Önerilen Kurumsal Değer</span>
-                <span className={styles.compValRec}>{item.recommended_value}</span>
-              </div>
-            </div>
-
-            {item.remediation_sql && (
-              <div className={styles.remediationBox}>
-                <div className={styles.remediationHeader}>
-                  <span className={styles.remediationTitle}>
-                    <Wrench size={13} color="var(--accent-primary, #3b82f6)" />
-                    Önerilen Düzeltme (Remediation T-SQL)
-                  </span>
-                  <button
-                    type="button"
-                    className={`${styles.copyBtn} ${copiedId === item.id ? styles.copyBtnCopied : ''}`}
-                    onClick={() => handleCopySql(item.id, item.remediation_sql!)}
-                    title="T-SQL Düzeltme Komutunu Kopyala"
-                  >
-                    {copiedId === item.id ? (
-                      <>
-                        <Check size={12} /> Kopyalandı!
-                      </>
-                    ) : (
-                      <>
-                        <Copy size={12} /> Scripti Kopyala
-                      </>
-                    )}
-                  </button>
-                </div>
-                <CodeBlock code={item.remediation_sql} language="sql" maxLines={6} />
-              </div>
-            )}
+      {/* 3. Streamlined Interactive Accordion List */}
+      <div className={styles.rulesList}>
+        {filteredItems.length === 0 ? (
+          <div className={styles.noResultsBox}>
+            <span>Filtrelere uygun kural bulunamadı.</span>
           </div>
-        ))}
+        ) : (
+          filteredItems.map((item) => {
+            const isExpanded = expandedIds.has(item.id);
+            const isFail = item.status === 'FAIL';
+            const isWarn = item.status === 'WARN';
+            const isPass = item.status === 'PASS';
+
+            return (
+              <div
+                key={item.id}
+                className={`${styles.ruleRow} ${
+                  isFail
+                    ? styles.ruleRowFail
+                    : isWarn
+                    ? styles.ruleRowWarn
+                    : styles.ruleRowPass
+                }`}
+              >
+                {/* Clickable Header Row */}
+                <div
+                  className={styles.ruleRowHeader}
+                  onClick={() => toggleExpand(item.id)}
+                  role="button"
+                  tabIndex={0}
+                  aria-expanded={isExpanded}
+                >
+                  {/* Status Icon */}
+                  <div className={styles.rowIconArea}>
+                    {isPass && <CheckCircle2 size={17} className={styles.iconPass} />}
+                    {isWarn && <AlertTriangle size={17} className={styles.iconWarn} />}
+                    {isFail && <XCircle size={17} className={styles.iconFail} />}
+                  </div>
+
+                  {/* ID & Title */}
+                  <div className={styles.rowTitleArea}>
+                    <div className={styles.rowMeta}>
+                      <span className={styles.ruleIdBadge}>{item.id}</span>
+                      <span className={styles.ruleCatBadge}>{item.category}</span>
+                      <span
+                        className={`${styles.impactBadge} ${
+                          item.impact === 'CRITICAL'
+                            ? styles.impactCritical
+                            : item.impact === 'HIGH'
+                            ? styles.impactHigh
+                            : item.impact === 'MEDIUM'
+                            ? styles.impactMedium
+                            : styles.impactLow
+                        }`}
+                      >
+                        {item.impact}
+                      </span>
+                    </div>
+                    <span className={styles.ruleTitleText}>{item.title}</span>
+                  </div>
+
+                  {/* Quick Values Inline Preview */}
+                  <div className={styles.valuesPreview}>
+                    <div className={styles.previewValBox}>
+                      <span className={styles.previewValLabel}>Mevcut:</span>
+                      <span className={isFail ? styles.previewValBad : isWarn ? styles.previewValWarn : styles.previewValGood}>
+                        {item.current_value}
+                      </span>
+                    </div>
+                    <ArrowRight size={12} className={styles.arrowIcon} />
+                    <div className={styles.previewValBox}>
+                      <span className={styles.previewValLabel}>Hedef:</span>
+                      <span className={styles.previewValTarget}>{item.recommended_value}</span>
+                    </div>
+                  </div>
+
+                  {/* Right Status Pill & Chevron */}
+                  <div className={styles.rowActions}>
+                    <span
+                      className={`${styles.statusPill} ${
+                        isFail
+                          ? styles.statusPillFail
+                          : isWarn
+                          ? styles.statusPillWarn
+                          : styles.statusPillPass
+                      }`}
+                    >
+                      {isPass ? 'BAŞARILI' : isWarn ? 'UYARI' : 'KRİTİK HATA'}
+                    </span>
+                    <button
+                      type="button"
+                      className={styles.chevronBtn}
+                      aria-label={isExpanded ? 'Daralt' : 'Genişlet'}
+                    >
+                      {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Expanded Detailed Content */}
+                {isExpanded && (
+                  <div className={styles.ruleDetails}>
+                    <p className={styles.detailDesc}>{item.description}</p>
+
+                    {/* Side-by-Side Comparison Grid */}
+                    <div className={styles.compGrid}>
+                      <div className={styles.compCardCurrent}>
+                        <span className={styles.compCardLabel}>Sunucuda Tespit Edilen Değer</span>
+                        <span className={isFail ? styles.compValFail : isWarn ? styles.compValWarn : styles.compValPass}>
+                          {item.current_value}
+                        </span>
+                      </div>
+                      <div className={styles.compCardTarget}>
+                        <span className={styles.compCardLabel}>Önerilen Kurumsal Hedef (Best Practice)</span>
+                        <span className={styles.compValTargetText}>{item.recommended_value}</span>
+                      </div>
+                    </div>
+
+                    {/* Remediation T-SQL Block */}
+                    {item.remediation_sql && (
+                      <div className={styles.remediationBox}>
+                        <div className={styles.remediationHead}>
+                          <div className={styles.remediationTitle}>
+                            <Wrench size={13} color="var(--accent, #38bdf8)" />
+                            <span>Önerilen Düzeltme Reçetesi (Remediation T-SQL)</span>
+                          </div>
+                          <button
+                            type="button"
+                            className={`${styles.copyBtn} ${copiedId === item.id ? styles.copyBtnCopied : ''}`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopySql(item.id, item.remediation_sql!);
+                            }}
+                          >
+                            {copiedId === item.id ? (
+                              <>
+                                <Check size={12} color="#4ade80" />
+                                <span>Kopyalandı!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={12} />
+                                <span>Scripti Kopyala</span>
+                              </>
+                            )}
+                          </button>
+                        </div>
+
+                        <CodeBlock
+                          code={item.remediation_sql}
+                          language="sql"
+                          showCopy={false}
+                          maxLines={8}
+                        />
+
+                        <div className={styles.remediationFootnote}>
+                          * Güvenlik ilkesi: Bu komut doğrudan çalıştırılmaz. DBA incelemesi sonrası SSMS üzerinde uygulanması önerilir.
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })
+        )}
       </div>
     </div>
   );

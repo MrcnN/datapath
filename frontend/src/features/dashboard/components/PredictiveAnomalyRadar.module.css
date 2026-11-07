@@ -165,14 +165,24 @@
   border-radius: var(--radius-sm);
   padding: var(--space-4);
   position: relative;
+  overflow: visible;
 }
 
 .chartMeta {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
   font-size: 11.5px;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.metaLeft {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
 }
 
 .metaItem {
@@ -182,14 +192,41 @@
   color: var(--text-secondary);
 }
 
+.metaLabel {
+  color: var(--text-muted);
+}
+
 .metaValue {
   font-weight: 700;
   color: #ffffff;
+  font-family: var(--font-mono);
+}
+
+.metaValueMuted {
+  font-weight: 600;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+}
+
+.metaZScoreCritical {
+  font-weight: 700;
+  color: #f87171;
+  font-family: var(--font-mono);
+  background: rgba(239, 68, 68, 0.15);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.metaZScoreNormal {
+  font-weight: 600;
+  color: #38bdf8;
+  font-family: var(--font-mono);
 }
 
 .legendArea {
   display: flex;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
 }
 
 .legendDot {
@@ -199,105 +236,207 @@
   border-radius: 50%;
 }
 
-.svgWrapper {
-  width: 100%;
-  height: 180px;
+.legendDash {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed;
 }
 
-/* Alerts List */
+.svgWrapper {
+  width: 100%;
+  position: relative;
+  min-height: 200px;
+}
+
+.chartSvg {
+  width: 100%;
+  height: auto;
+  display: block;
+  overflow: visible;
+}
+
+/* Chart Tooltip */
+.chartTooltip {
+  position: absolute;
+  transform: translate(-50%, -120%);
+  background-color: #0b1329;
+  border: 1px solid #38bdf8;
+  border-radius: 6px;
+  padding: 6px 10px;
+  pointer-events: none;
+  z-index: 10;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  font-size: 11px;
+  white-space: nowrap;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.tooltipTime {
+  color: #94a3b8;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 3px;
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: #cbd5e1;
+}
+
+.tooltipCritical {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.tooltipNormal {
+  color: #38bdf8;
+  font-weight: 600;
+}
+
+/* Pulse animation */
+@keyframes pulse {
+  0% {
+    r: 6px;
+    opacity: 0.8;
+  }
+  50% {
+    r: 9px;
+    opacity: 0.2;
+  }
+  100% {
+    r: 6px;
+    opacity: 0.8;
+  }
+}
+
+/* Alerts Section - Side-by-Side Multi-column Grid */
 .alertsSection {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
-  margin-top: var(--space-2);
+  margin-top: var(--space-1);
 }
 
 .alertsSectionTitle {
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 700;
   color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+}
+
+.alertsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
 }
 
 .alertCard {
   background-color: var(--bg-elevated);
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: var(--space-4);
+  padding: 14px 16px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  transition: border-color var(--transition-fast);
+  justify-content: space-between;
+  gap: 12px;
+  transition: all var(--transition-fast);
+}
+
+.alertCard:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-sm);
 }
 
 .alertCardCritical {
   border-left: 3px solid #ef4444;
+  background: linear-gradient(180deg, rgba(239, 68, 68, 0.04) 0%, var(--bg-elevated) 100%);
 }
 
 .alertCardWarning {
   border-left: 3px solid #f59e0b;
+  background: linear-gradient(180deg, rgba(245, 158, 11, 0.04) 0%, var(--bg-elevated) 100%);
+}
+
+.alertCardTop {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .alertCardHeader {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: 8px;
 }
 
 .alertMetricName {
   font-size: 13px;
   font-weight: 700;
   color: #ffffff;
-}
-
-.alertBadge {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 2px 8px;
-  border-radius: var(--radius-xs);
+  letter-spacing: -0.01em;
 }
 
 .alertDesc {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--text-primary);
-  line-height: 1.5;
+  line-height: 1.45;
   margin: 0;
 }
 
 .alertHypothesis {
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-size: 11.5px;
+  color: #94a3b8;
   background-color: rgba(15, 23, 42, 0.6);
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: var(--radius-xs);
   border: 1px dashed var(--border);
+  line-height: 1.4;
+}
+
+.hypoTitle {
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
 .codeArea {
   position: relative;
-  background-color: #060912;
+  background-color: #050811;
   border: 1px solid #1e293b;
   border-radius: var(--radius-xs);
-  padding: 10px 12px;
-  font-family: var(--font-mono);
-  font-size: 11.5px;
-  color: #e2e8f0;
-  overflow-x: auto;
-  white-space: pre-wrap;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.codeAreaHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.codeTag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .copyCodeBtn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   background-color: #1e293b;
   border: 1px solid #334155;
   color: #cbd5e1;
-  padding: 3px 8px;
+  padding: 2px 7px;
   border-radius: var(--radius-xs);
   font-size: 10.5px;
   cursor: pointer;
@@ -310,4 +449,16 @@
 .copyCodeBtn:hover {
   background-color: #334155;
   color: #ffffff;
+}
+
+.codeContent {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #38bdf8;
+  max-height: 80px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  line-height: 1.35;
+  padding-right: 4px;
 }
