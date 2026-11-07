@@ -34,11 +34,12 @@ import type {
   TimelineEvent,
 } from '../../lib/types';
 import RCAReportModal from './components/RCAReportModal';
+import IncidentSimulatorModal from './components/IncidentSimulatorModal';
 import HAPage from '../high-availability/HAPage';
 import BackupRecoveryPage from '../backups/BackupRecoveryPage';
 import ExtendedEventsPage from '../extended-events/ExtendedEventsPage';
 import PredictiveAnomalyRadar from './components/PredictiveAnomalyRadar';
-import { Shield, Database, Radio, Layers } from 'lucide-react';
+import { Shield, Database, Radio, Layers, Zap } from 'lucide-react';
 
 import styles from './IncidentCenterPage.module.css';
 
@@ -66,6 +67,7 @@ const tabs: TabItem[] = [
 export default function IncidentCenterPage({ initialTab }: { initialTab?: TabType } = {}) {
   const [activeTab, setActiveTab] = useState<TabType>(initialTab || 'sessions');
   const [showRcaModal, setShowRcaModal] = useState<boolean>(false);
+  const [showSimModal, setShowSimModal] = useState<boolean>(false);
 
   // Tab data states
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -116,6 +118,16 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
         subtitle="Canlı kilitlenme olayları, interaktif SVG Deadlock grafiği, SQL Server hata günlükleri ve kurumsal RCA Post-Mortem raporlayıcısı."
         actions={
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <button
+              type="button"
+              className={styles.refreshBtn}
+              onClick={() => setShowSimModal(true)}
+              title="Test ortamında canlı kilitlenme veya deadlock simülasyonu başlat"
+              style={{ background: 'rgba(245, 158, 11, 0.15)', borderColor: 'rgba(245, 158, 11, 0.3)', color: '#f59e0b' }}
+            >
+              <Zap size={13} />
+              <span>Kriz Simülatörü</span>
+            </button>
             <button
               type="button"
               className={styles.refreshBtn}
@@ -183,6 +195,14 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
           </>
         )}
       </div>
+      {showSimModal && (
+        <IncidentSimulatorModal
+          onClose={() => setShowSimModal(false)}
+          onSimulationStarted={() => {
+            fetchTabData(activeTab);
+          }}
+        />
+      )}
       {showRcaModal && (
         <RCAReportModal
           onClose={() => setShowRcaModal(false)}

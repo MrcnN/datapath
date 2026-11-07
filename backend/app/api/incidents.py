@@ -122,3 +122,36 @@ def read_incident_timeline(
 def generate_rca_endpoint(req: RCARequest):
     """Generate executive post-mortem Incident Root-Cause Analysis (RCA) report."""
     return generate_rca_post_mortem(req)
+
+
+class IncidentSimulationRequest(BaseModel):
+    simulation_type: str = "BLOCKING"
+    duration_seconds: int = 15
+    target_database: Optional[str] = "Datapath_TestDB"
+
+
+class IncidentSimulationResponse(BaseModel):
+    status: str
+    simulation_type: str
+    database: str
+    message: str
+    blocker_spid: Optional[int] = None
+    waiter_spid: Optional[int] = None
+    victim_spid: Optional[int] = None
+    duration_seconds: Optional[int] = None
+    details: dict = {}
+
+
+@router.post("/incidents/simulate-lock", response_model=IncidentSimulationResponse)
+def simulate_lock_endpoint(req: IncidentSimulationRequest):
+    """Execute controlled transient blocking or real deadlock on target database for live diagnostic verification."""
+    from app.services.incident_simulation_service import run_lock_simulation
+
+    params = _get_connection_params()
+    result = run_lock_simulation(
+        params=params,
+        simulation_type=req.simulation_type,
+        duration_seconds=req.duration_seconds,
+        target_database=req.target_database or "Datapath_TestDB",
+    )
+    return IncidentSimulationResponse(**result)

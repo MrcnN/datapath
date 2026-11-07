@@ -57,3 +57,17 @@ def test_read_deadlock_history():
     assert "victim_id" in first
     assert "deadlock_xml" in first
     assert "<deadlock" in first["deadlock_xml"]
+
+
+def test_simulate_lock_endpoint():
+    payload = {
+        "simulation_type": "BLOCKING",
+        "duration_seconds": 5,
+        "target_database": "Datapath_TestDB"
+    }
+    res = client.post("/api/incidents/simulate-lock", json=payload)
+    assert res.status_code == 200
+    data = res.json()
+    assert data["simulation_type"] == "BLOCKING"
+    assert "status" in data
+    assert "message" in data

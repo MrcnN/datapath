@@ -54,6 +54,8 @@ import type {
   RestoreSimulationResult,
   VersionStoreAnalysis,
   UserProfile,
+  IncidentSimulationRequest,
+  IncidentSimulationResponse,
   UserLoginRequest,
   UserRegisterRequest,
   OAuthLoginRequest,
@@ -717,5 +719,12 @@ export async function resetPermissionsToDefault(): Promise<RolePermissionMatrixR
 export async function elevateToAdmin(): Promise<UserProfile> {
   return apiFetch<UserProfile>('/api/auth/elevate-admin', {
     method: 'POST',
+  });
+}
+
+export async function simulateLock(req: IncidentSimulationRequest): Promise<IncidentSimulationResponse> {
+  return apiFetch<IncidentSimulationResponse>('/api/incidents/simulate-lock', {
+    method: 'POST',
+    body: JSON.stringify(req),
   });
 }

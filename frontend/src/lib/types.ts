@@ -1908,3 +1908,22 @@ export interface UpdateUserRoleRequest {
   user_id: string;
   new_role: string;
 }
+
+// ─── Incident & Lock Simulation Types ──────────────────────────────────────────────
+export interface IncidentSimulationRequest {
+  simulation_type: 'BLOCKING' | 'DEADLOCK';
+  duration_seconds?: number;
+  target_database?: string;
+}
+
+export interface IncidentSimulationResponse {
+  status: string;
+  simulation_type: string;
+  database: string;
+  message: string;
+  blocker_spid?: number;
+  waiter_spid?: number;
+  victim_spid?: number;
+  duration_seconds?: number;
+  details?: Record<string, any>;
+}
