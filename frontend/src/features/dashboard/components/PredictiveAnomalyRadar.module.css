@@ -136,6 +136,10 @@
   font-weight: 600;
 }
 
+.tabName {
+  font-size: 12px;
+}
+
 .zPill {
   font-size: 10.5px;
   font-weight: 700;
@@ -172,7 +176,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: var(--space-2);
+  margin-bottom: var(--space-3);
   font-size: 11.5px;
   flex-wrap: wrap;
   gap: 12px;
@@ -196,15 +200,67 @@
   color: var(--text-muted);
 }
 
-.metaValue {
+.metaValGreen {
+  font-weight: 700;
+  color: #10b981;
+  font-family: var(--font-mono);
+}
+
+.metaZScoreGreen {
+  font-weight: 700;
+  color: #34d399;
+  font-family: var(--font-mono);
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.35);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.legendLineGreen {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background-color: #10b981;
+  border-radius: 1px;
+}
+
+.tooltipBadgeGreen {
+  color: #34d399;
+  background-color: rgba(16, 185, 129, 0.15);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.tooltipValGreen {
+  color: #10b981;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.metaValCritical {
+  font-weight: 700;
+  color: #ef4444;
+  font-family: var(--font-mono);
+}
+
+.metaValNormal {
   font-weight: 700;
   color: #ffffff;
   font-family: var(--font-mono);
 }
 
-.metaValueMuted {
+.metaValMuted {
   font-weight: 600;
   color: #94a3b8;
+  font-family: var(--font-mono);
+}
+
+.metaValWarn {
+  font-weight: 600;
+  color: #f59e0b;
   font-family: var(--font-mono);
 }
 
@@ -227,92 +283,109 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  flex-wrap: wrap;
 }
 
-.legendDot {
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+.legendLineCyan {
   display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 14px;
+  height: 2px;
+  background-color: #38bdf8;
+  border-radius: 1px;
 }
 
-.legendDash {
+.legendLineRed {
   display: inline-block;
   width: 14px;
   height: 0;
-  border-top: 2px dashed;
+  border-top: 2px dashed #ef4444;
 }
 
-.svgWrapper {
+.legendLineGray {
+  display: inline-block;
+  width: 14px;
+  height: 0;
+  border-top: 2px dashed #64748b;
+}
+
+.chartWrapper {
   width: 100%;
-  position: relative;
-  min-height: 200px;
+  height: 260px;
 }
 
-.chartSvg {
-  width: 100%;
-  height: auto;
-  display: block;
-  overflow: visible;
-}
-
-/* Chart Tooltip */
-.chartTooltip {
-  position: absolute;
-  transform: translate(-50%, -120%);
+/* Custom Corporate Recharts Tooltip */
+.customTooltip {
   background-color: #0b1329;
-  border: 1px solid #38bdf8;
-  border-radius: 6px;
-  padding: 6px 10px;
-  pointer-events: none;
-  z-index: 10;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  border: 1px solid #1e293b;
+  border-radius: var(--radius-xs);
+  padding: 8px 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
   font-size: 11px;
-  white-space: nowrap;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
+  min-width: 180px;
+}
+
+.tooltipHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .tooltipTime {
   color: #94a3b8;
-  font-size: 10px;
   font-family: var(--font-mono);
-  border-bottom: 1px solid #1e293b;
-  padding-bottom: 3px;
+  font-size: 10px;
+}
+
+.tooltipBadgeCritical {
+  color: #f87171;
+  background-color: rgba(239, 68, 68, 0.15);
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 1px 5px;
+  border-radius: 3px;
+}
+
+.tooltipBadgeNormal {
+  color: #38bdf8;
+  background-color: rgba(56, 189, 248, 0.12);
+  font-size: 9.5px;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 3px;
 }
 
 .tooltipRow {
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 12px;
   color: #cbd5e1;
 }
 
-.tooltipCritical {
+.tooltipValRed {
   color: #ef4444;
   font-weight: 700;
+  font-family: var(--font-mono);
 }
 
-.tooltipNormal {
+.tooltipValCyan {
   color: #38bdf8;
   font-weight: 600;
-}
-
-/* Pulse animation */
-@keyframes pulse {
-  0% {
-    r: 6px;
-    opacity: 0.8;
-  }
-  50% {
-    r: 9px;
-    opacity: 0.2;
-  }
-  100% {
-    r: 6px;
-    opacity: 0.8;
-  }
+  font-family: var(--font-mono);
 }
 
 /* Alerts Section - Side-by-Side Multi-column Grid */
@@ -334,8 +407,14 @@
 
 .alertsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
+}
+
+@media (max-width: 1024px) {
+  .alertsGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 .alertCard {
@@ -455,7 +534,7 @@
   font-family: var(--font-mono);
   font-size: 11px;
   color: #38bdf8;
-  max-height: 80px;
+  max-height: 70px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-break: break-all;

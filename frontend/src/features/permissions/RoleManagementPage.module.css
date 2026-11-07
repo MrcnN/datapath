@@ -77,38 +77,41 @@
 
 /* Tab Navigation */
 .tabsBar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  border-bottom: 1px solid var(--border, #1e293b);
-  padding-bottom: 10px;
+  display: inline-flex;
+  gap: 4px;
+  background-color: var(--bg-surface, #0d1527);
+  border: 1px solid var(--border, #1e293b);
+  border-radius: var(--radius-sm, 6px);
+  padding: 4px;
+  width: fit-content;
 }
 
 .tabBtn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 16px;
+  padding: 6px 14px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: var(--radius-xs, 4px);
   color: var(--text-secondary, #94a3b8);
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 12.5px;
+  font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all var(--transition-fast);
 }
 
 .tabBtn:hover {
   color: #ffffff;
-  background: var(--bg-hover, #141f36);
+  background: var(--bg-hover, rgba(255, 255, 255, 0.04));
 }
 
 .tabBtnActive {
-  background: var(--bg-surface, #0d1527);
+  background-color: var(--bg-elevated, #141f36);
   border-color: var(--border, #1e293b);
-  color: var(--accent, #38bdf8);
-  border-bottom-color: var(--accent, #38bdf8);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Control Toolbar */

@@ -953,7 +953,7 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
       {/* Tab 6: VLFs */}
       {activeTab === 'vlfs' && (
         <div>
-          <div className={styles.alertBanner} style={{ marginBottom: '16px', background: 'rgba(0, 210, 255, 0.05)', borderColor: 'rgba(0, 210, 255, 0.2)' }}>
+          <div className={styles.alertBanner} style={{ marginBottom: '16px', background: 'rgba(56, 189, 248, 0.06)', borderColor: 'rgba(56, 189, 248, 0.2)' }}>
             <Layers size={20} className={styles.alertIcon} style={{ color: 'var(--accent)' }} />
             <div>
               <strong>Sanal Log Dosyaları (VLF) ve Transaction Log Mimarisi:</strong> SQL Server'da Transaction Log dosyası (LDF) dahili olarak VLF birimlerine ayrılır. Log dosyası sık ve küçük artışlarla otomatik büyüdüğünde binlerce küçük VLF oluşur. Yüksek VLF sayısı (&gt;1.000 VLF) sunucu yeniden başlatmalarında (Crash Recovery), Always On failover senkronizasyonunda ve log yedeklerinde ciddi gecikmelere sebep olur.

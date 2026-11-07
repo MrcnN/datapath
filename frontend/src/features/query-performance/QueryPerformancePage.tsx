@@ -205,6 +205,7 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     {
       key: 'query_text_snippet',
       label: 'SQL Metni',
+      width: '42%',
       render: (q) => {
         const rawSql = q.query_text_snippet || '';
         const firstWord = rawSql.trim().split(/\s+/)[0]?.toUpperCase() || 'SQL';
@@ -289,30 +290,35 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     {
       key: 'avg_cpu_ms',
       label: 'Ort. CPU (ms)',
+      width: '105px',
       sortable: true,
       render: (q) => `${q.avg_cpu_ms?.toFixed(2) ?? '—'} ms`,
     },
     {
       key: 'avg_duration_ms',
       label: 'Ort. Süre (ms)',
+      width: '110px',
       sortable: true,
       render: (q) => `${q.avg_duration_ms?.toFixed(2) ?? '—'} ms`,
     },
     {
       key: 'avg_logical_reads',
       label: 'Mantıksal Okuma',
+      width: '120px',
       sortable: true,
       render: (q) => q.avg_logical_reads?.toLocaleString() ?? '—',
     },
     {
       key: 'execution_count',
       label: 'Çalışma Sayısı',
+      width: '110px',
       sortable: true,
       render: (q) => q.execution_count?.toLocaleString() ?? '—',
     },
     {
       key: 'is_regressed',
       label: 'Gerileme',
+      width: '115px',
       render: (q) =>
         q.is_regressed ? (
           <StatusBadge variant="error" label="Gerileme Var" />
@@ -413,9 +419,9 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
             gap: '4px',
             padding: '4px 10px',
             borderRadius: '4px',
-            background: 'rgba(0, 210, 255, 0.1)',
-            border: '1px solid rgba(0, 210, 255, 0.3)',
-            color: 'var(--accent, #00d2ff)',
+            background: 'rgba(56, 189, 248, 0.08)',
+            border: '1px solid rgba(56, 189, 248, 0.3)',
+            color: 'var(--accent, #38bdf8)',
             fontSize: '11.5px',
             fontWeight: 500,
             cursor: 'pointer',

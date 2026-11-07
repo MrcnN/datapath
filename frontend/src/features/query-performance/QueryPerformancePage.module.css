@@ -398,13 +398,14 @@
 .sqlSnippetText {
   font-family: var(--font-mono);
   font-size: 11.5px;
-  color: #94a3b8;
+  color: #cbd5e1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
   transition: color var(--transition-fast);
-  flex-grow: 1;
+  flex: 1;
+  min-width: 0;
 }
 
 .sqlSnippetText:hover {

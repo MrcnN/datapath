@@ -203,9 +203,9 @@ export default function TempDBContentionViewer() {
             gap: '4px',
             padding: '4px 8px',
             borderRadius: '4px',
-            background: 'rgba(0, 210, 255, 0.1)',
-            border: '1px solid rgba(0, 210, 255, 0.25)',
-            color: 'var(--accent, #00d2ff)',
+            background: 'rgba(56, 189, 248, 0.08)',
+            border: '1px solid rgba(56, 189, 248, 0.25)',
+            color: 'var(--accent, #38bdf8)',
             fontSize: '11px',
             cursor: 'pointer',
           }}

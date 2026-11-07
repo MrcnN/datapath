@@ -72,8 +72,23 @@
   --border: #1e293b;
   --border-subtle: #151f33;
   --border-card: #1e293b;
+  --border-color: #1e293b;
+  --border-primary: #1e293b;
   --border-hover: #334155;
   --border-focus: #38bdf8;
+
+  /* Enterprise SaaS Shared Action & Status Aliases */
+  --primary: #0284c7;
+  --primary-hover: #0369a1;
+  --accent-primary: #38bdf8;
+  --accent-purple: #818cf8;
+  --error: #ef4444;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --bg-input: #080d1a;
+  --bg-primary: #0d1527;
+  --bg-secondary: #141f36;
+  --text-tertiary: #64748b;
 
   /* Layout Dimensions */
   --sidebar-width: 236px;

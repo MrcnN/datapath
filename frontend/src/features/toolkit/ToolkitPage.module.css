@@ -95,7 +95,7 @@
 
 .card:hover {
   
-  border-color: rgba(0, 210, 255, 0.3);
+  border-color: rgba(56, 189, 248, 0.3);
   box-shadow: var(--shadow-sm);
 }
 

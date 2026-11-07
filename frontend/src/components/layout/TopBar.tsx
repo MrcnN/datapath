@@ -613,13 +613,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                         </div>
                       </div>
                     </div>
-                    <div className={styles.userMenuSubTitle}>
-                      {user.role === 'SENIOR_DBA'
-                        ? 'Kıdemli Veritabanı Yöneticisi (Senior DBA)'
-                        : user.role === 'OPERATOR'
-                        ? 'Veritabanı Operatörü (Operator)'
-                        : 'Salt Okunur Gözlemci (Viewer)'}
-                    </div>
                   </div>
 
                   <div className={styles.userMenuItems}>

@@ -142,7 +142,7 @@ export default function ExtendedEventsPage({ embedded = false }: { embedded?: bo
                   fontSize: '11px',
                   padding: '2px 6px',
                   borderRadius: '4px',
-                  background: t === 'ring_buffer' ? 'rgba(0, 210, 255, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                  background: t === 'ring_buffer' ? 'rgba(56, 189, 248, 0.12)' : 'rgba(245, 158, 11, 0.15)',
                   color: t === 'ring_buffer' ? 'var(--accent)' : '#f59e0b',
                   fontWeight: 600,
                 }}
@@ -404,7 +404,7 @@ GO`,
           {activeTab === 'events' && (
             <div>
               <div className={styles.infoCallout}>
-                <Activity size={18} style={{ color: '#00d2ff', flexShrink: 0, marginTop: '2px' }} />
+                <Activity size={18} style={{ color: '#38bdf8', flexShrink: 0, marginTop: '2px' }} />
                 <div>
                   <strong>system_health Ring Buffer Teşhisi:</strong> SQL Server varsayılan olarak arka planda system_health oturumunu çalıştırır. Kilitlenmeler (Deadlock), şiddeti 20 ve üzeri olan kritik donanım/veri bozulması hataları, bağlantı el sıkışma zaman aşımları ve önbellek daralmaları doğrudan bu arabellekte XML olarak tutulur.
                 </div>
