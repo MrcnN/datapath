@@ -610,12 +610,6 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                               ? 'Operatör'
                               : 'Görüntüleyici'}
                           </span>
-                          {user.google_connected && (
-                            <span className={styles.oauthMiniTag} title="Google Hesabı Bağlı">Google</span>
-                          )}
-                          {user.github_connected && (
-                            <span className={styles.oauthMiniTag} title="GitHub Hesabı Bağlı">GitHub</span>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -651,7 +645,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                         }}
                       >
                         <Crown size={13} className={styles.userMenuIcon} aria-hidden="true" />
-                        <span>Tüm Rol & Yetkileri Yönet</span>
+                        <span>Yönetim</span>
                       </button>
                     )}
 
@@ -664,34 +658,8 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
                         navigate('/profile');
                       }}
                     >
-                      <User size={13} className={styles.userMenuIcon} aria-hidden="true" />
-                      <span>Profil & Bilgileri Düzenle</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={styles.userMenuItem}
-                      onClick={() => {
-                        setUserDropdownOpen(false);
-                        navigate('/profile');
-                      }}
-                    >
-                      <ShieldCheck size={13} className={styles.userMenuIcon} aria-hidden="true" />
-                      <span>Operasyonel Yetki Matrisi</span>
-                    </button>
-
-                    <button
-                      type="button"
-                      role="menuitem"
-                      className={styles.userMenuItem}
-                      onClick={() => {
-                        setUserDropdownOpen(false);
-                        navigate('/profile');
-                      }}
-                    >
                       <Settings size={13} className={styles.userMenuIcon} aria-hidden="true" />
-                      <span>Güvenlik & Parola Ayarları</span>
+                      <span>Profil Ayarları</span>
                     </button>
                   </div>
 
