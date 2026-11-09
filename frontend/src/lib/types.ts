@@ -2093,3 +2093,76 @@ export interface MigrationRunbookResponse {
   emergency_rollback_sql: string;
   architectural_guidelines: string[];
 }
+
+
+// ─── Workload Time-Travel Correlator & Spike Detective Types ──────────────
+export interface CorrelatedQueryItem {
+  query_id: number;
+  plan_id: number;
+  query_text: string;
+  cpu_time_ms: number;
+  duration_ms: number;
+  logical_reads: number;
+  execution_count: number;
+  cpu_contribution_pct: number;
+  database_name: string;
+  object_name?: string | null;
+}
+
+export interface CorrelatedWaitItem {
+  wait_category: string;
+  total_wait_ms: number;
+  percentage: number;
+  architectural_diagnosis: string;
+}
+
+export interface CorrelatedEventItem {
+  event_time: string;
+  event_type: string;
+  object_name: string;
+  database_name: string;
+  description: string;
+  risk_level: 'HIGH' | 'MEDIUM' | 'LOW';
+}
+
+export interface TimeTravelSnapshotDetail {
+  interval_id: number;
+  start_time: string;
+  end_time: string;
+  total_cpu_ms: number;
+  total_executions: number;
+  distinct_plans_count: number;
+  dominant_wait_category: string;
+  is_anomaly_spike: boolean;
+  spike_score: number;
+  queries: CorrelatedQueryItem[];
+  waits: CorrelatedWaitItem[];
+  events: CorrelatedEventItem[];
+  root_cause_diagnosis: string;
+  recommended_action_title: string;
+  recommended_action_sql?: string | null;
+}
+
+export interface TimeTravelTimelinePoint {
+  interval_id: number;
+  time_label: string;
+  start_time: string;
+  cpu_load_percent: number;
+  total_cpu_ms: number;
+  total_executions: number;
+  dominant_wait_category: string;
+  is_anomaly_spike: boolean;
+  spike_severity: 'CRITICAL' | 'WARNING' | 'NORMAL';
+}
+
+export interface TimeTravelCorrelatorOverview {
+  database_name: string;
+  server_name: string;
+  time_range: string;
+  is_demo: boolean;
+  total_intervals: number;
+  detected_spikes_count: number;
+  timeline: TimeTravelTimelinePoint[];
+  initial_interval_id: number;
+  initial_snapshot?: TimeTravelSnapshotDetail | null;
+}

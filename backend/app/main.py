@@ -31,6 +31,7 @@ from app.api import (
     webhooks,
     partitioning,
     online_migrations,
+    time_travel,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -89,6 +90,7 @@ app.include_router(triage.router, prefix="/api")
 app.include_router(anomaly_radar.router, prefix="/api")
 app.include_router(partitioning.router)
 app.include_router(online_migrations.router)
+app.include_router(time_travel.router)
 
 
 # --- Custom Exception Handlers ---

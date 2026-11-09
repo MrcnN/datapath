@@ -47,24 +47,28 @@ import type {
 import ExecutionPlanViewer from './components/ExecutionPlanViewer';
 import QueryRewriterStudio from './components/QueryRewriterStudio';
 import CardinalityDriftViewer from './components/CardinalityDriftViewer';
+import TimeTravelCorrelator from './components/TimeTravelCorrelator';
 import WaitStatsPage from '../wait-stats/WaitStatsPage';
 import styles from './QueryPerformancePage.module.css';
 
-export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' } = {}) {
+export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' } = {}) {
   const location = useLocation();
 
-  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' => {
+  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' => {
     if (initialTab) return initialTab;
+    if (location.pathname === '/time-travel') return 'TIME_TRAVEL';
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
     if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
     if (location.pathname === '/waits') return 'WAITS';
     return 'QUERY_STORE';
   };
 
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS'>(resolveInitialTab);
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL'>(resolveInitialTab);
 
   useEffect(() => {
-    if (location.pathname === '/query-rewriter') {
+    if (location.pathname === '/time-travel') {
+      setActiveTab('TIME_TRAVEL');
+    } else if (location.pathname === '/query-rewriter') {
       setActiveTab('REWRITER_STUDIO');
     } else if (location.pathname === '/execution-plan') {
       setActiveTab('PLAN_VIEWER');
@@ -497,6 +501,13 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
           )}
         </button>
         <button
+          className={`${styles.tabButton} ${activeTab === 'TIME_TRAVEL' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('TIME_TRAVEL')}
+        >
+          <Clock size={16} />
+          Zaman Yolculuğu & Olay Korelasyonu
+        </button>
+        <button
           className={`${styles.tabButton} ${activeTab === 'PLAN_VIEWER' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('PLAN_VIEWER')}
         >
@@ -527,7 +538,11 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
 
       </div>
 
-                  {activeTab === 'CARDINALITY_DRIFT' && (
+                  {activeTab === 'TIME_TRAVEL' && (
+        <TimeTravelCorrelator />
+      )}
+
+      {activeTab === 'CARDINALITY_DRIFT' && (
         <CardinalityDriftViewer />
       )}
 

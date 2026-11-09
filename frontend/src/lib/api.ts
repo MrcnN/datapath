@@ -56,6 +56,8 @@ import type {
   UserProfile,
   PartitioningOverviewResponse,
   CandidateTableInfo,
+  TimeTravelCorrelatorOverview,
+  TimeTravelSnapshotDetail,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -775,4 +777,22 @@ export async function generateMigrationRunbook(
     method: 'POST',
     body: JSON.stringify(req),
   });
+}
+
+
+// ── Workload Time-Travel Correlator & Spike Detective ─────────────────────
+export async function getTimeTravelOverview(
+  database?: string,
+  timeRange: string = '24H'
+): Promise<TimeTravelCorrelatorOverview> {
+  const query = '?time_range=' + encodeURIComponent(timeRange) + (database ? '&database=' + encodeURIComponent(database) : '');
+  return apiFetch<TimeTravelCorrelatorOverview>('/api/time-travel/overview' + query);
+}
+
+export async function getTimeTravelSnapshot(
+  intervalId: number,
+  database?: string
+): Promise<TimeTravelSnapshotDetail> {
+  const query = '?interval_id=' + encodeURIComponent(String(intervalId)) + (database ? '&database=' + encodeURIComponent(database) : '');
+  return apiFetch<TimeTravelSnapshotDetail>('/api/time-travel/snapshot' + query);
 }
