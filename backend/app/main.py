@@ -32,6 +32,7 @@ from app.api import (
     partitioning,
     online_migrations,
     time_travel,
+    connection_pool,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -91,6 +92,7 @@ app.include_router(anomaly_radar.router, prefix="/api")
 app.include_router(partitioning.router)
 app.include_router(online_migrations.router)
 app.include_router(time_travel.router)
+app.include_router(connection_pool.router)
 
 
 # --- Custom Exception Handlers ---

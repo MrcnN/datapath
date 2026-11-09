@@ -2166,3 +2166,55 @@ export interface TimeTravelCorrelatorOverview {
   initial_interval_id: number;
   initial_snapshot?: TimeTravelSnapshotDetail | null;
 }
+
+// ── Connection Sentinel & Sleeping Transaction Hunter ─────────────
+export interface ClientConnectionGroup {
+  client_ip: string;
+  program_name: string;
+  host_name: string;
+  login_name: string;
+  active_connections: number;
+  sleeping_connections: number;
+  total_connections: number;
+  pool_utilization_pct: number;
+}
+
+export interface SleepingTransactionItem {
+  session_id: number;
+  host_name?: string | null;
+  program_name?: string | null;
+  login_name: string;
+  client_ip?: string | null;
+  status: string;
+  open_tran_count: number;
+  transaction_begin_time?: string | null;
+  idle_duration_sec: number;
+  transaction_isolation_level: string;
+  last_sql_text?: string | null;
+  blocked_sessions_count: number;
+  database_name?: string | null;
+  log_bytes_used_mb: number;
+  severity: 'CRITICAL' | 'WARNING' | 'NORMAL';
+  risk_summary: string;
+}
+
+export interface ConnectionPoolSummary {
+  server_name: string;
+  is_demo: boolean;
+  total_connections: number;
+  active_sessions: number;
+  sleeping_sessions: number;
+  orphaned_sleeping_transactions_count: number;
+  max_worker_threads: number;
+  current_worker_threads_used: number;
+  top_client_groups: ClientConnectionGroup[];
+  sleeping_transactions: SleepingTransactionItem[];
+  diagnostic_verdict: string;
+}
+
+export interface KillSessionResponse {
+  session_id: number;
+  investigation_sql: string;
+  kill_command: string;
+  description: string;
+}

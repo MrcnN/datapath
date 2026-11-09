@@ -58,6 +58,8 @@ import type {
   CandidateTableInfo,
   TimeTravelCorrelatorOverview,
   TimeTravelSnapshotDetail,
+  ConnectionPoolSummary,
+  KillSessionResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -795,4 +797,18 @@ export async function getTimeTravelSnapshot(
 ): Promise<TimeTravelSnapshotDetail> {
   const query = '?interval_id=' + encodeURIComponent(String(intervalId)) + (database ? '&database=' + encodeURIComponent(database) : '');
   return apiFetch<TimeTravelSnapshotDetail>('/api/time-travel/snapshot' + query);
+}
+
+// ── Connection Sentinel & Session Leak Hunter ─────────────────────────
+export async function getConnectionPoolSummary(
+  database?: string
+): Promise<ConnectionPoolSummary> {
+  const query = database ? '?database=' + encodeURIComponent(database) : '';
+  return apiFetch<ConnectionPoolSummary>('/api/connection-sentinel/summary' + query);
+}
+
+export async function getKillSessionScript(
+  sessionId: number
+): Promise<KillSessionResponse> {
+  return apiFetch<KillSessionResponse>('/api/connection-sentinel/kill-script/' + encodeURIComponent(String(sessionId)));
 }

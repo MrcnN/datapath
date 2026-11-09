@@ -17,6 +17,7 @@ import DeadlockViewer from './components/DeadlockViewer';
 import AgentJobsTable from './components/AgentJobsTable';
 import ErrorLogViewer from './components/ErrorLogViewer';
 import IncidentTimeline from './components/IncidentTimeline';
+import ConnectionSentinel from './components/ConnectionSentinel';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import {
@@ -39,11 +40,11 @@ import HAPage from '../high-availability/HAPage';
 import BackupRecoveryPage from '../backups/BackupRecoveryPage';
 import ExtendedEventsPage from '../extended-events/ExtendedEventsPage';
 import PredictiveAnomalyRadar from './components/PredictiveAnomalyRadar';
-import { Shield, Database, Radio, Layers, Zap } from 'lucide-react';
+import { Shield, Database, Radio, Layers, Zap, ShieldAlert } from 'lucide-react';
 
 import styles from './IncidentCenterPage.module.css';
 
-type TabType = 'sessions' | 'radar' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
+type TabType = 'sessions' | 'connection-sentinel' | 'radar' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
 
 interface TabItem {
   key: TabType;
@@ -53,6 +54,7 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { key: 'sessions', label: 'Canlı Süreç & Oturumlar', icon: Activity },
+  { key: 'connection-sentinel', label: 'Bağlantı Havuzu & Uyuyan İşlemler', icon: ShieldAlert },
   { key: 'radar', label: 'Anomali Radarı & Darboğaz', icon: Radio },
   { key: 'blocking', label: 'Engelleme Zincirleri', icon: AlertTriangle },
   { key: 'deadlocks', label: 'Kilitlenme Analizi', icon: Flame },
@@ -177,6 +179,9 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
           <>
             {activeTab === 'sessions' && (
               <SessionsTable />
+            )}
+            {activeTab === 'connection-sentinel' && (
+              <ConnectionSentinel />
             )}
             {activeTab === 'blocking' && (
               <BlockingChain
