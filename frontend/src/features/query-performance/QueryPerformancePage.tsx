@@ -87,6 +87,8 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
   const [regError, setRegError] = useState<string | null>(null);
   const [regSearch, setRegSearch] = useState<string>('');
   const [selectedRegSql, setSelectedRegSql] = useState<{ title: string; sql: string } | null>(null);
+  const [selectedRegression, setSelectedRegression] = useState<QueryRegression | null>(null);
+  const [regScriptTab, setRegScriptTab] = useState<'force' | 'unforce' | 'diagnose'>('force');
   const [copied, setCopied] = useState<boolean>(false);
   const [selectedSqlDetail, setSelectedSqlDetail] = useState<{ id: number | string; sql: string; db?: string; cpu?: number | null; duration?: number | null } | null>(null);
 
@@ -409,10 +411,10 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
       label: 'Reçete',
       render: (r) => (
         <button
-          onClick={() => setSelectedRegSql({
-            title: `Sorgu #${r.query_id} Plan Zorlama (Plan Forcing) Reçetesi`,
-            sql: r.remediation_sql || `-- Query Store Plan Zorlama:\nEXEC sp_query_store_force_plan @query_id = ${r.query_id}, @plan_id = ${r.plan_id_good || 1};`,
-          })}
+          onClick={() => {
+            setSelectedRegression(r);
+            setRegScriptTab('force');
+          }}
           style={{
             display: 'inline-flex',
             alignItems: 'center',
@@ -1028,74 +1030,423 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
         </div>
       )}
 
-      {/* Plan Forcing Modal */}
-      {selectedRegSql && (
+            {/* Enhanced Plan Forcing & Regression Studio Modal */}
+      {selectedRegression && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0, 0, 0, 0.75)',
+            background: 'rgba(0, 0, 0, 0.78)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             zIndex: 1000,
-            backdropFilter: 'blur(4px)',
+            backdropFilter: 'blur(5px)',
+            padding: '1.5rem',
           }}
-          onClick={() => setSelectedRegSql(null)}
+          onClick={() => setSelectedRegression(null)}
         >
           <div
             style={{
-              background: 'var(--bg-card)',
-              border: '1px solid var(--border-color)',
+              background: '#0f172a',
+              border: '1px solid #1e293b',
               borderRadius: '12px',
-              width: '90%',
-              maxWidth: '680px',
-              boxShadow: '0 20px 40px rgba(0, 0, 0, 0.5)',
+              width: '100%',
+              maxWidth: '820px',
+              maxHeight: '92vh',
+              boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.7)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{selectedRegSql.title}</div>
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                borderBottom: '1px solid #1e293b',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                background: '#0b1122',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    color: '#ef4444',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  {selectedRegression.severity || 'CRITICAL'} GERİLEME
+                </span>
+                <div style={{ fontWeight: 700, fontSize: '15px', color: '#f1f5f9' }}>
+                  Query Store Plan Zorlama &amp; Regresyon Stüdyosu • Sorgu #{selectedRegression.query_id}
+                </div>
+              </div>
               <button
-                onClick={() => setSelectedRegSql(null)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-secondary)', fontSize: '18px', cursor: 'pointer' }}
+                onClick={() => setSelectedRegression(null)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#94a3b8',
+                  fontSize: '18px',
+                  cursor: 'pointer',
+                  padding: '4px 8px',
+                }}
               >
                 ✕
               </button>
             </div>
-            <div style={{ padding: '1.25rem 1.5rem', background: 'rgba(0, 0, 0, 0.4)', fontFamily: 'monospace', fontSize: '12px', lineHeight: 1.6, color: '#38bdf8', maxHeight: '340px', overflowY: 'auto' }}>
-              <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{selectedRegSql.sql}</pre>
-            </div>
-            <div style={{ padding: '1rem 1.5rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                * Salt okunur güvenlik: Bu komut otomatik yürütülmez. İnceleyip SSMS üzerinde çalıştırabilirsiniz.
-              </span>
-              <button
-                onClick={() => handleCopy(selectedRegSql.sql)}
+
+            {/* Modal Body */}
+            <div
+              style={{
+                padding: '1.25rem 1.5rem',
+                overflowY: 'auto',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '1.2rem',
+              }}
+            >
+              {/* Query Snippet & Target Database */}
+              <div
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 14px',
+                  padding: '0.85rem 1.1rem',
+                  background: 'rgba(11, 17, 34, 0.7)',
+                  border: '1px solid #1e293b',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.35rem',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}>
+                  <span style={{ color: '#94a3b8' }}>
+                    Hedef Veritabanı: <strong style={{ color: '#f1f5f9' }}>{selectedRegression.database_name || 'Datapath_TestDB'}</strong>
+                  </span>
+                  <span style={{ color: '#94a3b8' }}>
+                    Sorgu ID: <strong style={{ color: '#38bdf8' }}>#{selectedRegression.query_id}</strong>
+                  </span>
+                </div>
+                <div
+                  style={{
+                    fontFamily: 'var(--font-mono, monospace)',
+                    fontSize: '11.5px',
+                    color: '#cbd5e1',
+                    maxHeight: '52px',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {selectedRegression.query_text_snippet || '—'}
+                </div>
+              </div>
+
+              {/* Side-by-Side Plan Comparison Grid */}
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '1rem',
+                }}
+              >
+                {/* Good Plan */}
+                <div
+                  style={{
+                    padding: '1rem 1.15rem',
+                    background: 'rgba(16, 185, 129, 0.05)',
+                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#10b981' }}>
+                      REFERANS İYİ PLAN (PLAN #{selectedRegression.plan_id_good || 1})
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '10.5px',
+                        background: 'rgba(16, 185, 129, 0.15)',
+                        color: '#10b981',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      Önerilen
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '12px' }}>
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>Ort. CPU</div>
+                      <div style={{ fontWeight: 600, color: '#f1f5f9', marginTop: '2px' }}>
+                        {(selectedRegression.old_avg_cpu_ms ?? 0).toFixed(1)} ms
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>Ort. Süre</div>
+                      <div style={{ fontWeight: 600, color: '#f1f5f9', marginTop: '2px' }}>
+                        {(selectedRegression.old_avg_duration_ms ?? 0).toFixed(1)} ms
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                    İcra Sayısı: {selectedRegression.old_execution_count?.toLocaleString() || '1'}
+                  </div>
+                </div>
+
+                {/* Regressed Plan */}
+                <div
+                  style={{
+                    padding: '1rem 1.15rem',
+                    background: 'rgba(239, 68, 68, 0.05)',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.6rem',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 700, color: '#ef4444' }}>
+                      GERİLEYEN MEVCUT PLAN (PLAN #{selectedRegression.plan_id_bad || 2})
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '10.5px',
+                        background: 'rgba(239, 68, 68, 0.15)',
+                        color: '#ef4444',
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        fontWeight: 600,
+                      }}
+                    >
+                      +{Math.round(selectedRegression.duration_delta_pct || 0)}% Sapma
+                    </span>
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', fontSize: '12px' }}>
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>Ort. CPU</div>
+                      <div style={{ fontWeight: 600, color: '#f59e0b', marginTop: '2px' }}>
+                        {(selectedRegression.new_avg_cpu_ms ?? 0).toFixed(1)} ms
+                      </div>
+                    </div>
+                    <div>
+                      <div style={{ color: '#94a3b8', fontSize: '11px' }}>Ort. Süre</div>
+                      <div style={{ fontWeight: 600, color: '#ef4444', marginTop: '2px' }}>
+                        {(selectedRegression.new_avg_duration_ms ?? 0).toFixed(1)} ms
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '11px', color: '#64748b' }}>
+                    İcra Sayısı: {selectedRegression.new_execution_count?.toLocaleString() || '1'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Root Cause Banner */}
+              <div
+                style={{
+                  padding: '0.75rem 1rem',
+                  background: 'rgba(245, 158, 11, 0.08)',
+                  border: '1px solid rgba(245, 158, 11, 0.25)',
                   borderRadius: '6px',
-                  background: 'var(--primary, #0284c7)',
-                  color: '#fff',
-                  border: 'none',
-                  fontWeight: 500,
                   fontSize: '12px',
+                  color: '#e2e8f0',
+                  lineHeight: 1.5,
+                }}
+              >
+                <strong style={{ color: '#f59e0b' }}>Kök Neden Teşhisi: </strong>
+                {selectedRegression.root_cause ||
+                  'Query Store, parametre koklama (parameter sniffing) veya kardinalite sapması sebebiyle suboptimal yeni bir plan derledi.'}
+              </div>
+
+              {/* T-SQL Tabs */}
+              <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid #1e293b', paddingBottom: '0.5rem' }}>
+                <button
+                  onClick={() => setRegScriptTab('force')}
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    background: regScriptTab === 'force' ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                    border: '1px solid ' + (regScriptTab === 'force' ? 'rgba(56, 189, 248, 0.3)' : 'transparent'),
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: regScriptTab === 'force' ? '#38bdf8' : '#94a3b8',
+                    cursor: 'pointer',
+                  }}
+                >
+                  1. Planı Zorla (sp_query_store_force_plan)
+                </button>
+                <button
+                  onClick={() => setRegScriptTab('unforce')}
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    background: regScriptTab === 'unforce' ? 'rgba(239, 68, 68, 0.12)' : 'transparent',
+                    border: '1px solid ' + (regScriptTab === 'unforce' ? 'rgba(239, 68, 68, 0.3)' : 'transparent'),
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: regScriptTab === 'unforce' ? '#ef4444' : '#94a3b8',
+                    cursor: 'pointer',
+                  }}
+                >
+                  2. Geri Al / Serbest Bırak (sp_query_store_unforce_plan)
+                </button>
+                <button
+                  onClick={() => setRegScriptTab('diagnose')}
+                  style={{
+                    padding: '0.4rem 0.9rem',
+                    background: regScriptTab === 'diagnose' ? 'rgba(16, 185, 129, 0.12)' : 'transparent',
+                    border: '1px solid ' + (regScriptTab === 'diagnose' ? 'rgba(16, 185, 129, 0.3)' : 'transparent'),
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: regScriptTab === 'diagnose' ? '#10b981' : '#94a3b8',
+                    cursor: 'pointer',
+                  }}
+                >
+                  3. Query Store Teşhis Sorgusu
+                </button>
+              </div>
+
+              {/* Code Box */}
+              {(() => {
+                const dbName = selectedRegression.database_name || 'Datapath_TestDB';
+                const qId = selectedRegression.query_id;
+                const pGood = selectedRegression.plan_id_good || 1;
+                const pBad = selectedRegression.plan_id_bad || 2;
+
+                const forceSql = `-- ============================================================================\n-- QUERY STORE PLAN ZORLAMA (FORCE PLAN) REÇETESİ\n-- Hedef Veritabanı: [${dbName}] | Sorgu ID: ${qId} | Hedef Plan ID: ${pGood}\n-- ============================================================================\nUSE [${dbName}];\nGO\n\n-- 1. Güvenlik Denetimi: Planın Query Store üzerinde kayıtlı olduğunu doğrula\nIF EXISTS (\n    SELECT 1 FROM sys.query_store_plan \n    WHERE query_id = ${qId} AND plan_id = ${pGood}\n)\nBEGIN\n    -- 2. İyi planı zorunlu kıl (Plan Forcing)\n    EXEC sp_query_store_force_plan \n        @query_id = ${qId}, \n        @plan_id = ${pGood};\n    \n    PRINT 'Başarılı: Sorgu #${qId} için Plan #${pGood} zorlandı.';\nEND\nELSE\nBEGIN\n    RAISERROR('Hata: Belirtilen Plan ID Query Store tablosunda bulunamadı.', 16, 1);\nEND\nGO\n\n-- 3. Plan Zorlama Durumunu Doğrula\nSELECT \n    q.query_id,\n    p.plan_id,\n    p.is_forced_plan,\n    p.force_failure_count,\n    p.last_force_failure_reason_desc\nFROM sys.query_store_plan p\nJOIN sys.query_store_query q ON p.query_id = q.query_id\nWHERE q.query_id = ${qId};\nGO`;
+
+                const unforceSql = `-- ============================================================================\n-- GERİ ALMA (ROLLBACK): PLAN ZORLAMASINI KALDIR (UNFORCE PLAN)\n-- ============================================================================\nUSE [${dbName}];\nGO\n\nEXEC sp_query_store_unforce_plan \n    @query_id = ${qId}, \n    @plan_id = ${pGood};\n\nPRINT 'Sorgu #${qId} için plan zorlaması kaldırıldı. Optimizer serbest bırakıldı.';\nGO`;
+
+                const diagSql = `-- ============================================================================\n-- QUERY STORE DETAYLI PLAN & ÇALIŞMA KARŞILAŞTIRMASI\n-- ============================================================================\nUSE [${dbName}];\nGO\n\nSELECT \n    p.plan_id,\n    p.is_forced_plan,\n    rs.count_executions,\n    rs.avg_duration / 1000.0 AS avg_duration_ms,\n    rs.avg_cpu_time / 1000.0 AS avg_cpu_ms,\n    rs.avg_logical_io_reads,\n    p.query_plan\nFROM sys.query_store_plan p\nJOIN sys.query_store_runtime_stats rs ON p.plan_id = rs.plan_id\nWHERE p.query_id = ${qId}\nORDER BY rs.avg_cpu_time DESC;\nGO`;
+
+                const activeSql = regScriptTab === 'force' ? forceSql : regScriptTab === 'unforce' ? unforceSql : diagSql;
+
+                return (
+                  <div
+                    style={{
+                      background: '#070b16',
+                      border: '1px solid #1e293b',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        padding: '0.6rem 1rem',
+                        background: '#0b1122',
+                        borderBottom: '1px solid #1e293b',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        fontSize: '11px',
+                        color: '#94a3b8',
+                      }}
+                    >
+                      <span>
+                        {regScriptTab === 'force' && `sp_query_store_force_plan @query_id=${qId}, @plan_id=${pGood}`}
+                        {regScriptTab === 'unforce' && `sp_query_store_unforce_plan @query_id=${qId}, @plan_id=${pGood}`}
+                        {regScriptTab === 'diagnose' && `Query Store Teşhis SQL (Query #${qId})`}
+                      </span>
+                      <button
+                        onClick={() => handleCopy(activeSql)}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '4px 10px',
+                          borderRadius: '4px',
+                          background: 'rgba(56, 189, 248, 0.12)',
+                          border: '1px solid rgba(56, 189, 248, 0.3)',
+                          color: '#38bdf8',
+                          fontSize: '11px',
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {copied ? <Check size={13} /> : <Copy size={13} />}
+                        {copied ? 'Kopyalandı!' : 'T-SQL Kopyala'}
+                      </button>
+                    </div>
+                    <pre
+                      style={{
+                        margin: 0,
+                        padding: '1rem 1.25rem',
+                        fontFamily: 'var(--font-mono, monospace)',
+                        fontSize: '12px',
+                        lineHeight: 1.6,
+                        color: '#7dd3fc',
+                        maxHeight: '260px',
+                        overflowY: 'auto',
+                        whiteSpace: 'pre-wrap',
+                      }}
+                    >
+                      {activeSql}
+                    </pre>
+                  </div>
+                );
+              })()}
+
+              {/* Safety notice */}
+              <div
+                style={{
+                  fontSize: '11px',
+                  color: '#64748b',
+                  lineHeight: 1.4,
+                  padding: '0.5rem 0.75rem',
+                  background: 'rgba(11, 17, 34, 0.5)',
+                  borderRadius: '4px',
+                }}
+              >
+                * <strong>Kurumsal Güvenlik Politikası (Review-Only):</strong> Plan zorlama işlemi anlık darboğazları gidermek için acil müdahaledir. Kalıcı çözüm için eksik indeksler veya `OPTION (RECOMPILE)` / `OPTIMIZE FOR` yönergeleri değerlendirilmelidir.
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div
+              style={{
+                padding: '1rem 1.5rem',
+                borderTop: '1px solid #1e293b',
+                display: 'flex',
+                justifyContent: 'flex-end',
+                background: '#0b1122',
+              }}
+            >
+              <button
+                onClick={() => setSelectedRegression(null)}
+                style={{
+                  padding: '0.45rem 1.2rem',
+                  background: '#1e293b',
+                  border: '1px solid #334155',
+                  color: '#f1f5f9',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  fontWeight: 600,
                   cursor: 'pointer',
                 }}
               >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? 'Kopyalandı!' : 'Kodu Kopyala'}
+                Kapat
               </button>
             </div>
           </div>
         </div>
       )}
+
     </div>
   );
 }
