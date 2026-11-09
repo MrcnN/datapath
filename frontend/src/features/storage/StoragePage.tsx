@@ -26,6 +26,7 @@ import TempDBPage from '../tempdb/TempDBPage';
 import BufferPoolPage from '../tempdb/BufferPoolPage';
 import { Cpu, PieChart } from 'lucide-react';
 import CapacityRunwayForecasting from './components/CapacityRunwayForecasting';
+import PartitioningAdvisor from './components/PartitioningAdvisor';
 import { getStorageSummary } from '../../lib/api';
 import type {
   StorageSummary,
@@ -52,14 +53,14 @@ const LOG_REUSE_EXPLANATIONS: Record<string, string> = {
 };
 
 interface StoragePageProps {
-  initialTab?: 'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs' | 'tempdb' | 'buffer_pool';
+  initialTab?: 'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs' | 'tempdb' | 'buffer_pool' | 'partitioning';
 }
 
 export default function StoragePage({ initialTab }: StoragePageProps = {}) {
   const [summary, setSummary] = useState<StorageSummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs' | 'tempdb' | 'buffer_pool'>(initialTab || 'files');
+  const [activeTab, setActiveTab] = useState<'files' | 'io' | 'growth' | 'open_trans' | 'logs' | 'trace' | 'vlfs' | 'tempdb' | 'buffer_pool' | 'partitioning'>(initialTab || 'files');
   const [search, setSearch] = useState<string>('');
   const [selectedFileForSql, setSelectedFileForSql] = useState<DatabaseFile | null>(null);
   const [selectedVlfForSql, setSelectedVlfForSql] = useState<DatabaseVLFInfo | null>(null);
@@ -817,6 +818,13 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
           <Layers size={16} /> Sanal Log (VLF) Sağlığı ({summary?.vlf_infos?.length || 0})
         </button>
         <button
+          className={`${styles.tabBtn} ${activeTab === 'partitioning' ? styles.activeTab : ''}`}
+          onClick={() => setActiveTab('partitioning')}
+        >
+          <Layers size={16} /> Tablo Bölümleme &amp; Sliding Window
+        </button>
+
+        <button
           className={`${styles.tabBtn} ${activeTab === 'tempdb' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('tempdb')}
         >
@@ -1056,6 +1064,7 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
       )}
       {activeTab === 'tempdb' && <TempDBPage embedded />}
       {activeTab === 'buffer_pool' && <BufferPoolPage embedded />}
+      {activeTab === 'partitioning' && <PartitioningAdvisor />}
     </div>
   );
 }

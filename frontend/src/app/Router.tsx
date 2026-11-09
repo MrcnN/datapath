@@ -52,6 +52,7 @@ export default function Router() {
       <Route path="/buffer-pool" element={<StoragePage initialTab="buffer_pool" />} />
       <Route path="/storage" element={<StoragePage />} />
       <Route path="/capacity-runway" element={<StoragePage initialTab="growth" />} />
+      <Route path="/partitioning" element={<StoragePage initialTab="partitioning" />} />
 
       {/* 5. Kilitlenme & Güvenilirlik */}
       <Route path="/incidents" element={<IncidentCenterPage />} />

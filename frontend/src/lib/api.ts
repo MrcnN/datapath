@@ -54,6 +54,9 @@ import type {
   RestoreSimulationResult,
   VersionStoreAnalysis,
   UserProfile,
+  PartitioningOverviewResponse,
+  GeneratePartitionScriptRequest,
+  GeneratePartitionScriptResponse,
   IncidentSimulationRequest,
   IncidentSimulationResponse,
   UserLoginRequest,
@@ -728,3 +731,21 @@ export async function simulateLock(req: IncidentSimulationRequest): Promise<Inci
     body: JSON.stringify(req),
   });
 }
+
+
+// ── Table Partitioning & Sliding Window Lifecycle ─────────────────────────
+export async function getPartitioningOverview(database?: string): Promise<PartitioningOverviewResponse> {
+  const query = database ? '?database=' + encodeURIComponent(database) : '';
+  return apiFetch<PartitioningOverviewResponse>('/api/partitioning/overview' + query);
+}
+
+export async function generatePartitionScript(
+  req: GeneratePartitionScriptRequest
+): Promise<GeneratePartitionScriptResponse> {
+  return apiFetch<GeneratePartitionScriptResponse>('/api/partitioning/generate-script', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}
+
+

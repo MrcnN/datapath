@@ -1927,3 +1927,80 @@ export interface IncidentSimulationResponse {
   duration_seconds?: number;
   details?: Record<string, any>;
 }
+
+
+// ─── Table Partitioning & Sliding Window Lifecycle Types ──────────────────────────
+export interface PartitionRangeInfo {
+  partition_number: number;
+  boundary_value?: string | null;
+  row_count: number;
+  reserved_mb: number;
+  data_mb: number;
+  index_mb: number;
+  filegroup_name: string;
+  is_empty: boolean;
+}
+
+export interface TablePartitionSummary {
+  table_name: string;
+  schema_name: string;
+  is_partitioned: boolean;
+  partition_scheme?: string | null;
+  partition_function?: string | null;
+  partition_key_column?: string | null;
+  partition_key_type?: string | null;
+  total_partitions: number;
+  total_rows: number;
+  total_reserved_mb: number;
+  partitions: PartitionRangeInfo[];
+  recommended_action?: string | null;
+}
+
+export interface PartitionCandidate {
+  table_name: string;
+  schema_name: string;
+  total_rows: number;
+  total_reserved_mb: number;
+  recommended_key_column?: string | null;
+  recommended_key_type?: string | null;
+  candidate_reason: string;
+  urgency: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  archival_benefit: string;
+}
+
+export interface PartitioningOverviewResponse {
+  database_name: string;
+  server_name: string;
+  is_demo: boolean;
+  total_partitioned_tables: number;
+  total_candidate_tables: number;
+  total_managed_partitions: number;
+  total_partitioned_rows: number;
+  partitioned_tables: TablePartitionSummary[];
+  candidates: PartitionCandidate[];
+}
+
+export interface GeneratePartitionScriptRequest {
+  database_name: string;
+  table_name: string;
+  schema_name?: string;
+  key_column: string;
+  key_type?: string;
+  boundary_interval?: 'MONTHLY' | 'YEARLY';
+  start_year?: number;
+  end_year?: number;
+  filegroup?: string;
+}
+
+export interface GeneratePartitionScriptResponse {
+  table_name: string;
+  partition_function_name: string;
+  partition_scheme_name: string;
+  ddl_create_scheme_sql: string;
+  ddl_rebuild_table_sql: string;
+  sliding_window_split_sql: string;
+  switch_archive_sql: string;
+  architectural_notes: string[];
+}
+
+
