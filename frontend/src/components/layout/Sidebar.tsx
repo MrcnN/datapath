@@ -84,7 +84,7 @@ export const primaryHubs: HubItem[] = [
     label: 'Uygunluk & Güvenlik',
     icon: ShieldCheck,
     description: '16 kural mimari uygunluk karnesi, kullanıcı yetkileri, SQL Agent alarmları ve şema karşılaştırma.',
-    matchPrefixes: ['/best-practices', '/permissions', '/agent-jobs', '/schema-diff'],
+    matchPrefixes: ['/best-practices', '/permissions', '/agent-jobs', '/schema-diff', '/online-migrations'],
   },
 ];
 

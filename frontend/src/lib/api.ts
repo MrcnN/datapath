@@ -55,6 +55,10 @@ import type {
   VersionStoreAnalysis,
   UserProfile,
   PartitioningOverviewResponse,
+  CandidateTableInfo,
+  TableSchemaInspection,
+  GenerateMigrationRunbookRequest,
+  MigrationRunbookResponse,
   GeneratePartitionScriptRequest,
   GeneratePartitionScriptResponse,
   IncidentSimulationRequest,
@@ -749,3 +753,26 @@ export async function generatePartitionScript(
 }
 
 
+// ── Zero-Downtime Online Schema Migration Studio ──────────────────────────
+export async function getMigrationCandidateTables(database?: string): Promise<CandidateTableInfo[]> {
+  const query = database ? '?database=' + encodeURIComponent(database) : '';
+  return apiFetch<CandidateTableInfo[]>('/api/online-migrations/tables' + query);
+}
+
+export async function getTableSchemaDetails(
+  table: string,
+  schema: string = 'dbo',
+  database?: string
+): Promise<TableSchemaInspection> {
+  const query = '?table=' + encodeURIComponent(table) + '&schema=' + encodeURIComponent(schema) + (database ? '&database=' + encodeURIComponent(database) : '');
+  return apiFetch<TableSchemaInspection>('/api/online-migrations/table-details' + query);
+}
+
+export async function generateMigrationRunbook(
+  req: GenerateMigrationRunbookRequest
+): Promise<MigrationRunbookResponse> {
+  return apiFetch<MigrationRunbookResponse>('/api/online-migrations/generate-runbook', {
+    method: 'POST',
+    body: JSON.stringify(req),
+  });
+}

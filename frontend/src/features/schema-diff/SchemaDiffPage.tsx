@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, GitCompare } from 'lucide-react';
+import { AlertTriangle, GitCompare, Zap } from 'lucide-react';
+import OnlineMigrationStudio from './components/OnlineMigrationStudio';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -15,7 +16,8 @@ import type {
 } from '../../lib/types';
 import styles from './SchemaDiffPage.module.css';
 
-export default function SchemaDiffPage() {
+export default function SchemaDiffPage({ initialTab }: { initialTab?: 'diff' | 'online_migrations' } = {}) {
+  const [activeTab, setActiveTab] = useState<'diff' | 'online_migrations'>(initialTab || 'diff');
   const [databases, setDatabases] = useState<Database[]>([]);
   const [sourceDb, setSourceDb] = useState<string>('');
   const [targetDb, setTargetDb] = useState<string>('');
@@ -118,7 +120,11 @@ export default function SchemaDiffPage() {
         subtitle="İki veritabanı arasındaki tablo, kolon, veri tipi ve indeks farklılıklarını karşılaştırır; güvenli DDL senkronizasyon betiği üretir."
       />
 
-      <div className={styles.controls}>
+      {activeTab === 'online_migrations' && <OnlineMigrationStudio />}
+
+      {activeTab === 'diff' && (
+        <>
+          <div className={styles.controls}>
         <div className={styles.row}>
           <div className={styles.selectGroup}>
             <label className={styles.label}>Kaynak Veritabanı (Source)</label>
@@ -239,6 +245,8 @@ export default function SchemaDiffPage() {
           title="Karşılaştırmaya Başlayın"
           message="Karşılaştırmak istediğiniz kaynak ve hedef veritabanlarını seçip 'Şemaları Karşılaştır' butonuna tıklayın."
         />
+      )}
+        </>
       )}
     </div>
   );

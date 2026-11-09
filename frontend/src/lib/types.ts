@@ -2004,3 +2004,92 @@ export interface GeneratePartitionScriptResponse {
 }
 
 
+// ─── Zero-Downtime Online Schema Migration Types ─────────────────────────
+export interface ColumnMeta {
+  column_name: string;
+  data_type: string;
+  max_length: number;
+  is_nullable: boolean;
+  is_identity: boolean;
+  is_primary_key: boolean;
+  default_definition?: string | null;
+}
+
+export interface IndexMeta {
+  index_name: string;
+  type_desc: string;
+  is_unique: boolean;
+  is_primary_key: boolean;
+  key_columns: string;
+  included_columns?: string | null;
+}
+
+export interface CandidateTableInfo {
+  table_name: string;
+  schema_name: string;
+  total_rows: number;
+  total_reserved_mb: number;
+  column_count: number;
+  migration_risk_level: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  recommendation_tip: string;
+}
+
+export interface TableSchemaInspection {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  total_rows: number;
+  total_reserved_mb: number;
+  columns: ColumnMeta[];
+  indexes: IndexMeta[];
+  foreign_keys_count: number;
+  is_demo: boolean;
+}
+
+export interface GenerateMigrationRunbookRequest {
+  database_name: string;
+  table_name: string;
+  schema_name?: string;
+  pattern: 'ADD_NOT_NULL_COLUMN' | 'COLUMN_TYPE_EVOLUTION' | 'ONLINE_INDEX_REBUILD' | 'COLUMN_SPLIT';
+  target_column?: string | null;
+  new_column_name?: string | null;
+  new_data_type?: string | null;
+  default_value?: string | null;
+  batch_size?: number;
+  throttle_delay_ms?: number;
+}
+
+export interface MigrationPhaseScript {
+  phase_number: number;
+  phase_name: string;
+  title: string;
+  description: string;
+  sql_script: string;
+  estimated_duration: string;
+  lock_type: string;
+  lock_duration_ms: string;
+  safety_checklist: string[];
+}
+
+export interface NaiveVsOnlineComparison {
+  naive_approach: string;
+  naive_lock_type: string;
+  naive_downtime_estimate: string;
+  naive_log_risk: string;
+  online_approach: string;
+  online_lock_type: string;
+  online_downtime_estimate: string;
+  online_log_risk: string;
+}
+
+export interface MigrationRunbookResponse {
+  database_name: string;
+  table_name: string;
+  schema_name: string;
+  pattern: string;
+  summary: string;
+  comparison: NaiveVsOnlineComparison;
+  phases: MigrationPhaseScript[];
+  emergency_rollback_sql: string;
+  architectural_guidelines: string[];
+}

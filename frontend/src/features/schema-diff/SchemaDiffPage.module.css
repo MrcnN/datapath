@@ -140,3 +140,38 @@
   align-items: center;
   gap: var(--space-2);
 }
+
+
+/* Tabs Bar */
+.tabBar {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-card, #1e293b);
+  padding-bottom: 0.5rem;
+}
+
+.tabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.1rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary, #94a3b8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.tabBtn:hover {
+  color: var(--text-primary, #f1f5f9);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.tabBtnActive {
+  background: rgba(56, 189, 248, 0.12);
+  border-color: rgba(56, 189, 248, 0.35);
+  color: #38bdf8;
+}
