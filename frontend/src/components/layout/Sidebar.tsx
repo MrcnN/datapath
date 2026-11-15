@@ -68,7 +68,7 @@ export const primaryHubs: HubItem[] = [
     label: 'Depolama & Bellek',
     icon: HardDrive,
     description: 'MDF/LDF disk alanı, capacity runway disk dolum tahminleme, VLF, TempDB ve Buffer Pool.',
-    matchPrefixes: ['/storage', '/capacity-runway', '/tempdb', '/buffer-pool', '/partitioning'],
+    matchPrefixes: ['/storage', '/io-latency', '/capacity-runway', '/tempdb', '/buffer-pool', '/partitioning'],
   },
   {
     id: 'incidents',

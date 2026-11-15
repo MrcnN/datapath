@@ -68,6 +68,7 @@ import type {
   AlertSimulationResponse,
   FleetOverviewResponse,
   DDLAuditResponse,
+  IOHeatmapResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -896,4 +897,10 @@ export async function getDDLAuditEvents(
   if (limit) params.append('limit', String(limit));
   const query = params.toString() ? '?' + params.toString() : '';
   return apiFetch<DDLAuditResponse>('/api/ddl-audit/events' + query);
+}
+
+
+// ── File IO Latency & Stall Heatmap Studio ──────────────────────────────
+export async function getFileIoHeatmap(): Promise<IOHeatmapResponse> {
+  return apiFetch<IOHeatmapResponse>('/api/storage/io-heatmap');
 }

@@ -20,13 +20,13 @@ import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import OpenTransactionsViewer from './components/OpenTransactionsViewer';
 import TempDBPage from '../tempdb/TempDBPage';
 import BufferPoolPage from '../tempdb/BufferPoolPage';
 import { Cpu, PieChart } from 'lucide-react';
 import CapacityRunwayForecasting from './components/CapacityRunwayForecasting';
 import PartitioningAdvisor from './components/PartitioningAdvisor';
+import FileIoHeatmapStudio from './components/FileIoHeatmapStudio';
 import { getStorageSummary } from '../../lib/api';
 import type {
   StorageSummary,
@@ -690,8 +690,6 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
         subtitle="MDF/LDF disk alanı, okuma/yazma disk gecikmeleri (stall ms), Virtual Log File (VLF) şişmesi ve açık kalan işlemler."
       />
 
-      {summary?.is_demo && <DemoDataBanner />}
-
       {/* Metric Cards */}
       <div className={styles.metricsGrid}>
         <div className={styles.metricCard}>
@@ -785,7 +783,7 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
           className={`${styles.tabBtn} ${activeTab === 'io' ? styles.activeTab : ''}`}
           onClick={() => setActiveTab('io')}
         >
-          <Activity size={16} /> Disk I/O Gecikmesi ({summary?.file_io_latencies?.length || 0})
+          <Activity size={16} /> Disk I/O &amp; Stall Isı Haritası
         </button>
         <button
           className={`${styles.tabBtn} ${activeTab === 'growth' ? styles.activeTab : ''}`}
@@ -862,73 +860,9 @@ export default function StoragePage({ initialTab }: StoragePageProps = {}) {
         </div>
       )}
 
-      {/* Tab: Disk I/O Latency */}
+      {/* Tab: Disk I/O & Stall Heatmap */}
       {activeTab === 'io' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
-          {/* Drive Summary Cards */}
-          <div className={styles.driveGrid}>
-            {(summary?.drive_io_summaries || []).map((d) => {
-              const isCrit = d.status === 'CRITICAL';
-              const isWarn = d.status === 'WARNING';
-              const cardBorder = isCrit ? 'rgba(239, 68, 68, 0.4)' : isWarn ? 'rgba(234, 179, 8, 0.4)' : 'var(--border-card)';
-              return (
-                <div key={d.drive_letter} className={styles.driveCard} style={{ borderColor: cardBorder }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                      {d.drive_letter} Sürücüsü
-                    </span>
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        padding: '2px 8px',
-                        borderRadius: '4px',
-                        background: isCrit ? 'rgba(239, 68, 68, 0.15)' : isWarn ? 'rgba(234, 179, 8, 0.15)' : 'rgba(34, 197, 94, 0.15)',
-                        color: isCrit ? 'var(--status-danger)' : isWarn ? '#eab308' : 'var(--status-success)',
-                        fontWeight: 600,
-                      }}
-                    >
-                      {d.status === 'CRITICAL' ? 'I/O Darboğazı' : d.status === 'WARNING' ? 'Yüksek Gecikme' : d.status === 'NORMAL' ? 'Normal' : 'Mükemmel'}
-                    </span>
-                  </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '8px' }}>
-                    <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ort. Okuma</div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: d.avg_read_latency_ms > 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
-                        {d.avg_read_latency_ms.toFixed(1)} ms
-                      </div>
-                    </div>
-                    <div>
-                      <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Ort. Yazma</div>
-                      <div style={{ fontSize: '15px', fontWeight: 600, color: d.avg_write_latency_ms > 20 ? 'var(--status-danger)' : 'var(--text-primary)' }}>
-                        {d.avg_write_latency_ms.toFixed(1)} ms
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px' }}>
-                    {d.file_count} dosya • {((d.total_reads + d.total_writes)).toLocaleString()} toplam I/O
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Latency Threshold Guide */}
-          <div style={{ display: 'flex', gap: '16px', fontSize: '12px', color: 'var(--text-secondary)', background: 'var(--bg-surface)', padding: '10px 16px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
-            <span><strong>Gecikme Eşikleri:</strong></span>
-            <span style={{ color: 'var(--status-success)' }}>● &lt;5 ms: Mükemmel (SSD / NVMe)</span>
-            <span style={{ color: 'var(--accent-blue)' }}>● 5-15 ms: Normal</span>
-            <span style={{ color: '#eab308' }}>● 15-25 ms: Yüksek Gecikme</span>
-            <span style={{ color: 'var(--status-danger)' }}>● &gt;25 ms: Kritik I/O Darboğazı</span>
-          </div>
-
-          <div className={styles.tableCard}>
-            <DataTable
-              data={summary?.file_io_latencies || []}
-              columns={ioColumns}
-              emptyMessage="Disk I/O gecikme bilgisi bulunamadı."
-            />
-          </div>
-        </div>
+        <FileIoHeatmapStudio />
       )}
 
       {/* Tab 2: Logs */}

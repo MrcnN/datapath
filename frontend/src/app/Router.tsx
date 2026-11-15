@@ -54,6 +54,7 @@ export default function Router() {
       <Route path="/tempdb" element={<StoragePage initialTab="tempdb" />} />
       <Route path="/buffer-pool" element={<StoragePage initialTab="buffer_pool" />} />
       <Route path="/storage" element={<StoragePage />} />
+      <Route path="/io-latency" element={<StoragePage initialTab="io" />} />
       <Route path="/capacity-runway" element={<StoragePage initialTab="growth" />} />
       <Route path="/partitioning" element={<StoragePage initialTab="partitioning" />} />
 

@@ -2483,3 +2483,66 @@ export interface DDLAuditResponse {
   is_trace_active: boolean;
   evaluated_at: string;
 }
+
+
+// ==========================================
+// 11. Dosya Bazlı IO Gecikme Isı Haritası (File IO Latency Heatmap)
+// ==========================================
+
+export type IOStatus = 'EXCELLENT' | 'NORMAL' | 'WARNING' | 'CRITICAL';
+
+export interface FileIOHeatmapItem {
+  database_name: string;
+  file_name: string;
+  file_type: string;
+  physical_name: string;
+  drive_letter: string;
+  size_mb: number;
+  num_of_reads: number;
+  num_of_writes: number;
+  read_mb: number;
+  write_mb: number;
+  read_latency_ms: number;
+  write_latency_ms: number;
+  overall_latency_ms: number;
+  io_stall_read_ms: number;
+  io_stall_write_ms: number;
+  io_stall_total_ms: number;
+  status: IOStatus;
+  bottleneck_verdict: string;
+  recommendation?: string | null;
+  rebalance_script?: string | null;
+}
+
+export interface DriveHeatmapGroup {
+  drive_letter: string;
+  file_count: number;
+  total_reads: number;
+  total_writes: number;
+  avg_read_latency_ms: number;
+  avg_write_latency_ms: number;
+  avg_overall_latency_ms: number;
+  status: IOStatus;
+  files: FileIOHeatmapItem[];
+}
+
+export interface IOHeatmapSummary {
+  total_files: number;
+  total_drives: number;
+  critical_files_count: number;
+  warning_files_count: number;
+  optimal_files_count: number;
+  highest_latency_file: string;
+  highest_latency_ms: number;
+  total_io_stall_sec: number;
+  avg_read_latency_ms: number;
+  avg_write_latency_ms: number;
+}
+
+export interface IOHeatmapResponse {
+  summary: IOHeatmapSummary;
+  drives: DriveHeatmapGroup[];
+  all_files: FileIOHeatmapItem[];
+  recommendations: string[];
+  evaluated_at: string;
+}

@@ -37,6 +37,7 @@ from app.api import (
     alert_rules,
     fleet,
     ddl_audit,
+    io_heatmap,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -101,6 +102,7 @@ app.include_router(index_roi.router)
 app.include_router(alert_rules.router)
 app.include_router(fleet.router)
 app.include_router(ddl_audit.router)
+app.include_router(io_heatmap.router)
 
 
 # --- Custom Exception Handlers ---
