@@ -43,6 +43,7 @@ from app.api import (
     query_fingerprint,
     right_sizing,
     lock_escalation,
+    config_drift,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -113,6 +114,7 @@ app.include_router(adaptive_baselines.router, prefix="/api")
 app.include_router(query_fingerprint.router, prefix="/api")
 app.include_router(right_sizing.router, prefix="/api")
 app.include_router(lock_escalation.router, prefix="/api")
+app.include_router(config_drift.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

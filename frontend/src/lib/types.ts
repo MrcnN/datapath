@@ -2803,3 +2803,45 @@ export interface LockEscalationResponse {
   items: LockContentionItem[];
   active_database: string;
 }
+
+// ==========================================
+// 17. Multi-Environment Configuration Drift
+// ==========================================
+export interface ConfigDriftItem {
+  scope: 'SERVER' | 'DATABASE' | string;
+  target_name: string;
+  setting_name: string;
+  category: string;
+  baseline_value: string;
+  current_value: string;
+  in_memory_value: string;
+  is_reboot_pending: boolean;
+  drift_status: 'IN_SYNC' | 'DRIFTED_CRITICAL' | 'DRIFTED_WARNING' | 'REBOOT_REQUIRED' | string;
+  risk_assessment: string;
+  remediation_tsql: string;
+}
+
+export interface ConfigDriftSummary {
+  server_name: string;
+  baseline_profile: string;
+  total_rules_evaluated: number;
+  in_sync_count: number;
+  drifted_critical_count: number;
+  drifted_warning_count: number;
+  reboot_pending_count: number;
+  drift_score_pct: number;
+  evaluated_at: string;
+}
+
+export interface BaselineProfileMeta {
+  key: string;
+  label: string;
+  description: string;
+}
+
+export interface ConfigDriftResponse {
+  summary: ConfigDriftSummary;
+  items: ConfigDriftItem[];
+  available_baselines: BaselineProfileMeta[];
+  full_alignment_script: string;
+}

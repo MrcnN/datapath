@@ -74,6 +74,7 @@ import type {
   QueryFingerprintResponse,
   RightSizingResponse,
   LockEscalationResponse,
+  ConfigDriftResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -959,4 +960,13 @@ export async function getLockEscalationAnalysis(database?: string): Promise<Lock
   if (database) params.append('database', database);
   const q = params.toString() ? '?' + params.toString() : '';
   return apiFetch<LockEscalationResponse>('/api/incidents/lock-escalation' + q);
+}
+
+
+// ── Multi-Environment Configuration Drift ────────────────────────────
+export async function getConfigurationDrift(baseline?: string): Promise<ConfigDriftResponse> {
+  const params = new URLSearchParams();
+  if (baseline) params.append('baseline', baseline);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<ConfigDriftResponse>('/api/configuration/drift' + q);
 }
