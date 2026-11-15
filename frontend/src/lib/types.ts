@@ -2427,3 +2427,59 @@ export interface FleetOverviewResponse {
   evaluated_at: string;
   top_risks: string[];
 }
+
+
+// ==========================================
+// 10. DDL Değişiklik Takip & Denetim İzi (DDL Audit & Schema Timeline)
+// ==========================================
+
+export type DDLActionType = 'CREATE' | 'ALTER' | 'DROP';
+
+export type DDLObjectType =
+  | 'TABLE'
+  | 'INDEX'
+  | 'STORED_PROCEDURE'
+  | 'VIEW'
+  | 'TRIGGER'
+  | 'FUNCTION'
+  | 'DATABASE'
+  | 'SCHEMA'
+  | 'OBJECT';
+
+export type DDLRiskLevel = 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+
+export interface DDLEventItem {
+  event_id: string;
+  event_time: string;
+  action_type: DDLActionType;
+  object_type: DDLObjectType;
+  object_name: string;
+  schema_name?: string | null;
+  database_name: string;
+  login_name: string;
+  host_name?: string | null;
+  application_name?: string | null;
+  session_id?: number | null;
+  risk_level: DDLRiskLevel;
+  impact_summary: string;
+  remediation_or_rollback_hint?: string | null;
+}
+
+export interface DDLAuditSummary {
+  total_events: number;
+  create_count: number;
+  alter_count: number;
+  drop_count: number;
+  critical_changes_count: number;
+  unique_users_count: number;
+  affected_databases: string[];
+  last_change_time?: string | null;
+}
+
+export interface DDLAuditResponse {
+  summary: DDLAuditSummary;
+  events: DDLEventItem[];
+  source: string;
+  is_trace_active: boolean;
+  evaluated_at: string;
+}

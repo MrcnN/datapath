@@ -67,6 +67,7 @@ import type {
   AlertSimulationRequest,
   AlertSimulationResponse,
   FleetOverviewResponse,
+  DDLAuditResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -880,4 +881,19 @@ export async function simulateAlert(payload: AlertSimulationRequest): Promise<Al
 // ── Multi-Server Fleet Overview & Estate Intelligence ────────────────────
 export async function getFleetOverview(): Promise<FleetOverviewResponse> {
   return apiFetch<FleetOverviewResponse>('/api/fleet/overview');
+}
+
+
+// ── DDL Audit & Schema Change Timeline ───────────────────────────────────
+export async function getDDLAuditEvents(
+  database?: string,
+  actionType?: string,
+  limit: number = 100
+): Promise<DDLAuditResponse> {
+  const params = new URLSearchParams();
+  if (database) params.append('database', database);
+  if (actionType) params.append('action_type', actionType);
+  if (limit) params.append('limit', String(limit));
+  const query = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<DDLAuditResponse>('/api/ddl-audit/events' + query);
 }

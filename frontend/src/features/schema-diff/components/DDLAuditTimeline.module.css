@@ -1,0 +1,325 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Header & Controls */
+.headerRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.titleArea h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.titleArea p {
+  font-size: 0.85rem;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--bg-surface, #1e293b);
+  border: 1px solid var(--border, #334155);
+  color: var(--text-primary, #f1f5f9);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.actionBtn:hover:not(:disabled) {
+  background: var(--bg-hover, #283548);
+  border-color: var(--border-hover, #475569);
+}
+
+.spinning {
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Summary Grid */
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+}
+
+.kpiCard {
+  background: var(--bg-surface, #0f172a);
+  border: 1px solid var(--border, #1e293b);
+  border-radius: 8px;
+  padding: 1rem 1.15rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.kpiLabel {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted, #94a3b8);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.kpiValue {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #f8fafc);
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+}
+
+.kpiSub {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+}
+
+/* Timeline & Filter Container */
+.timelineContainer {
+  background: var(--bg-surface, #0f172a);
+  border: 1px solid var(--border, #1e293b);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border, #1e293b);
+  background: rgba(15, 23, 42, 0.4);
+}
+
+.filterTabs {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.filterBtn {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted, #94a3b8);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterBtn:hover {
+  color: var(--text-primary, #f1f5f9);
+}
+
+.filterBtnActive {
+  background: var(--bg-hover, #1e293b);
+  border-color: var(--border, #334155);
+  color: var(--text-primary, #f8fafc);
+  font-weight: 500;
+}
+
+.searchInput {
+  background: #090d16;
+  border: 1px solid var(--border, #334155);
+  border-radius: 6px;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  color: var(--text-primary, #f8fafc);
+  outline: none;
+  min-width: 220px;
+}
+
+.searchInput:focus {
+  border-color: #3b82f6;
+}
+
+/* Event List */
+.eventList {
+  display: flex;
+  flex-direction: column;
+  divide-y: 1px solid rgba(30, 41, 59, 0.6);
+}
+
+.eventCard {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid rgba(30, 41, 59, 0.6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: background 0.15s ease;
+}
+
+.eventCard:hover {
+  background: rgba(30, 41, 59, 0.3);
+}
+
+.eventHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.eventMetaLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.objTitle {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--text-primary, #f8fafc);
+  font-family: monospace;
+}
+
+.dbName {
+  font-size: 0.75rem;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.1);
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+}
+
+.eventTime {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.eventDetailsRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #cbd5e1);
+  flex-wrap: wrap;
+}
+
+.userTag {
+  color: #a78bfa;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.appTag {
+  color: var(--text-muted, #94a3b8);
+}
+
+.impactBox {
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  background: rgba(15, 23, 42, 0.6);
+  border-left: 3px solid #3b82f6;
+  padding: 0.4rem 0.75rem;
+  border-radius: 0 4px 4px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.impactCritical {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.05);
+}
+
+.impactWarning {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.rollbackHint {
+  font-family: monospace;
+  font-size: 0.74rem;
+  color: #fca5a5;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.badgeCreate {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.badgeAlter {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.badgeDrop {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.badgeRiskCritical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+.badgeRiskHigh {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+}
+
+.badgeRiskLow {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}

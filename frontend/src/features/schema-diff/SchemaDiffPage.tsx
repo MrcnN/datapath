@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, GitCompare, Zap } from 'lucide-react';
+import { AlertTriangle, GitCompare, Zap, History } from 'lucide-react';
 import OnlineMigrationStudio from './components/OnlineMigrationStudio';
+import DDLAuditTimeline from './components/DDLAuditTimeline';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -16,8 +17,8 @@ import type {
 } from '../../lib/types';
 import styles from './SchemaDiffPage.module.css';
 
-export default function SchemaDiffPage({ initialTab }: { initialTab?: 'diff' | 'online_migrations' } = {}) {
-  const [activeTab, setActiveTab] = useState<'diff' | 'online_migrations'>(initialTab || 'diff');
+export default function SchemaDiffPage({ initialTab }: { initialTab?: 'diff' | 'online_migrations' | 'ddl_audit' } = {}) {
+  const [activeTab, setActiveTab] = useState<'diff' | 'online_migrations' | 'ddl_audit'>(initialTab || 'diff');
   const [databases, setDatabases] = useState<Database[]>([]);
   const [sourceDb, setSourceDb] = useState<string>('');
   const [targetDb, setTargetDb] = useState<string>('');
@@ -116,11 +117,48 @@ export default function SchemaDiffPage({ initialTab }: { initialTab?: 'diff' | '
   return (
     <div className={styles.container}>
       <PageHeader
-        title="Şema Karşılaştırma"
-        subtitle="İki veritabanı arasındaki tablo, kolon, veri tipi ve indeks farklılıklarını karşılaştırır; güvenli DDL senkronizasyon betiği üretir."
+        title="Şema Yönetimi & Denetim İzi"
+        subtitle="Veritabanları arası şema farkları, sıfır kesintili tablo göçü ve DDL değişiklik geçmişi denetim izi."
       />
 
+      {/* Segmented Tab Bar */}
+      <div className={styles.tabsBar} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'diff'}
+          className={`${styles.tabBtn} ${activeTab === 'diff' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('diff')}
+        >
+          <GitCompare size={14} />
+          <span>Şema Karşılaştırma &amp; Senkronizasyon</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'online_migrations'}
+          className={`${styles.tabBtn} ${activeTab === 'online_migrations' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('online_migrations')}
+        >
+          <Zap size={14} />
+          <span>Sıfır Kesinti Göç Stüdyosu (Online Migration)</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'ddl_audit'}
+          className={`${styles.tabBtn} ${activeTab === 'ddl_audit' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('ddl_audit')}
+        >
+          <History size={14} />
+          <span>DDL Değişiklik Takip &amp; Denetim İzi</span>
+        </button>
+      </div>
+
       {activeTab === 'online_migrations' && <OnlineMigrationStudio />}
+      {activeTab === 'ddl_audit' && <DDLAuditTimeline />}
 
       {activeTab === 'diff' && (
         <>

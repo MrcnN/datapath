@@ -36,6 +36,7 @@ from app.api import (
     index_roi,
     alert_rules,
     fleet,
+    ddl_audit,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -99,6 +100,7 @@ app.include_router(connection_pool.router)
 app.include_router(index_roi.router)
 app.include_router(alert_rules.router)
 app.include_router(fleet.router)
+app.include_router(ddl_audit.router)
 
 
 # --- Custom Exception Handlers ---

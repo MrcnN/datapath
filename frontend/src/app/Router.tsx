@@ -72,6 +72,7 @@ export default function Router() {
       <Route path="/agent-jobs" element={<AgentJobsPage />} />
       <Route path="/schema-diff" element={<SchemaDiffPage />} />
       <Route path="/online-migrations" element={<SchemaDiffPage initialTab="online_migrations" />} />
+      <Route path="/ddl-audit" element={<SchemaDiffPage initialTab="ddl_audit" />} />
       <Route path="/toolkit" element={<ToolkitPage initialTab="scripts" />} />
 
       {/* 7. Kimlik Doğrulama & Kullanıcı Profili (Login şuanlık devre dışı bırakıldı, doğrudan ana panoya yönlendirilir) */}
