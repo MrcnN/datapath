@@ -33,6 +33,7 @@ from app.api import (
     online_migrations,
     time_travel,
     connection_pool,
+    index_roi,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -93,6 +94,7 @@ app.include_router(partitioning.router)
 app.include_router(online_migrations.router)
 app.include_router(time_travel.router)
 app.include_router(connection_pool.router)
+app.include_router(index_roi.router)
 
 
 # --- Custom Exception Handlers ---

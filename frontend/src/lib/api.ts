@@ -60,6 +60,7 @@ import type {
   TimeTravelSnapshotDetail,
   ConnectionPoolSummary,
   KillSessionResponse,
+  IndexRoiOverview,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -811,4 +812,12 @@ export async function getKillSessionScript(
   sessionId: number
 ): Promise<KillSessionResponse> {
   return apiFetch<KillSessionResponse>('/api/connection-sentinel/kill-script/' + encodeURIComponent(String(sessionId)));
+}
+
+// ── Index ROI & Write Penalty Optimizer ───────────────────────────
+export async function getIndexRoiOverview(
+  database?: string
+): Promise<IndexRoiOverview> {
+  const query = database ? '?database=' + encodeURIComponent(database) : '';
+  return apiFetch<IndexRoiOverview>('/api/index-roi/overview' + query);
 }

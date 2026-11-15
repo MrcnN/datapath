@@ -44,6 +44,7 @@ export default function Router() {
 
       {/* 3. İndeks & Bakım */}
       <Route path="/indexes" element={<IndexesPage />} />
+      <Route path="/index-roi" element={<IndexesPage initialTab="roi" />} />
       <Route path="/statistics" element={<StatisticsPage />} />
       <Route path="/hypothetical-indexes" element={<HypotheticalIndexPage />} />
       <Route path="/maintenance-planner" element={<MaintenancePlannerPage />} />

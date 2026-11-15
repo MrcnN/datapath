@@ -60,7 +60,7 @@ export const primaryHubs: HubItem[] = [
     label: 'İndeks & Bakım Merkezi',
     icon: Layers,
     description: 'Eksik, kullanılmayan, parçalanmış indeksler, sanal indeks simülatörü ve akıllı bakım planlayıcı.',
-    matchPrefixes: ['/indexes', '/hypothetical-indexes', '/maintenance-planner', '/statistics'],
+    matchPrefixes: ['/indexes', '/index-roi', '/hypothetical-indexes', '/maintenance-planner', '/statistics'],
   },
   {
     id: 'storage',

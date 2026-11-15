@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck, Wrench, FlaskConical } from 'lucide-react';
+import { Layers, AlertCircle, Trash2, RefreshCw, Code2, Database as DbIcon, CopyCheck, Wrench, FlaskConical, TrendingDown } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -30,24 +30,28 @@ import type {
 } from '../../lib/types';
 import SmartMaintenancePlanner from './components/SmartMaintenancePlanner';
 import HypotheticalIndexSimulator from './components/HypotheticalIndexSimulator';
+import IndexRoiMatrix from './components/IndexRoiMatrix';
 import styles from './IndexesPage.module.css';
 
-type TabType = 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant' | 'maintenance' | 'hypothetical';
+type TabType = 'roi' | 'missing' | 'unused' | 'fragmentation' | 'statistics' | 'redundant' | 'maintenance' | 'hypothetical';
 
 export default function IndexesPage({ initialTab }: { initialTab?: TabType } = {}) {
   const location = useLocation();
 
   const resolveInitialTab = (): TabType => {
     if (initialTab) return initialTab;
+    if (location.pathname === '/index-roi') return 'roi';
     if (location.pathname === '/hypothetical-indexes') return 'hypothetical';
     if (location.pathname === '/maintenance-planner') return 'maintenance';
-    return 'missing';
+    return 'roi';
   };
 
   const [activeTab, setActiveTab] = useState<TabType>(resolveInitialTab);
 
   useEffect(() => {
-    if (location.pathname === '/hypothetical-indexes') {
+    if (location.pathname === '/index-roi') {
+      setActiveTab('roi');
+    } else if (location.pathname === '/hypothetical-indexes') {
       setActiveTab('hypothetical');
     } else if (location.pathname === '/maintenance-planner') {
       setActiveTab('maintenance');
@@ -566,6 +570,14 @@ export default function IndexesPage({ initialTab }: { initialTab?: TabType } = {
         <div className={styles.tabs}>
           <button
             type="button"
+            className={`${styles.tabBtn} ${activeTab === 'roi' ? styles.tabBtnActive : ''}`}
+            onClick={() => setActiveTab('roi')}
+          >
+            <TrendingDown size={15} />
+            İndeks ROI & Yazma Cezası
+          </button>
+          <button
+            type="button"
             className={`${styles.tabBtn} ${activeTab === 'missing' ? styles.tabBtnActive : ''}`}
             onClick={() => setActiveTab('missing')}
           >
@@ -674,7 +686,11 @@ export default function IndexesPage({ initialTab }: { initialTab?: TabType } = {
         <ErrorState message={error} onRetry={() => setActiveTab(activeTab)} />
       ) : (
         <>
-                    {activeTab === 'hypothetical' && (
+          {activeTab === 'roi' && (
+            <IndexRoiMatrix database={selectedDb || undefined} />
+          )}
+
+          {activeTab === 'hypothetical' && (
             <HypotheticalIndexSimulator initialDb={selectedDb} />
           )}
 

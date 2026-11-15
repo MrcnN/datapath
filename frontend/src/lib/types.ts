@@ -2218,3 +2218,43 @@ export interface KillSessionResponse {
   kill_command: string;
   description: string;
 }
+
+// ── Index ROI & Write Penalty Optimizer ───────────────────────────
+export interface IndexRoiItem {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  index_name: string;
+  index_type: string;
+  is_unique: boolean;
+  user_seeks: number;
+  user_scans: number;
+  user_lookups: number;
+  total_reads: number;
+  total_writes: number;
+  write_to_read_ratio: number;
+  size_mb: number;
+  row_count: number;
+  page_lock_wait_count: number;
+  page_io_latch_wait_in_ms: number;
+  roi_score: number;
+  classification: 'CRITICAL_BOTTLENECK' | 'NEGATIVE_ROI' | 'LOW_ROI' | 'OPTIMAL_ROI';
+  key_columns: string;
+  included_columns?: string | null;
+  verdict_reason: string;
+  recommended_action: 'DROP' | 'COMPRESS_PAGE' | 'KEEP' | 'CONSOLIDATE';
+  drop_script: string;
+  rollback_create_script: string;
+}
+
+export interface IndexRoiOverview {
+  database_name: string;
+  is_demo: boolean;
+  total_evaluated_indexes: number;
+  negative_roi_count: number;
+  wasted_write_iops_total: number;
+  reclaimable_storage_mb: number;
+  overall_efficiency_score: number;
+  items: IndexRoiItem[];
+  executive_summary: string;
+}
