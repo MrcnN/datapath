@@ -18,11 +18,11 @@ import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import MemoryGrantsViewer from './components/MemoryGrantsViewer';
 import TempDBContentionViewer from './components/TempDBContentionViewer';
 import BufferPoolTomographyViewer from './components/BufferPoolTomographyViewer';
 import VersionStoreRadar from './components/VersionStoreRadar';
+import TempDBForensicsStudio from './components/TempDBForensicsStudio';
 import { getTempDBMemorySummary } from '../../lib/api';
 import type {
   TempDBMemorySummary,
@@ -30,14 +30,19 @@ import type {
   MemoryClerk,
   BufferPoolDatabaseUsage,
   BufferPoolTopObject,
-  PlanCacheBloatAnalysis,
 } from '../../lib/types';
 import styles from './TempDBPage.module.css';
 
-export default function TempDBPage({ embedded = false }: { embedded?: boolean } = {}) {
+interface TempDBPageProps {
+  embedded?: boolean;
+  initialTab?: 'forensics' | 'allocation' | 'memory';
+}
+
+export default function TempDBPage({ embedded = false, initialTab }: TempDBPageProps = {}) {
   const [summary, setSummary] = useState<TempDBMemorySummary | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [activeMainTab, setActiveMainTab] = useState<'forensics' | 'allocation' | 'memory'>(initialTab || 'forensics');
   const [copiedScript, setCopiedScript] = useState<boolean>(false);
 
   useEffect(() => {
@@ -253,10 +258,10 @@ export default function TempDBPage({ embedded = false }: { embedded?: boolean } 
     },
     {
       key: 'page_count',
-      label: 'Bellek Sayfası',
+      label: 'Sayfa Sayısı',
       sortable: true,
       render: (o) => (
-        <span style={{ fontSize: '11.5px', fontFamily: 'monospace' }}>
+        <span style={{ fontFamily: 'monospace' }}>
           {o.page_count.toLocaleString()} sayfa
         </span>
       ),
@@ -276,396 +281,434 @@ export default function TempDBPage({ embedded = false }: { embedded?: boolean } 
       {!embedded && (
         <PageHeader
           title="TempDB & RAM Durumu"
-          subtitle="TempDB GAM/SGAM/PFS sayfa tahsis çekişmesi, Page Life Expectancy (PLE), bellek dağılımı ve Plan Cache şişmesi analizi."
+          subtitle="TempDB forensik tüketim & spill analizi, sayfa tahsis çekişmesi (PFS/GAM/SGAM), Page Life Expectancy (PLE) ve bellek dağılımı."
         />
       )}
 
-      {summary?.is_demo && <DemoDataBanner />}
-
-      {/* Top KPIs */}
-      <div className={styles.kpiGrid}>
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiTitle}>Page Life Expectancy (PLE)</span>
-            <Clock size={18} color="var(--accent-blue)" />
-          </div>
-          <div className={styles.kpiValue}>
-            {summary?.page_life_expectancy_sec} <span style={{ fontSize: '14px', fontWeight: 500 }}>saniye</span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              className={
-                summary?.ple_status === 'HEALTHY'
-                  ? styles.badgeSuccess
-                  : summary?.ple_status === 'WARNING'
-                  ? styles.badgeWarning
-                  : styles.badgeDanger
-              }
-            >
-              {summary?.ple_status === 'HEALTHY' ? 'Sağlıklı' : summary?.ple_status === 'WARNING' ? 'Uyarı' : 'Kritik Baskı'}
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Standart Eşik: &gt;300s</span>
-          </div>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiTitle}>Buffer Cache Hit Ratio</span>
-            <Zap size={18} color="var(--status-success)" />
-          </div>
-          <div className={styles.kpiValue}>{summary?.buffer_cache_hit_ratio.toFixed(2)}%</div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Önbellekten karşılanan veri istekleri
-          </div>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiTitle}>Sunucu Bellek Tüketimi</span>
-            <Cpu size={18} color="var(--accent-purple)" />
-          </div>
-          <div className={styles.kpiValue}>
-            {((summary?.total_server_memory_mb || 0) / 1024).toFixed(1)} GB
-          </div>
-          <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-            Hedef Maksimum: {((summary?.target_server_memory_mb || 0) / 1024).toFixed(1)} GB ({summary?.memory_utilization_pct.toFixed(1)}%)
-          </div>
-        </div>
-
-        <div className={styles.kpiCard}>
-          <div className={styles.kpiHeader}>
-            <span className={styles.kpiTitle}>TempDB Dosya Yapılandırması</span>
-            <HardDrive size={18} color="var(--accent-cyan)" />
-          </div>
-          <div className={styles.kpiValue}>
-            {summary?.file_count} Dosya
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span
-              className={
-                summary?.file_count_status === 'OPTIMAL' ? styles.badgeSuccess : styles.badgeWarning
-              }
-            >
-              {summary?.file_count_status === 'OPTIMAL' ? 'Optimal Eşit Sizing' : 'Gözden Geçirilmeli'}
-            </span>
-            <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{summary?.cpu_cores} Mantıksal Çekirdek</span>
-          </div>
-        </div>
-      </div>
-
-      {/* Advisory Banner */}
-      <div className={summary?.allocation_contention_detected ? styles.dangerAlert : styles.infoAlert}>
-        <ShieldCheck size={20} className={styles.alertIcon} />
-        <div>
-          <strong>TempDB Çekişme &amp; Dosya Durumu:</strong> {summary?.file_count_recommendation}
-          <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
-            {summary?.contention_description}
-          </div>
-        </div>
-      </div>
-
-      {/* Section 1: TempDB Space Breakdown */}
-      <div className={styles.sectionCard}>
-        <div className={styles.sectionHeader}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <PieChart size={18} color="var(--accent-blue)" />
-            <h3 style={{ margin: 0, fontSize: '15px' }}>TempDB Alan Dağılımı (Space Allocation)</h3>
-          </div>
-          <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
-            Toplam: {((space?.total_size_mb || 0) / 1024).toFixed(2)} GB
-          </span>
-        </div>
-
-        {/* Visual Stacked Progress Bar */}
-        <div className={styles.stackedBar}>
-          <div
-            className={styles.segmentUser}
-            style={{ width: `${space?.user_objects_pct || 0}%` }}
-            title={`Kullanıcı Nesneleri: ${space?.user_objects_mb} MB (%${space?.user_objects_pct})`}
-          />
-          <div
-            className={styles.segmentInternal}
-            style={{ width: `${space?.internal_objects_pct || 0}%` }}
-            title={`Dahili Nesneler: ${space?.internal_objects_mb} MB (%${space?.internal_objects_pct})`}
-          />
-          <div
-            className={styles.segmentVersion}
-            style={{ width: `${space?.version_store_pct || 0}%` }}
-            title={`Version Store: ${space?.version_store_mb} MB (%${space?.version_store_pct})`}
-          />
-          <div
-            className={styles.segmentUnallocated}
-            style={{ width: `${space?.unallocated_pct || 0}%` }}
-            title={`Boş Alan: ${space?.unallocated_space_mb} MB (%${space?.unallocated_pct})`}
-          />
-        </div>
-
-        {/* Legend Cards */}
-        <div className={styles.breakdownGrid}>
-          <div className={styles.breakdownItem}>
-            <div className={styles.legendColor} style={{ background: 'var(--accent-blue)' }} />
-            <div>
-              <div className={styles.breakdownLabel}>Kullanıcı Nesneleri (User Objects)</div>
-              <div className={styles.breakdownValue}>
-                {space?.user_objects_mb} MB ({space?.user_objects_pct}%)
-              </div>
-              <div className={styles.breakdownSub}>
-                Geçici tablolar (#tablo), @table değişkenleri ve tablo değerli fonksiyonlar.
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.breakdownItem}>
-            <div className={styles.legendColor} style={{ background: '#f59e0b' }} />
-            <div>
-              <div className={styles.breakdownLabel}>Dahili Nesneler (Internal Objects)</div>
-              <div className={styles.breakdownValue}>
-                {space?.internal_objects_mb} MB ({space?.internal_objects_pct}%)
-              </div>
-              <div className={styles.breakdownSub}>
-                Sıralama (Sort Spills), Hash Join çalışma tabloları ve imleçler (cursors).
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.breakdownItem}>
-            <div className={styles.legendColor} style={{ background: 'var(--accent-purple)' }} />
-            <div>
-              <div className={styles.breakdownLabel}>Sürüm Deposu (Version Store)</div>
-              <div className={styles.breakdownValue}>
-                {space?.version_store_mb} MB ({space?.version_store_pct}%)
-              </div>
-              <div className={styles.breakdownSub}>
-                Snapshot İzolasyonu, RCSI (Read Committed Snapshot) ve Online Reindex.
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.breakdownItem}>
-            <div className={styles.legendColor} style={{ background: 'var(--status-success)' }} />
-            <div>
-              <div className={styles.breakdownLabel}>Boş Alan (Unallocated)</div>
-              <div className={styles.breakdownValue}>
-                {space?.unallocated_space_mb} MB ({space?.unallocated_pct}%)
-              </div>
-              <div className={styles.breakdownSub}>
-                TempDB dosyalarında hemen kullanılabilir durumdaki boş alan.
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Two Column Section: TempDB Files & Memory Clerks */}
-      <div className={styles.twoColGrid}>
-        {/* Left: TempDB Files */}
-        <div className={styles.sectionCard}>
-          <div className={styles.sectionHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <HardDrive size={18} color="var(--accent-cyan)" />
-              <h3 style={{ margin: 0, fontSize: '15px' }}>TempDB Veri Dosyaları ({summary?.tempdb_files?.length || 0})</h3>
-            </div>
-          </div>
-          <DataTable
-            data={summary?.tempdb_files || []}
-            columns={fileColumns}
-            emptyMessage="TempDB dosyası bulunamadı."
-          />
-        </div>
-
-        {/* Right: Memory Clerks */}
-        <div className={styles.sectionCard}>
-          <div className={styles.sectionHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Layers size={18} color="var(--accent-purple)" />
-              <h3 style={{ margin: 0, fontSize: '15px' }}>En Çok Bellek Tüketen Bileşenler (Clerks)</h3>
-            </div>
-          </div>
-          <DataTable
-            data={summary?.top_memory_clerks || []}
-            columns={clerkColumns}
-            emptyMessage="Memory clerk verisi bulunamadı."
-          />
-        </div>
-      </div>
-
-      {/* Section: Ad-Hoc Plan Cache Bloat Analysis */}
-      {summary?.plan_cache_bloat && (
-        <div
-          className={`${styles.bloatCard} ${
-            summary.plan_cache_bloat.status === 'CRITICAL' ? styles.bloatCardCritical : ''
-          }`}
+      {/* Segmented Top Tab Bar */}
+      <div className={styles.topTabBar}>
+        <button
+          type="button"
+          className={`${styles.topTabBtn} ${activeMainTab === 'forensics' ? styles.activeTopTab : ''}`}
+          onClick={() => setActiveMainTab('forensics')}
         >
-          <div className={styles.bloatHeader}>
-            <div className={styles.bloatHeaderLeft}>
-              <Flame
-                size={20}
-                color={
-                  summary.plan_cache_bloat.status === 'CRITICAL'
-                    ? '#ef4444'
-                    : summary.plan_cache_bloat.status === 'WARNING'
-                    ? '#f59e0b'
-                    : 'var(--status-success)'
-                }
+          <Flame size={15} color="var(--status-danger)" />
+          TempDB Tüketim &amp; Spill Forensik Stüdyosu
+        </button>
+        <button
+          type="button"
+          className={`${styles.topTabBtn} ${activeMainTab === 'allocation' ? styles.activeTopTab : ''}`}
+          onClick={() => setActiveMainTab('allocation')}
+        >
+          <HardDrive size={15} color="var(--accent-cyan)" />
+          Alan Dağılımı &amp; Mandal Çekişmesi
+        </button>
+        <button
+          type="button"
+          className={`${styles.topTabBtn} ${activeMainTab === 'memory' ? styles.activeTopTab : ''}`}
+          onClick={() => setActiveMainTab('memory')}
+        >
+          <Cpu size={15} color="var(--accent-purple)" />
+          RAM &amp; Buffer Pool Bellek Analizi
+        </button>
+      </div>
+
+      {/* Tab 1: TempDB Forensics Studio */}
+      {activeMainTab === 'forensics' && (
+        <TempDBForensicsStudio />
+      )}
+
+      {/* Tab 2: Allocation, Latches & Version Store */}
+      {activeMainTab === 'allocation' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {/* Advisory Banner */}
+          <div className={summary?.allocation_contention_detected ? styles.dangerAlert : styles.infoAlert}>
+            <ShieldCheck size={20} className={styles.alertIcon} />
+            <div>
+              <strong>TempDB Çekişme &amp; Dosya Durumu:</strong> {summary?.file_count_recommendation}
+              <div style={{ marginTop: '4px', fontSize: '12px', color: 'var(--text-secondary)' }}>
+                {summary?.contention_description}
+              </div>
+            </div>
+          </div>
+
+          {/* Section 1: TempDB Space Breakdown */}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <PieChart size={18} color="var(--accent-blue)" />
+                <h3 style={{ margin: 0, fontSize: '15px' }}>TempDB Alan Dağılımı (Space Allocation)</h3>
+              </div>
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                Toplam: {((space?.total_size_mb || 0) / 1024).toFixed(2)} GB
+              </span>
+            </div>
+
+            {/* Visual Stacked Progress Bar */}
+            <div className={styles.stackedBar}>
+              <div
+                className={styles.segmentUser}
+                style={{ width: `${space?.user_objects_pct || 0}%` }}
+                title={`Kullanıcı Nesneleri: ${space?.user_objects_mb} MB (%${space?.user_objects_pct})`}
               />
-              <h3 className={styles.bloatTitle}>
-                Ad-Hoc Plan Cache Şişmesi &amp; Bellek İsrafı (sys.dm_exec_cached_plans)
-              </h3>
+              <div
+                className={styles.segmentInternal}
+                style={{ width: `${space?.internal_objects_pct || 0}%` }}
+                title={`Dahili Nesneler: ${space?.internal_objects_mb} MB (%${space?.internal_objects_pct})`}
+              />
+              <div
+                className={styles.segmentVersion}
+                style={{ width: `${space?.version_store_pct || 0}%` }}
+                title={`Version Store: ${space?.version_store_mb} MB (%${space?.version_store_pct})`}
+              />
+              <div
+                className={styles.segmentUnallocated}
+                style={{ width: `${space?.unallocated_pct || 0}%` }}
+                title={`Boş Alan: ${space?.unallocated_space_mb} MB (%${space?.unallocated_pct})`}
+              />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span
-                className={
-                  summary.plan_cache_bloat.status === 'CRITICAL'
-                    ? styles.badgeDanger
-                    : summary.plan_cache_bloat.status === 'WARNING'
-                    ? styles.badgeWarning
-                    : styles.badgeSuccess
-                }
-              >
-                {summary.plan_cache_bloat.status === 'CRITICAL'
-                  ? 'Kritik Bellek İsrafı'
-                  : summary.plan_cache_bloat.status === 'WARNING'
-                  ? 'Orta Seviye Şişme'
-                  : 'Sağlıklı Önbellek'}
-              </span>
-              <span
-                style={{
-                  fontSize: '11px',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  background: summary.plan_cache_bloat.optimize_for_adhoc_enabled
-                    ? 'rgba(34, 197, 94, 0.15)'
-                    : 'rgba(239, 68, 68, 0.15)',
-                  color: summary.plan_cache_bloat.optimize_for_adhoc_enabled
-                    ? 'var(--status-success)'
-                    : '#ef4444',
-                  fontWeight: 600,
-                }}
-              >
-                optimize for ad hoc workloads:{' '}
-                {summary.plan_cache_bloat.optimize_for_adhoc_enabled ? 'AÇIK (1)' : 'KAPALI (0)'}
-              </span>
+
+            {/* Legend Cards */}
+            <div className={styles.breakdownGrid}>
+              <div className={styles.breakdownItem}>
+                <div className={styles.legendColor} style={{ background: 'var(--accent-blue)' }} />
+                <div>
+                  <div className={styles.breakdownLabel}>Kullanıcı Nesneleri (User Objects)</div>
+                  <div className={styles.breakdownValue}>
+                    {space?.user_objects_mb} MB ({space?.user_objects_pct}%)
+                  </div>
+                  <div className={styles.breakdownSub}>
+                    Geçici tablolar (#tablo), @table değişkenleri ve tablo değerli fonksiyonlar.
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.breakdownItem}>
+                <div className={styles.legendColor} style={{ background: '#f59e0b' }} />
+                <div>
+                  <div className={styles.breakdownLabel}>Dahili Nesneler (Internal Objects)</div>
+                  <div className={styles.breakdownValue}>
+                    {space?.internal_objects_mb} MB ({space?.internal_objects_pct}%)
+                  </div>
+                  <div className={styles.breakdownSub}>
+                    Sıralama (Sort Spills), Hash Join çalışma tabloları ve imleçler (cursors).
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.breakdownItem}>
+                <div className={styles.legendColor} style={{ background: 'var(--accent-purple)' }} />
+                <div>
+                  <div className={styles.breakdownLabel}>Sürüm Deposu (Version Store)</div>
+                  <div className={styles.breakdownValue}>
+                    {space?.version_store_mb} MB ({space?.version_store_pct}%)
+                  </div>
+                  <div className={styles.breakdownSub}>
+                    Snapshot İzolasyonu, RCSI (Read Committed Snapshot) ve Online Reindex.
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.breakdownItem}>
+                <div className={styles.legendColor} style={{ background: 'var(--status-success)' }} />
+                <div>
+                  <div className={styles.breakdownLabel}>Boş Alan (Unallocated)</div>
+                  <div className={styles.breakdownValue}>
+                    {space?.unallocated_space_mb} MB ({space?.unallocated_pct}%)
+                  </div>
+                  <div className={styles.breakdownSub}>
+                    TempDB dosyalarında hemen kullanılabilir durumdaki boş alan.
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div className={styles.bloatGrid}>
-            <div className={styles.bloatItem}>
-              <span className={styles.bloatLabel}>Toplam Önbellek Planı</span>
-              <span className={styles.bloatValue}>
-                {summary.plan_cache_bloat.total_cached_plans_count.toLocaleString()}
-              </span>
+          {/* TempDB Files Table */}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <HardDrive size={18} color="var(--accent-cyan)" />
+                <h3 style={{ margin: 0, fontSize: '15px' }}>TempDB Veri Dosyaları ({summary?.tempdb_files?.length || 0})</h3>
+              </div>
             </div>
-            <div className={styles.bloatItem}>
-              <span className={styles.bloatLabel}>Tek Seferlik (Single-Use) Plan</span>
-              <span
-                className={styles.bloatValue}
-                style={{
-                  color:
-                    summary.plan_cache_bloat.single_use_plans_percent > 40
-                      ? '#ef4444'
-                      : 'inherit',
-                }}
-              >
-                {summary.plan_cache_bloat.single_use_plans_count.toLocaleString()}{' '}
-                <span style={{ fontSize: '12px', fontWeight: 500 }}>
-                  (%{summary.plan_cache_bloat.single_use_plans_percent})
-                </span>
-              </span>
-            </div>
-            <div className={styles.bloatItem}>
-              <span className={styles.bloatLabel}>Plan Cache Toplam Boyut</span>
-              <span className={styles.bloatValue}>
-                {summary.plan_cache_bloat.total_cache_size_mb >= 1024
-                  ? `${(summary.plan_cache_bloat.total_cache_size_mb / 1024).toFixed(2)} GB`
-                  : `${summary.plan_cache_bloat.total_cache_size_mb.toFixed(1)} MB`}
-              </span>
-            </div>
-            <div className={styles.bloatItem}>
-              <span className={styles.bloatLabel}>İsraf Edilen RAM Alanı</span>
-              <span
-                className={styles.bloatValue}
-                style={{
-                  color:
-                    summary.plan_cache_bloat.wasted_memory_percent > 30 ? '#ef4444' : 'inherit',
-                }}
-              >
-                {summary.plan_cache_bloat.wasted_adhoc_mb >= 1024
-                  ? `${(summary.plan_cache_bloat.wasted_adhoc_mb / 1024).toFixed(2)} GB`
-                  : `${summary.plan_cache_bloat.wasted_adhoc_mb.toFixed(1)} MB`}{' '}
-                <span style={{ fontSize: '12px', fontWeight: 500 }}>
-                  (%{summary.plan_cache_bloat.wasted_memory_percent})
-                </span>
-              </span>
-            </div>
+            <DataTable
+              data={summary?.tempdb_files || []}
+              columns={fileColumns}
+              emptyMessage="TempDB dosyası bulunamadı."
+            />
           </div>
 
-          <div className={styles.bloatRecBox}>
-            <strong>Kök Neden &amp; Çözüm Teşhisi:</strong> {summary.plan_cache_bloat.recommendation}
-          </div>
+          {/* Section: TempDB Version Store & Snapshot Isolation Leak Radar */}
+          <VersionStoreRadar />
 
-          <div className={styles.scriptWrapper}>
-            <button
-              type="button"
-              className={styles.copyScriptBtn}
-              onClick={() => handleCopyScript(summary.plan_cache_bloat?.remediation_script || '')}
-              title="İyileştirme T-SQL betiğini kopyala"
-            >
-              {copiedScript ? <Check size={12} /> : <Copy size={12} />}
-              {copiedScript ? 'Kopyalandı' : 'T-SQL Betiğini Kopyala'}
-            </button>
-            <pre className={styles.scriptPre}>{summary.plan_cache_bloat.remediation_script}</pre>
-          </div>
+          {/* Section: TempDB PFS/GAM/SGAM Latch Contention & Session Space Leaks */}
+          <TempDBContentionViewer />
         </div>
       )}
 
-      {/* Section: TempDB Version Store & Snapshot Isolation Leak Radar */}
-      <VersionStoreRadar />
+      {/* Tab 3: RAM & Buffer Pool */}
+      {activeMainTab === 'memory' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-4)' }}>
+          {/* Top KPIs */}
+          <div className={styles.kpiGrid}>
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiHeader}>
+                <span className={styles.kpiTitle}>Page Life Expectancy (PLE)</span>
+                <Clock size={18} color="var(--accent-blue)" />
+              </div>
+              <div className={styles.kpiValue}>
+                {summary?.page_life_expectancy_sec} <span style={{ fontSize: '14px', fontWeight: 500 }}>saniye</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span
+                  className={
+                    summary?.ple_status === 'HEALTHY'
+                      ? styles.badgeSuccess
+                      : summary?.ple_status === 'WARNING'
+                      ? styles.badgeWarning
+                      : styles.badgeDanger
+                  }
+                >
+                  {summary?.ple_status === 'HEALTHY' ? 'Sağlıklı' : summary?.ple_status === 'WARNING' ? 'Uyarı' : 'Kritik Baskı'}
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Standart Eşik: &gt;300s</span>
+              </div>
+            </div>
 
-      {/* Section: TempDB PFS/GAM/SGAM Latch Contention & Session Space Leaks */}
-      <TempDBContentionViewer />
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiHeader}>
+                <span className={styles.kpiTitle}>Buffer Cache Hit Ratio</span>
+                <Zap size={18} color="var(--status-success)" />
+              </div>
+              <div className={styles.kpiValue}>{summary?.buffer_cache_hit_ratio.toFixed(2)}%</div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Önbellekten karşılanan veri istekleri
+              </div>
+            </div>
 
-      {/* Section: Query Memory Grants & RESOURCE_SEMAPHORE Contention */}
-      <MemoryGrantsViewer />
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiHeader}>
+                <span className={styles.kpiTitle}>Sunucu Bellek Tüketimi</span>
+                <Cpu size={18} color="var(--accent-purple)" />
+              </div>
+              <div className={styles.kpiValue}>
+                {((summary?.total_server_memory_mb || 0) / 1024).toFixed(1)} GB
+              </div>
+              <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
+                Hedef Maksimum: {((summary?.target_server_memory_mb || 0) / 1024).toFixed(1)} GB ({summary?.memory_utilization_pct.toFixed(1)}%)
+              </div>
+            </div>
 
-      {/* Section: Interactive Buffer Pool Tomography & Dirty Page Explorer */}
-      <BufferPoolTomographyViewer />
-
-      {/* Section: Buffer Pool Deep Breakdown (Databases & Top Objects) */}
-      <div className={styles.twoColGrid}>
-        {/* Left: Buffer Pool Per-Database Distribution */}
-        <div className={styles.sectionCard}>
-          <div className={styles.sectionHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Database size={18} color="var(--accent-blue)" />
-              <h3 style={{ margin: 0, fontSize: '15px' }}>
-                Veritabanı Bazında Buffer Pool Kullanımı (sys.dm_os_buffer_descriptors)
-              </h3>
+            <div className={styles.kpiCard}>
+              <div className={styles.kpiHeader}>
+                <span className={styles.kpiTitle}>TempDB Dosya Yapılandırması</span>
+                <HardDrive size={18} color="var(--accent-cyan)" />
+              </div>
+              <div className={styles.kpiValue}>
+                {summary?.file_count} Dosya
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span
+                  className={
+                    summary?.file_count_status === 'OPTIMAL' ? styles.badgeSuccess : styles.badgeWarning
+                  }
+                >
+                  {summary?.file_count_status === 'OPTIMAL' ? 'Optimal Eşit Sizing' : 'Gözden Geçirilmeli'}
+                </span>
+                <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{summary?.cpu_cores} Mantıksal Çekirdek</span>
+              </div>
             </div>
           </div>
-          <DataTable
-            data={summary?.buffer_pool_db_distribution || []}
-            columns={bpColumns}
-            emptyMessage="Buffer pool veritabanı dağılımı bulunamadı."
-          />
-        </div>
 
-        {/* Right: Top In-Memory Cached Objects */}
-        <div className={styles.sectionCard}>
-          <div className={styles.sectionHeader}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileCode size={18} color="var(--accent-cyan)" />
-              <h3 style={{ margin: 0, fontSize: '15px' }}>
-                RAM'de En Çok Yer Kaplayan Tablolar &amp; İndeksler
-              </h3>
+          {/* Memory Clerks Section */}
+          <div className={styles.sectionCard}>
+            <div className={styles.sectionHeader}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Layers size={18} color="var(--accent-purple)" />
+                <h3 style={{ margin: 0, fontSize: '15px' }}>En Çok Bellek Tüketen Bileşenler (Clerks)</h3>
+              </div>
+            </div>
+            <DataTable
+              data={summary?.top_memory_clerks || []}
+              columns={clerkColumns}
+              emptyMessage="Memory clerk verisi bulunamadı."
+            />
+          </div>
+
+          {/* Section: Ad-Hoc Plan Cache Bloat Analysis */}
+          {summary?.plan_cache_bloat && (
+            <div
+              className={`${styles.bloatCard} ${
+                summary.plan_cache_bloat.status === 'CRITICAL' ? styles.bloatCardCritical : ''
+              }`}
+            >
+              <div className={styles.bloatHeader}>
+                <div className={styles.bloatHeaderLeft}>
+                  <Flame
+                    size={20}
+                    color={
+                      summary.plan_cache_bloat.status === 'CRITICAL'
+                        ? '#ef4444'
+                        : summary.plan_cache_bloat.status === 'WARNING'
+                        ? '#f59e0b'
+                        : 'var(--status-success)'
+                    }
+                  />
+                  <h3 className={styles.bloatTitle}>
+                    Ad-Hoc Plan Cache Şişmesi &amp; Bellek İsrafı (sys.dm_exec_cached_plans)
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span
+                    className={
+                      summary.plan_cache_bloat.status === 'CRITICAL'
+                        ? styles.badgeDanger
+                        : summary.plan_cache_bloat.status === 'WARNING'
+                        ? styles.badgeWarning
+                        : styles.badgeSuccess
+                    }
+                  >
+                    {summary.plan_cache_bloat.status === 'CRITICAL'
+                      ? 'Kritik Bellek İsrafı'
+                      : summary.plan_cache_bloat.status === 'WARNING'
+                      ? 'Orta Seviye Şişme'
+                      : 'Sağlıklı Önbellek'}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      background: summary.plan_cache_bloat.optimize_for_adhoc_enabled
+                        ? 'rgba(34, 197, 94, 0.15)'
+                        : 'rgba(239, 68, 68, 0.15)',
+                      color: summary.plan_cache_bloat.optimize_for_adhoc_enabled
+                        ? 'var(--status-success)'
+                        : '#ef4444',
+                      fontWeight: 600,
+                    }}
+                  >
+                    optimize for ad hoc workloads:{' '}
+                    {summary.plan_cache_bloat.optimize_for_adhoc_enabled ? 'AÇIK (1)' : 'KAPALI (0)'}
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.bloatGrid}>
+                <div className={styles.bloatItem}>
+                  <span className={styles.bloatLabel}>Toplam Önbellek Planı</span>
+                  <span className={styles.bloatValue}>
+                    {summary.plan_cache_bloat.total_cached_plans_count.toLocaleString()}
+                  </span>
+                </div>
+                <div className={styles.bloatItem}>
+                  <span className={styles.bloatLabel}>Tek Seferlik (Single-Use) Plan</span>
+                  <span
+                    className={styles.bloatValue}
+                    style={{
+                      color:
+                        summary.plan_cache_bloat.single_use_plans_percent > 40
+                          ? '#ef4444'
+                          : 'inherit',
+                    }}
+                  >
+                    {summary.plan_cache_bloat.single_use_plans_count.toLocaleString()}{' '}
+                    <span style={{ fontSize: '12px', fontWeight: 500 }}>
+                      (%{summary.plan_cache_bloat.single_use_plans_percent})
+                    </span>
+                  </span>
+                </div>
+                <div className={styles.bloatItem}>
+                  <span className={styles.bloatLabel}>Plan Cache Toplam Boyut</span>
+                  <span className={styles.bloatValue}>
+                    {summary.plan_cache_bloat.total_cache_size_mb >= 1024
+                      ? `${(summary.plan_cache_bloat.total_cache_size_mb / 1024).toFixed(2)} GB`
+                      : `${summary.plan_cache_bloat.total_cache_size_mb.toFixed(1)} MB`}
+                  </span>
+                </div>
+                <div className={styles.bloatItem}>
+                  <span className={styles.bloatLabel}>İsraf Edilen RAM Alanı</span>
+                  <span
+                    className={styles.bloatValue}
+                    style={{
+                      color:
+                        summary.plan_cache_bloat.wasted_memory_percent > 30 ? '#ef4444' : 'inherit',
+                    }}
+                  >
+                    {summary.plan_cache_bloat.wasted_adhoc_mb >= 1024
+                      ? `${(summary.plan_cache_bloat.wasted_adhoc_mb / 1024).toFixed(2)} GB`
+                      : `${summary.plan_cache_bloat.wasted_adhoc_mb.toFixed(1)} MB`}{' '}
+                    <span style={{ fontSize: '12px', fontWeight: 500 }}>
+                      (%{summary.plan_cache_bloat.wasted_memory_percent})
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              <div className={styles.bloatRecBox}>
+                <strong>Kök Neden &amp; Çözüm Teşhisi:</strong> {summary.plan_cache_bloat.recommendation}
+              </div>
+
+              <div className={styles.scriptWrapper}>
+                <button
+                  type="button"
+                  className={styles.copyScriptBtn}
+                  onClick={() => handleCopyScript(summary.plan_cache_bloat?.remediation_script || '')}
+                  title="İyileştirme T-SQL betiğini kopyala"
+                >
+                  {copiedScript ? <Check size={12} /> : <Copy size={12} />}
+                  {copiedScript ? 'Kopyalandı' : 'T-SQL Betiğini Kopyala'}
+                </button>
+                <pre className={styles.scriptPre}>{summary.plan_cache_bloat.remediation_script}</pre>
+              </div>
+            </div>
+          )}
+
+          {/* Section: Query Memory Grants & RESOURCE_SEMAPHORE Contention */}
+          <MemoryGrantsViewer />
+
+          {/* Section: Interactive Buffer Pool Tomography & Dirty Page Explorer */}
+          <BufferPoolTomographyViewer />
+
+          {/* Section: Buffer Pool Deep Breakdown (Databases & Top Objects) */}
+          <div className={styles.twoColGrid}>
+            {/* Left: Buffer Pool Per-Database Distribution */}
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Database size={18} color="var(--accent-blue)" />
+                  <h3 style={{ margin: 0, fontSize: '15px' }}>
+                    Veritabanı Bazında Buffer Pool Kullanımı (sys.dm_os_buffer_descriptors)
+                  </h3>
+                </div>
+              </div>
+              <DataTable
+                data={summary?.buffer_pool_db_distribution || []}
+                columns={bpColumns}
+                emptyMessage="Buffer pool veritabanı dağılımı bulunamadı."
+              />
+            </div>
+
+            {/* Right: Top In-Memory Cached Objects */}
+            <div className={styles.sectionCard}>
+              <div className={styles.sectionHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileCode size={18} color="var(--accent-cyan)" />
+                  <h3 style={{ margin: 0, fontSize: '15px' }}>
+                    RAM'de En Çok Yer Kaplayan Tablolar &amp; İndeksler
+                  </h3>
+                </div>
+              </div>
+              <DataTable
+                data={summary?.buffer_pool_top_objects || []}
+                columns={objectColumns}
+                emptyMessage="Bellekteki nesne dağılımı bulunamadı."
+              />
             </div>
           </div>
-          <DataTable
-            data={summary?.buffer_pool_top_objects || []}
-            columns={objectColumns}
-            emptyMessage="Bellekteki nesne dağılımı bulunamadı."
-          />
         </div>
-      </div>
+      )}
     </div>
   );
 }

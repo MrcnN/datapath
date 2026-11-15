@@ -69,6 +69,7 @@ import type {
   FleetOverviewResponse,
   DDLAuditResponse,
   IOHeatmapResponse,
+  TempDBForensicsResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -903,4 +904,10 @@ export async function getDDLAuditEvents(
 // ── File IO Latency & Stall Heatmap Studio ──────────────────────────────
 export async function getFileIoHeatmap(): Promise<IOHeatmapResponse> {
   return apiFetch<IOHeatmapResponse>('/api/storage/io-heatmap');
+}
+
+
+// ── TempDB Space Hog & Spill Forensic Investigator ──────────────────────
+export async function getTempDBForensics(): Promise<TempDBForensicsResponse> {
+  return apiFetch<TempDBForensicsResponse>('/api/tempdb/forensics');
 }

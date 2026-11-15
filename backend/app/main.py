@@ -38,6 +38,7 @@ from app.api import (
     fleet,
     ddl_audit,
     io_heatmap,
+    tempdb_forensics,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -103,6 +104,7 @@ app.include_router(alert_rules.router)
 app.include_router(fleet.router)
 app.include_router(ddl_audit.router)
 app.include_router(io_heatmap.router)
+app.include_router(tempdb_forensics.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

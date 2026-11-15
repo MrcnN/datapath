@@ -363,3 +363,44 @@
   background: #f59e0b;
 }
 
+/* Segmented Top Tab Bar */
+.topTabBar {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  padding: 6px;
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.topTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.topTabBtn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.activeTopTab {
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border-color: var(--border-card);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+

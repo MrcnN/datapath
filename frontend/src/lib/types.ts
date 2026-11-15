@@ -2546,3 +2546,76 @@ export interface IOHeatmapResponse {
   recommendations: string[];
   evaluated_at: string;
 }
+
+// ==========================================
+// 12. TempDB Space Hog & Spill Forensics
+// ==========================================
+export interface TempDBSpillQuery {
+  query_hash: string;
+  query_text: string;
+  execution_count: number;
+  total_spills: number;
+  total_spill_mb: number;
+  last_spills: number;
+  last_spill_mb: number;
+  avg_spill_mb: number;
+  total_worker_time_ms: number;
+  avg_elapsed_time_ms: number;
+  spill_type: string;
+  severity: 'CRITICAL' | 'WARNING' | 'INFO';
+  root_cause: string;
+  remediation_sql: string;
+}
+
+export interface TempDBSessionConsumer {
+  session_id: number;
+  login_name: string;
+  host_name?: string | null;
+  program_name?: string | null;
+  status: string;
+  open_transaction_count: number;
+  cpu_time_ms: number;
+  elapsed_time_ms: number;
+  user_objects_mb: number;
+  internal_objects_mb: number;
+  task_active_mb: number;
+  total_net_mb: number;
+  current_sql?: string | null;
+  is_sleeping_with_tran: boolean;
+  risk_level: 'CRITICAL' | 'WARNING' | 'NORMAL';
+  kill_sql: string;
+  investigation_sql: string;
+}
+
+export interface TempDBActiveObject {
+  object_id: number;
+  clean_table_name: string;
+  raw_object_name: string;
+  create_date: string;
+  age_minutes: number;
+  row_count: number;
+  total_size_mb: number;
+  data_size_mb: number;
+  index_size_mb: number;
+  stale_risk: boolean;
+}
+
+export interface TempDBForensicsSummary {
+  total_spill_events: number;
+  total_spill_mb: number;
+  highest_spill_query?: string | null;
+  active_temp_tables_count: number;
+  active_temp_tables_mb: number;
+  top_consumer_spid?: number | null;
+  top_consumer_mb: number;
+  sleeping_with_tran_count: number;
+  overall_risk: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+}
+
+export interface TempDBForensicsResponse {
+  summary: TempDBForensicsSummary;
+  spills: TempDBSpillQuery[];
+  session_consumers: TempDBSessionConsumer[];
+  temp_objects: TempDBActiveObject[];
+  recommendations: string[];
+}
