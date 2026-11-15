@@ -61,6 +61,11 @@ import type {
   ConnectionPoolSummary,
   KillSessionResponse,
   IndexRoiOverview,
+  AlertRule,
+  AlertRuleCreate,
+  AlertEvaluationResult,
+  AlertSimulationRequest,
+  AlertSimulationResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -820,4 +825,52 @@ export async function getIndexRoiOverview(
 ): Promise<IndexRoiOverview> {
   const query = database ? '?database=' + encodeURIComponent(database) : '';
   return apiFetch<IndexRoiOverview>('/api/index-roi/overview' + query);
+}
+
+
+// ── Custom Alert Rules & Threshold Engine ────────────────────────────────
+export async function getAlertRules(): Promise<AlertRule[]> {
+  return apiFetch<AlertRule[]>('/api/alerts/rules');
+}
+
+export async function createAlertRule(rule: AlertRuleCreate): Promise<AlertRule> {
+  return apiFetch<AlertRule>('/api/alerts/rules', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rule),
+  });
+}
+
+export async function updateAlertRule(ruleId: string, rule: AlertRuleCreate): Promise<AlertRule> {
+  return apiFetch<AlertRule>(`/api/alerts/rules/${encodeURIComponent(ruleId)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(rule),
+  });
+}
+
+export async function deleteAlertRule(ruleId: string): Promise<{ success: boolean; message: string }> {
+  return apiFetch<{ success: boolean; message: string }>(`/api/alerts/rules/${encodeURIComponent(ruleId)}`, {
+    method: 'DELETE',
+  });
+}
+
+export async function toggleAlertRule(ruleId: string, isEnabled: boolean): Promise<AlertRule> {
+  return apiFetch<AlertRule>(`/api/alerts/rules/${encodeURIComponent(ruleId)}/toggle?is_enabled=${isEnabled}`, {
+    method: 'PATCH',
+  });
+}
+
+export async function evaluateAlertRules(triggerWebhooks: boolean = false): Promise<AlertEvaluationResult> {
+  return apiFetch<AlertEvaluationResult>(`/api/alerts/rules/evaluate?trigger_webhooks=${triggerWebhooks}`, {
+    method: 'POST',
+  });
+}
+
+export async function simulateAlert(payload: AlertSimulationRequest): Promise<AlertSimulationResponse> {
+  return apiFetch<AlertSimulationResponse>('/api/alerts/rules/simulate', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
 }

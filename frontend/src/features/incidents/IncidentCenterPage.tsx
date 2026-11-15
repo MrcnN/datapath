@@ -8,6 +8,7 @@ import {
   GitCommit,
   RefreshCw,
   AlertOctagon,
+  Bell,
   type LucideIcon,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
@@ -18,6 +19,7 @@ import AgentJobsTable from './components/AgentJobsTable';
 import ErrorLogViewer from './components/ErrorLogViewer';
 import IncidentTimeline from './components/IncidentTimeline';
 import ConnectionSentinel from './components/ConnectionSentinel';
+import AlertRulesStudio from './components/AlertRulesStudio';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import {
@@ -44,7 +46,7 @@ import { Shield, Database, Radio, Layers, Zap, ShieldAlert } from 'lucide-react'
 
 import styles from './IncidentCenterPage.module.css';
 
-type TabType = 'sessions' | 'connection-sentinel' | 'radar' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
+type TabType = 'sessions' | 'alert-rules' | 'connection-sentinel' | 'radar' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
 
 interface TabItem {
   key: TabType;
@@ -54,6 +56,7 @@ interface TabItem {
 
 const tabs: TabItem[] = [
   { key: 'sessions', label: 'Canlı Süreç & Oturumlar', icon: Activity },
+  { key: 'alert-rules', label: 'Alarm & Eşik Kuralları', icon: Bell },
   { key: 'connection-sentinel', label: 'Bağlantı Havuzu & Uyuyan İşlemler', icon: ShieldAlert },
   { key: 'radar', label: 'Anomali Radarı & Darboğaz', icon: Radio },
   { key: 'blocking', label: 'Engelleme Zincirleri', icon: AlertTriangle },
@@ -85,7 +88,7 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
     setLoading(true);
     setError(null);
     try {
-      if (tab === 'sessions' || tab === 'radar' || tab === 'extended-events') {
+      if (tab === 'sessions' || tab === 'radar' || tab === 'extended-events' || tab === 'alert-rules') {
         // SessionsTable manages its own live data and auto-refresh interval
         setLoading(false);
         return;
@@ -179,6 +182,9 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
           <>
             {activeTab === 'sessions' && (
               <SessionsTable />
+            )}
+            {activeTab === 'alert-rules' && (
+              <AlertRulesStudio />
             )}
             {activeTab === 'connection-sentinel' && (
               <ConnectionSentinel />

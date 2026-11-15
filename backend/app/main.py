@@ -34,6 +34,7 @@ from app.api import (
     time_travel,
     connection_pool,
     index_roi,
+    alert_rules,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -95,6 +96,7 @@ app.include_router(online_migrations.router)
 app.include_router(time_travel.router)
 app.include_router(connection_pool.router)
 app.include_router(index_roi.router)
+app.include_router(alert_rules.router)
 
 
 # --- Custom Exception Handlers ---

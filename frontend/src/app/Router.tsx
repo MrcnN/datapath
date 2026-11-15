@@ -58,6 +58,7 @@ export default function Router() {
 
       {/* 5. Kilitlenme & Güvenilirlik */}
       <Route path="/incidents" element={<IncidentCenterPage />} />
+      <Route path="/alert-rules" element={<IncidentCenterPage initialTab="alert-rules" />} />
       <Route path="/connection-sentinel" element={<IncidentCenterPage initialTab="connection-sentinel" />} />
       <Route path="/extended-events" element={<IncidentCenterPage initialTab="extended-events" />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />

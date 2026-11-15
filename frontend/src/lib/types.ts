@@ -2258,3 +2258,118 @@ export interface IndexRoiOverview {
   items: IndexRoiItem[];
   executive_summary: string;
 }
+
+
+// ==========================================
+// 8. Özel Alarm Kuralları & Eşik Motoru (Alert Rules & Threshold Engine)
+// ==========================================
+
+export type AlertMetric =
+  | 'CPU_UTILIZATION'
+  | 'MEMORY_PRESSURE'
+  | 'DISK_FREE_SPACE_PCT'
+  | 'BLOCKING_DURATION_SEC'
+  | 'DEADLOCK_RATE_PER_MIN'
+  | 'CONNECTION_POOL_PCT'
+  | 'TEMPDB_UTILIZATION_PCT'
+  | 'LONGEST_TRANSACTION_SEC'
+  | 'PAGE_LIFE_EXPECTANCY'
+  | 'BUFFER_CACHE_HIT_RATIO';
+
+export type AlertOperator = '>' | '<' | '>=' | '<=' | '==';
+export type AlertSeverity = 'CRITICAL' | 'WARNING' | 'INFO';
+export type AlertStatus = 'NORMAL' | 'TRIGGERED' | 'MUTED' | 'DISABLED';
+
+export interface AlertRule {
+  id: string;
+  name: string;
+  metric: AlertMetric;
+  operator: AlertOperator;
+  threshold: number;
+  unit: string;
+  severity: AlertSeverity;
+  duration_seconds: number;
+  cooldown_minutes: number;
+  is_enabled: boolean;
+  notify_channels: string[];
+  description?: string | null;
+  remediation_hint?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AlertRuleCreate {
+  name: string;
+  metric: AlertMetric;
+  operator: AlertOperator;
+  threshold: number;
+  unit: string;
+  severity: AlertSeverity;
+  duration_seconds: number;
+  cooldown_minutes: number;
+  is_enabled: boolean;
+  notify_channels: string[];
+  description?: string | null;
+  remediation_hint?: string | null;
+}
+
+export interface ActiveAlert {
+  rule_id: string;
+  rule_name: string;
+  metric: AlertMetric;
+  severity: AlertSeverity;
+  current_value: number;
+  threshold: number;
+  unit: string;
+  operator: AlertOperator;
+  status: AlertStatus;
+  triggered_at: string;
+  breach_duration_sec: number;
+  message: string;
+  remediation_hint?: string | null;
+  server_name: string;
+}
+
+export interface AlertRuleEvaluationSummary {
+  rule_id: string;
+  rule_name: string;
+  metric: AlertMetric;
+  operator: AlertOperator;
+  threshold: number;
+  unit: string;
+  current_value: number;
+  is_breached: boolean;
+  status: AlertStatus;
+  severity: AlertSeverity;
+}
+
+export interface AlertEvaluationResult {
+  server_name: string;
+  evaluated_at: string;
+  total_rules: number;
+  active_rules: number;
+  triggered_count: number;
+  critical_count: number;
+  warning_count: number;
+  alerts: ActiveAlert[];
+  evaluations: AlertRuleEvaluationSummary[];
+  webhook_enabled: boolean;
+  webhook_service?: string | null;
+}
+
+export interface AlertSimulationRequest {
+  rule_id?: string | null;
+  metric?: AlertMetric;
+  mock_value: number;
+  send_webhook: boolean;
+}
+
+export interface AlertSimulationResponse {
+  success: boolean;
+  rule_name: string;
+  is_breached: boolean;
+  message: string;
+  webhook_dispatched: boolean;
+  webhook_status_code?: number | null;
+  telemetry_snapshot: Record<string, any>;
+}
