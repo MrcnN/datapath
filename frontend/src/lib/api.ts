@@ -66,6 +66,7 @@ import type {
   AlertEvaluationResult,
   AlertSimulationRequest,
   AlertSimulationResponse,
+  FleetOverviewResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -873,4 +874,10 @@ export async function simulateAlert(payload: AlertSimulationRequest): Promise<Al
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   });
+}
+
+
+// ── Multi-Server Fleet Overview & Estate Intelligence ────────────────────
+export async function getFleetOverview(): Promise<FleetOverviewResponse> {
+  return apiFetch<FleetOverviewResponse>('/api/fleet/overview');
 }

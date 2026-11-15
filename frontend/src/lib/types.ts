@@ -2373,3 +2373,57 @@ export interface AlertSimulationResponse {
   webhook_status_code?: number | null;
   telemetry_snapshot: Record<string, any>;
 }
+
+
+// ==========================================
+// 9. Çoklu Sunucu Filo Panosu (Multi-Server Fleet Overview)
+// ==========================================
+
+export type ServerFleetStatus = 'HEALTHY' | 'WARNING' | 'CRITICAL' | 'OFFLINE';
+export type BackupHealthStatus = 'OPTIMAL' | 'WARNING' | 'CRITICAL';
+
+export interface FleetServerItem {
+  id: string;
+  name: string;
+  host: string;
+  port: number;
+  environment: EnvironmentType;
+  role: string;
+  status: ServerFleetStatus;
+  health_score: number;
+  cpu_pct: number;
+  memory_pct: number;
+  disk_free_min_pct: number;
+  active_connections: number;
+  blocking_sessions_count: number;
+  deadlocks_24h: number;
+  critical_alerts_count: number;
+  latency_ms: number;
+  sql_version: string;
+  edition: string;
+  backup_health: BackupHealthStatus;
+  is_active: boolean;
+  last_checked_at: string;
+  verdict: string;
+}
+
+export interface FleetSummary {
+  total_instances: number;
+  healthy_count: number;
+  warning_count: number;
+  critical_count: number;
+  offline_count: number;
+  average_health_score: number;
+  average_cpu_pct: number;
+  total_active_connections: number;
+  total_blocking_count: number;
+  total_critical_alerts: number;
+}
+
+export interface FleetOverviewResponse {
+  summary: FleetSummary;
+  servers: FleetServerItem[];
+  active_server_id: string;
+  evaluated_at: string;
+  top_risks: string[];
+}

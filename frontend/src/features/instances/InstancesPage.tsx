@@ -15,12 +15,13 @@ import InstanceMetadata from './components/InstanceMetadata';
 import DatabaseTable from './components/DatabaseTable';
 import ServerConfigurationAudit from './components/ServerConfigurationAudit';
 import ServerProfilesManager from './components/ServerProfilesManager';
+import FleetOverviewStudio from './components/FleetOverviewStudio';
 import styles from './InstancesPage.module.css';
 
-type InstanceTab = 'live-sessions' | 'profiles' | 'configuration' | 'databases';
+type InstanceTab = 'fleet' | 'live-sessions' | 'profiles' | 'configuration' | 'databases';
 
-export default function InstancesPage() {
-  const [activeTab, setActiveTab] = useState<InstanceTab>('live-sessions');
+export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab } = {}) {
+  const [activeTab, setActiveTab] = useState<InstanceTab>(initialTab || 'fleet');
 
   return (
     <div className={styles.page}>
@@ -31,6 +32,17 @@ export default function InstancesPage() {
 
       {/* Navigation Tabs Bar */}
       <div className={styles.tabsBar} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'fleet'}
+          className={`${styles.tabBtn} ${activeTab === 'fleet' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('fleet')}
+        >
+          <Network size={14} />
+          <span>Filo Panosu &amp; Sağlık Matrisi</span>
+        </button>
+
         <button
           type="button"
           role="tab"
@@ -75,6 +87,11 @@ export default function InstancesPage() {
           <span>Veritabanları &amp; Kaynaklar</span>
         </button>
       </div>
+
+      {/* TAB 0: Çoklu Sunucu Filo Panosu & Sağlık Matrisi */}
+      {activeTab === 'fleet' && (
+        <FleetOverviewStudio onInspectServer={() => setActiveTab('live-sessions')} />
+      )}
 
       {/* TAB 1: Canlı Süreçler & sp_WhoIsActive */}
       {activeTab === 'live-sessions' && (

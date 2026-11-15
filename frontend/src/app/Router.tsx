@@ -33,6 +33,7 @@ export default function Router() {
       {/* 1. Genel Bakış */}
       <Route path="/" element={<DashboardPage />} />
       <Route path="/instances" element={<InstancesPage />} />
+      <Route path="/fleet" element={<InstancesPage initialTab="fleet" />} />
 
       {/* 2. Sorgu & Performans */}
       <Route path="/query-performance" element={<QueryPerformancePage />} />
