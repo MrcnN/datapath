@@ -49,6 +49,7 @@ import QueryRewriterStudio from './components/QueryRewriterStudio';
 import CardinalityDriftViewer from './components/CardinalityDriftViewer';
 import TimeTravelCorrelator from './components/TimeTravelCorrelator';
 import AdaptiveBaselineStudio from './components/AdaptiveBaselineStudio';
+import QueryFingerprintStudio from './components/QueryFingerprintStudio';
 import WaitStatsPage from '../wait-stats/WaitStatsPage';
 import styles from './QueryPerformancePage.module.css';
 
@@ -62,10 +63,12 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
     if (location.pathname === '/waits') return 'WAITS';
     if (location.pathname === '/adaptive-baselines') return 'REGRESSIONS';
+    if (location.pathname === '/query-fingerprints') return 'QUERY_STORE';
     return 'QUERY_STORE';
   };
 
   const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL'>(resolveInitialTab);
+  const [queryStoreSubView, setQueryStoreSubView] = useState<'queries' | 'fingerprints'>(location.pathname === '/query-fingerprints' ? 'fingerprints' : 'queries');
 
   useEffect(() => {
     if (location.pathname === '/time-travel') {
@@ -78,6 +81,9 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
       setActiveTab('WAITS');
     } else if (location.pathname === '/adaptive-baselines') {
       setActiveTab('REGRESSIONS');
+    } else if (location.pathname === '/query-fingerprints') {
+      setActiveTab('QUERY_STORE');
+      setQueryStoreSubView('fingerprints');
     }
   }, [location.pathname]);
   const [selectedPlanHandle, setSelectedPlanHandle] = useState<string | undefined>(undefined);
@@ -791,66 +797,114 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
             </div>
           )}
 
-          <div className={styles.controls}>
-            <div className={styles.selectGroup}>
-              <label className={styles.label}>Hedef Veritabanı</label>
-              <select
-                className={styles.select}
-                value={selectedDb}
-                onChange={(e) => setSelectedDb(e.target.value)}
-              >
-                {databases.map((db) => (
-                  <option key={db.name} value={db.name}>
-                    {db.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className={styles.selectGroup}>
-              <label className={styles.label}>Sıralama Metriği</label>
-              <select
-                className={styles.select}
-                value={metric}
-                onChange={(e) => setMetric(e.target.value)}
-              >
-                <option value="cpu_time">Ortalama CPU Süresi</option>
-                <option value="duration">Ortalama Toplam Süre</option>
-                <option value="logical_reads">Mantıksal Okuma (IO)</option>
-                <option value="execution_count">Çalıştırma Sayısı</option>
-              </select>
-            </div>
-
-            <div className={styles.selectGroup}>
-              <label className={styles.label}>Kayıt Limiti</label>
-              <select
-                className={styles.select}
-                value={topN}
-                onChange={(e) => setTopN(Number(e.target.value))}
-              >
-                <option value={10}>İlk 10 Sorgu</option>
-                <option value={25}>İlk 25 Sorgu</option>
-                <option value={50}>İlk 50 Sorgu</option>
-              </select>
-            </div>
+          {/* Sub-view switcher: Individual queries vs Query Fingerprints */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '16px', background: 'var(--bg-surface)', padding: '4px', borderRadius: 'var(--radius-md)', width: 'fit-content', border: '1px solid var(--border)' }}>
+            <button
+              type="button"
+              onClick={() => setQueryStoreSubView('queries')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                fontSize: '12.5px',
+                fontWeight: queryStoreSubView === 'queries' ? 600 : 500,
+                color: queryStoreSubView === 'queries' ? 'var(--text-primary)' : 'var(--text-muted)',
+                background: queryStoreSubView === 'queries' ? 'var(--bg-card)' : 'transparent',
+                border: queryStoreSubView === 'queries' ? '1px solid var(--border-card)' : 'none',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              <TrendingUp size={14} /> Bireysel Ağır Sorgular (Top Queries)
+            </button>
+            <button
+              type="button"
+              onClick={() => setQueryStoreSubView('fingerprints')}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '6px 14px',
+                fontSize: '12.5px',
+                fontWeight: queryStoreSubView === 'fingerprints' ? 600 : 500,
+                color: queryStoreSubView === 'fingerprints' ? 'var(--text-primary)' : 'var(--text-muted)',
+                background: queryStoreSubView === 'fingerprints' ? 'var(--bg-card)' : 'transparent',
+                border: queryStoreSubView === 'fingerprints' ? '1px solid var(--border-card)' : 'none',
+                borderRadius: 'var(--radius-sm)',
+                cursor: 'pointer',
+              }}
+            >
+              <Layers size={14} color="var(--accent-blue)" /> Sorgu Parmak İzi &amp; İmzalar (Query Signatures)
+            </button>
           </div>
 
-          {qsLoading && <LoadingSpinner message="Maliyetli sorgu verileri alınıyor..." />}
-          {qsError && <ErrorState message={qsError} onRetry={() => setSelectedDb(selectedDb)} />}
+          {queryStoreSubView === 'fingerprints' ? (
+            <QueryFingerprintStudio />
+          ) : (
+            <>
+              <div className={styles.controls}>
+                <div className={styles.selectGroup}>
+                  <label className={styles.label}>Hedef Veritabanı</label>
+                  <select
+                    className={styles.select}
+                    value={selectedDb}
+                    onChange={(e) => setSelectedDb(e.target.value)}
+                  >
+                    {databases.map((db) => (
+                      <option key={db.name} value={db.name}>
+                        {db.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-          {!qsLoading && !qsError && queries.length === 0 && (
-            <EmptyState
-              title="Sorgu Verisi Bulunamadı"
-              message="Bu veritabanında henüz Query Store verisi kaydedilmemiş veya filtreye uygun sorgu bulunmuyor."
-            />
-          )}
+                <div className={styles.selectGroup}>
+                  <label className={styles.label}>Sıralama Metriği</label>
+                  <select
+                    className={styles.select}
+                    value={metric}
+                    onChange={(e) => setMetric(e.target.value)}
+                  >
+                    <option value="cpu_time">Ortalama CPU Süresi</option>
+                    <option value="duration">Ortalama Toplam Süre</option>
+                    <option value="logical_reads">Mantıksal Okuma (IO)</option>
+                    <option value="execution_count">Çalıştırma Sayısı</option>
+                  </select>
+                </div>
 
-          {!qsLoading && !qsError && queries.length > 0 && (
-            <DataTable
-              columns={qsColumns}
-              data={queries}
-              emptyMessage="Sorgu bulunamadı."
-            />
+                <div className={styles.selectGroup}>
+                  <label className={styles.label}>Kayıt Limiti</label>
+                  <select
+                    className={styles.select}
+                    value={topN}
+                    onChange={(e) => setTopN(Number(e.target.value))}
+                  >
+                    <option value={10}>İlk 10 Sorgu</option>
+                    <option value={25}>İlk 25 Sorgu</option>
+                    <option value={50}>İlk 50 Sorgu</option>
+                  </select>
+                </div>
+              </div>
+
+              {qsLoading && <LoadingSpinner message="Maliyetli sorgu verileri alınıyor..." />}
+              {qsError && <ErrorState message={qsError} onRetry={() => setSelectedDb(selectedDb)} />}
+
+              {!qsLoading && !qsError && queries.length === 0 && (
+                <EmptyState
+                  title="Sorgu Verisi Bulunamadı"
+                  message="Bu veritabanında henüz Query Store verisi kaydedilmemiş veya filtreye uygun sorgu bulunmuyor."
+                />
+              )}
+
+              {!qsLoading && !qsError && queries.length > 0 && (
+                <DataTable
+                  columns={qsColumns}
+                  data={queries}
+                  emptyMessage="Sorgu bulunamadı."
+                />
+              )}
+            </>
           )}
         </>
       )}

@@ -2677,3 +2677,43 @@ export interface AdaptiveBaselineResponse {
   regressions: AdaptiveQueryRegression[];
   recommendations: string[];
 }
+
+// ==========================================
+// 14. Query Fingerprints & Normalization
+// ==========================================
+export interface QueryFingerprintItem {
+  query_hash: string;
+  normalized_signature: string;
+  sample_raw_sql: string;
+  database_name: string;
+  total_executions: number;
+  plan_variants_count: number;
+  total_duration_ms: number;
+  avg_duration_ms: number;
+  min_duration_ms: number;
+  max_duration_ms: number;
+  duration_variance_ratio: number;
+  total_cpu_ms: number;
+  avg_cpu_ms: number;
+  total_logical_reads: number;
+  avg_logical_reads: number;
+  is_parameter_sensitive: boolean;
+  is_adhoc_unparameterized: boolean;
+  risk_verdict: 'CRITICAL_BLOAT' | 'HIGH_VARIANCE' | 'OPTIMAL';
+  remediation_sql: string;
+}
+
+export interface QueryFingerprintSummary {
+  total_signatures_evaluated: number;
+  total_server_executions: number;
+  total_server_duration_ms: number;
+  adhoc_unparameterized_count: number;
+  multi_plan_signatures_count: number;
+  top_signature_impact_pct: number;
+}
+
+export interface QueryFingerprintResponse {
+  summary: QueryFingerprintSummary;
+  signatures: QueryFingerprintItem[];
+  recommendations: string[];
+}

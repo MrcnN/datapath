@@ -52,7 +52,7 @@ export const primaryHubs: HubItem[] = [
     label: 'Sorgu Zekâsı & Planlar',
     icon: TrendingUp,
     description: 'Query Store ağır sorgular, kardinalite sapması, sorgu düzeltici, .sqlplan ve bekleme istatistikleri.',
-    matchPrefixes: ['/query-performance', '/adaptive-baselines', '/time-travel', '/cardinality-drift', '/query-rewriter', '/execution-plan', '/waits'],
+    matchPrefixes: ['/query-performance', '/query-fingerprints', '/adaptive-baselines', '/time-travel', '/cardinality-drift', '/query-rewriter', '/execution-plan', '/waits'],
   },
   {
     id: 'indexes',

@@ -71,6 +71,7 @@ import type {
   IOHeatmapResponse,
   TempDBForensicsResponse,
   AdaptiveBaselineResponse,
+  QueryFingerprintResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -926,4 +927,19 @@ export async function getAdaptiveBaselines(
   if (windowHours) params.append('window_hours', String(windowHours));
   const q = params.toString() ? '?' + params.toString() : '';
   return apiFetch<AdaptiveBaselineResponse>('/api/query-performance/adaptive-baselines' + q);
+}
+
+
+// ── Query Fingerprints & Canonical Signatures ────────────────────────────
+export async function getQueryFingerprints(
+  metric: string = 'duration',
+  limit: number = 50,
+  search?: string
+): Promise<QueryFingerprintResponse> {
+  const params = new URLSearchParams();
+  if (metric) params.append('metric', metric);
+  if (limit) params.append('limit', String(limit));
+  if (search) params.append('search', search);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<QueryFingerprintResponse>('/api/query-performance/fingerprints' + q);
 }
