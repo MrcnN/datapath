@@ -44,7 +44,7 @@ export const primaryHubs: HubItem[] = [
     label: 'Canlı Kokpit & Süreçler',
     icon: Activity,
     description: 'Canlı sp_WhoIsActive oturumları, kök kilit bloklayıcılar, sunucu profilleri ve yapılandırma.',
-    matchPrefixes: ['/instances', '/fleet'],
+    matchPrefixes: ['/instances', '/fleet', '/right-sizing'],
   },
   {
     id: 'queries',

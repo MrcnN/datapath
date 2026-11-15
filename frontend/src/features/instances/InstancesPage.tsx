@@ -7,6 +7,7 @@ import {
   Network,
   Activity,
   Cpu,
+  TrendingDown,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import LiveSessionCockpit from './components/LiveSessionCockpit';
@@ -16,9 +17,10 @@ import DatabaseTable from './components/DatabaseTable';
 import ServerConfigurationAudit from './components/ServerConfigurationAudit';
 import ServerProfilesManager from './components/ServerProfilesManager';
 import FleetOverviewStudio from './components/FleetOverviewStudio';
+import ResourceRightSizingStudio from './components/ResourceRightSizingStudio';
 import styles from './InstancesPage.module.css';
 
-type InstanceTab = 'fleet' | 'live-sessions' | 'profiles' | 'configuration' | 'databases';
+type InstanceTab = 'fleet' | 'live-sessions' | 'right-sizing' | 'profiles' | 'configuration' | 'databases';
 
 export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab } = {}) {
   const [activeTab, setActiveTab] = useState<InstanceTab>(initialTab || 'fleet');
@@ -52,6 +54,17 @@ export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab
         >
           <Activity size={14} />
           <span>Canlı Süreçler &amp; sp_WhoIsActive</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'right-sizing'}
+          className={`${styles.tabBtn} ${activeTab === 'right-sizing' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('right-sizing')}
+        >
+          <TrendingDown size={14} />
+          <span>Kaynak Boyutlandırma &amp; Optimizasyon</span>
         </button>
 
         <button
@@ -99,6 +112,11 @@ export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab
       {/* TAB 1: Canlı Süreçler & sp_WhoIsActive */}
       {activeTab === 'live-sessions' && (
         <LiveSessionCockpit />
+      )}
+
+      {/* TAB 1.5: Kaynak Boyutlandırma & Maliyet Optimizasyonu */}
+      {activeTab === 'right-sizing' && (
+        <ResourceRightSizingStudio />
       )}
 
       {/* TAB 2: Kayıtlı Sunucu Profilleri & Çoklu Ortam Yönetimi */}

@@ -72,6 +72,7 @@ import type {
   TempDBForensicsResponse,
   AdaptiveBaselineResponse,
   QueryFingerprintResponse,
+  RightSizingResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -942,4 +943,10 @@ export async function getQueryFingerprints(
   if (search) params.append('search', search);
   const q = params.toString() ? '?' + params.toString() : '';
   return apiFetch<QueryFingerprintResponse>('/api/query-performance/fingerprints' + q);
+}
+
+
+// ── Resource Right-Sizing & Cost Optimization Advisor ───────────────────
+export async function getRightSizingAdvisor(): Promise<RightSizingResponse> {
+  return apiFetch<RightSizingResponse>('/api/instances/right-sizing');
 }

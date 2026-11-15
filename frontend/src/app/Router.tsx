@@ -34,6 +34,7 @@ export default function Router() {
       <Route path="/" element={<DashboardPage />} />
       <Route path="/instances" element={<InstancesPage />} />
       <Route path="/fleet" element={<InstancesPage initialTab="fleet" />} />
+      <Route path="/right-sizing" element={<InstancesPage initialTab="right-sizing" />} />
 
       {/* 2. Sorgu & Performans */}
       <Route path="/query-performance" element={<QueryPerformancePage />} />

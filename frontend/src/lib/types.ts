@@ -2717,3 +2717,45 @@ export interface QueryFingerprintResponse {
   signatures: QueryFingerprintItem[];
   recommendations: string[];
 }
+
+// ==========================================
+// 15. Resource Right-Sizing & Cost Optimization
+// ==========================================
+export interface ResourceMetricUtilization {
+  resource_type: string;
+  allocated_capacity: string;
+  avg_utilization_pct: number;
+  peak_utilization_pct: number;
+  p95_utilization_pct: number;
+  status: 'OVER_PROVISIONED' | 'OPTIMAL' | 'UNDER_PROVISIONED';
+  verdict_text: string;
+}
+
+export interface RightSizingAdvice {
+  category: string;
+  title: string;
+  current_configuration: string;
+  recommended_configuration: string;
+  estimated_monthly_savings_usd: number;
+  urgency: 'HIGH' | 'MEDIUM' | 'OPPORTUNITY';
+  rationale: string;
+  remediation_sql: string;
+}
+
+export interface RightSizingSummary {
+  server_name: string;
+  edition: string;
+  cpu_cores: number;
+  total_ram_gb: number;
+  overall_sizing_health: 'OPTIMAL' | 'OVER_PROVISIONED' | 'UNDER_PROVISIONED';
+  potential_monthly_savings_usd: number;
+  bottlenecks_count: number;
+  waste_opportunities_count: number;
+  evaluated_at: string;
+}
+
+export interface RightSizingResponse {
+  summary: RightSizingSummary;
+  metrics: ResourceMetricUtilization[];
+  recommendations: RightSizingAdvice[];
+}

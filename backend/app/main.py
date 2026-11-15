@@ -41,6 +41,7 @@ from app.api import (
     tempdb_forensics,
     adaptive_baselines,
     query_fingerprint,
+    right_sizing,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -109,6 +110,7 @@ app.include_router(io_heatmap.router)
 app.include_router(tempdb_forensics.router, prefix="/api")
 app.include_router(adaptive_baselines.router, prefix="/api")
 app.include_router(query_fingerprint.router, prefix="/api")
+app.include_router(right_sizing.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---
