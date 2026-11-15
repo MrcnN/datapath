@@ -2619,3 +2619,61 @@ export interface TempDBForensicsResponse {
   temp_objects: TempDBActiveObject[];
   recommendations: string[];
 }
+
+// ==========================================
+// 13. Adaptive Query Baselines & Regressions
+// ==========================================
+export interface BaselineTrendPoint {
+  timestamp_label: string;
+  duration_ms: number;
+  cpu_ms: number;
+  logical_reads: number;
+  is_anomaly: boolean;
+}
+
+export interface AdaptiveQueryRegression {
+  query_id: number;
+  query_hash: string;
+  database_name: string;
+  query_text_snippet: string;
+  regression_type: string;
+  regression_type_label: string;
+  severity: 'CRITICAL' | 'HIGH' | 'MODERATE';
+  current_duration_ms: number;
+  baseline_duration_ms: number;
+  duration_delta_pct: number;
+  current_cpu_ms: number;
+  baseline_cpu_ms: number;
+  cpu_delta_pct: number;
+  current_logical_reads: number;
+  baseline_logical_reads: number;
+  reads_delta_pct: number;
+  z_score: number;
+  upper_bound_ms: number;
+  current_plan_id: number;
+  baseline_plan_id: number;
+  is_plan_forced: boolean;
+  root_cause_diagnosis: string;
+  force_plan_sql: string;
+  unforce_plan_sql: string;
+  remediation_sql: string;
+  trend_points: BaselineTrendPoint[];
+}
+
+export interface AdaptiveBaselineSummary {
+  total_evaluated_queries: number;
+  regressed_queries_count: number;
+  critical_p1_count: number;
+  high_p2_count: number;
+  plan_change_regressions_count: number;
+  forced_plans_active_count: number;
+  max_duration_spike_pct: number;
+  overall_status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  evaluated_at: string;
+}
+
+export interface AdaptiveBaselineResponse {
+  summary: AdaptiveBaselineSummary;
+  regressions: AdaptiveQueryRegression[];
+  recommendations: string[];
+}

@@ -48,6 +48,7 @@ import ExecutionPlanViewer from './components/ExecutionPlanViewer';
 import QueryRewriterStudio from './components/QueryRewriterStudio';
 import CardinalityDriftViewer from './components/CardinalityDriftViewer';
 import TimeTravelCorrelator from './components/TimeTravelCorrelator';
+import AdaptiveBaselineStudio from './components/AdaptiveBaselineStudio';
 import WaitStatsPage from '../wait-stats/WaitStatsPage';
 import styles from './QueryPerformancePage.module.css';
 
@@ -60,6 +61,7 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
     if (location.pathname === '/execution-plan') return 'PLAN_VIEWER';
     if (location.pathname === '/waits') return 'WAITS';
+    if (location.pathname === '/adaptive-baselines') return 'REGRESSIONS';
     return 'QUERY_STORE';
   };
 
@@ -74,6 +76,8 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
       setActiveTab('PLAN_VIEWER');
     } else if (location.pathname === '/waits') {
       setActiveTab('WAITS');
+    } else if (location.pathname === '/adaptive-baselines') {
+      setActiveTab('REGRESSIONS');
     }
   }, [location.pathname]);
   const [selectedPlanHandle, setSelectedPlanHandle] = useState<string | undefined>(undefined);
@@ -484,7 +488,7 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
           onClick={() => setActiveTab('REGRESSIONS')}
         >
           <Activity size={16} />
-          Plan Gerileme Radarı (Plan Regressions)
+          Adaptif Baseline &amp; Regresyon Radarı
           {regressions.length > 0 && (
             <span
               style={{
@@ -851,78 +855,9 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
         </>
       )}
 
-      {/* Tab 3: Plan Gerileme Radarı (Plan Regressions) */}
+      {/* Tab 3: Adaptif Baseline & Regresyon Radarı */}
       {activeTab === 'REGRESSIONS' && (
-        <>
-          {regLoading ? (
-            <LoadingSpinner message="Query Store üzerinden yürütme planı regresyonları hesaplanıyor..." />
-          ) : regError ? (
-            <ErrorState message={regError} onRetry={() => window.location.reload()} />
-          ) : (
-            <>
-              {/* Regression Summary KPIs */}
-              <div className={styles.antiPatternSummaryRow}>
-                <div className={styles.summaryStatBox}>
-                  <div className={styles.summaryStatVal} style={{ color: 'var(--status-danger)' }}>
-                    {regressions.length}
-                  </div>
-                  <div className={styles.summaryStatLbl}>Gerileyen Sorgu</div>
-                </div>
-                <div className={styles.summaryStatBox}>
-                  <div className={styles.summaryStatVal} style={{ color: '#ef4444' }}>
-                    {regressions.filter(r => r.severity === 'CRITICAL').length}
-                  </div>
-                  <div className={styles.summaryStatLbl}>Kritik Gerileme (P1)</div>
-                </div>
-                <div className={styles.summaryStatBox}>
-                  <div className={styles.summaryStatVal} style={{ color: '#f59e0b' }}>
-                    +{Math.round(regressions.reduce((max, r) => Math.max(max, r.duration_delta_pct || 0), 0))}%
-                  </div>
-                  <div className={styles.summaryStatLbl}>En Yüksek Süre Artışı</div>
-                </div>
-                <div className={styles.summaryStatBox}>
-                  <div className={styles.summaryStatVal} style={{ color: 'var(--accent-blue)' }}>
-                    +{Math.round(regressions.reduce((max, r) => Math.max(max, r.cpu_delta_pct || 0), 0))}%
-                  </div>
-                  <div className={styles.summaryStatLbl}>En Yüksek CPU Artışı</div>
-                </div>
-              </div>
-
-              {/* Search & DB filter */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
-                <div style={{ position: 'relative', width: '320px' }}>
-                  <Search size={15} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                  <input
-                    type="text"
-                    placeholder="Sorgu veya veritabanı filtrele..."
-                    value={regSearch}
-                    onChange={(e) => setRegSearch(e.target.value)}
-                    style={{
-                      width: '100%',
-                      padding: '7px 12px 7px 32px',
-                      background: 'var(--bg-surface)',
-                      border: '1px solid var(--border-card)',
-                      borderRadius: 'var(--radius-sm)',
-                      color: 'var(--text-primary)',
-                      fontSize: '12.5px',
-                      outline: 'none',
-                    }}
-                  />
-                </div>
-
-                <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-                  * Son 24 saatlik süre ile önceki baseline dönemi karşılaştırılmaktadır.
-                </div>
-              </div>
-
-              <DataTable
-                columns={regressionColumns}
-                data={regressions.filter(r => !regSearch || (r.query_text_snippet || '').toLowerCase().includes(regSearch.toLowerCase()) || (r.database_name || '').toLowerCase().includes(regSearch.toLowerCase()))}
-                emptyMessage="Plan gerilemesi tespit edilen sorgu bulunamadı."
-              />
-            </>
-          )}
-        </>
+        <AdaptiveBaselineStudio />
       )}
 
       {/* Full SQL Detail Modal */}

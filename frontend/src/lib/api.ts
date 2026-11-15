@@ -70,6 +70,7 @@ import type {
   DDLAuditResponse,
   IOHeatmapResponse,
   TempDBForensicsResponse,
+  AdaptiveBaselineResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -910,4 +911,19 @@ export async function getFileIoHeatmap(): Promise<IOHeatmapResponse> {
 // ── TempDB Space Hog & Spill Forensic Investigator ──────────────────────
 export async function getTempDBForensics(): Promise<TempDBForensicsResponse> {
   return apiFetch<TempDBForensicsResponse>('/api/tempdb/forensics');
+}
+
+
+// ── Adaptive Query Performance Baselines & Regressions ──────────────────
+export async function getAdaptiveBaselines(
+  database?: string,
+  severity?: string,
+  windowHours: number = 24
+): Promise<AdaptiveBaselineResponse> {
+  const params = new URLSearchParams();
+  if (database) params.append('database', database);
+  if (severity && severity !== 'ALL') params.append('severity', severity);
+  if (windowHours) params.append('window_hours', String(windowHours));
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<AdaptiveBaselineResponse>('/api/query-performance/adaptive-baselines' + q);
 }

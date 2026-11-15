@@ -37,6 +37,7 @@ export default function Router() {
 
       {/* 2. Sorgu & Performans */}
       <Route path="/query-performance" element={<QueryPerformancePage />} />
+      <Route path="/adaptive-baselines" element={<QueryPerformancePage initialTab="REGRESSIONS" />} />
       <Route path="/time-travel" element={<QueryPerformancePage initialTab="TIME_TRAVEL" />} />
       <Route path="/cardinality-drift" element={<QueryPerformancePage initialTab="CARDINALITY_DRIFT" />} />
       <Route path="/query-rewriter" element={<QueryRewriterPage />} />
