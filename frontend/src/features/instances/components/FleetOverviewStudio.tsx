@@ -25,9 +25,10 @@ import type {
 
 interface FleetOverviewStudioProps {
   onInspectServer?: (serverId: string) => void;
+  onAddServer?: () => void;
 }
 
-export default function FleetOverviewStudio({ onInspectServer }: FleetOverviewStudioProps) {
+export default function FleetOverviewStudio({ onInspectServer, onAddServer }: FleetOverviewStudioProps) {
   const [fleetData, setFleetData] = useState<FleetOverviewResponse | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -94,6 +95,15 @@ export default function FleetOverviewStudio({ onInspectServer }: FleetOverviewSt
           </p>
         </div>
         <div className={styles.headerActions}>
+          {onAddServer && (
+            <button
+              className={styles.actionBtn}
+              onClick={onAddServer}
+              style={{ background: '#2563eb', borderColor: '#3b82f6', color: '#ffffff' }}
+            >
+              <Server size={14} /> Yeni Sunucu Ekle
+            </button>
+          )}
           <button
             className={styles.actionBtn}
             onClick={loadData}

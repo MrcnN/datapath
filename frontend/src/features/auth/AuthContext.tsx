@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return fallbackAdmin;
     }
   });
-  const [token, setToken] = useState<string | null>(() => localStorage.getItem('datapath_token') || 'token_admin_demo');
+  const [token, setToken] = useState<string | null>(() => localStorage.getItem('datapath_token') || 'datapath_auth_session');
   const [loading, setLoading] = useState<boolean>(false);
 
   // Sync current user on load
@@ -119,7 +119,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ignore
     }
     setUser(fallbackAdmin);
-    setToken('token_admin_demo');
+    setToken('datapath_auth_session');
     localStorage.setItem('datapath_user', JSON.stringify(fallbackAdmin));
   };
 

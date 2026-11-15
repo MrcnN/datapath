@@ -90,7 +90,10 @@ export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab
 
       {/* TAB 0: Çoklu Sunucu Filo Panosu & Sağlık Matrisi */}
       {activeTab === 'fleet' && (
-        <FleetOverviewStudio onInspectServer={() => setActiveTab('live-sessions')} />
+        <FleetOverviewStudio
+          onInspectServer={() => setActiveTab('live-sessions')}
+          onAddServer={() => setActiveTab('profiles')}
+        />
       )}
 
       {/* TAB 1: Canlı Süreçler & sp_WhoIsActive */}

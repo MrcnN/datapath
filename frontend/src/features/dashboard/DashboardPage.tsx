@@ -114,7 +114,7 @@ export default function DashboardPage() {
   }, [autoRefreshInterval]);
 
   // Compute metrics from REAL data
-  const isDemo = metadata?.server_name?.includes('(Demo)') ?? false;
+  const isDemo = false;
   const activeSessionsCount = sessions.filter((s) => s.status === 'running').length;
   const totalSessionsCount = sessions.length;
   const blockedCount = blocking?.chains

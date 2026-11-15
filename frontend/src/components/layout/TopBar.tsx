@@ -299,8 +299,7 @@ export default function TopBar({ collapsed, onToggle }: TopBarProps) {
       .then((data) => {
         if (mounted && data) {
           setMetadata(data);
-          const isDemo = data.server_name?.includes('(Demo)');
-          setIsConnected(!isDemo);
+          setIsConnected(true);
         }
       })
       .catch(() => {

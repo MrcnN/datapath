@@ -86,14 +86,14 @@ from app.schemas.extended_events import (
 DEMO_DATABASES = [
     DatabaseInfo(name="master", state="ONLINE", recovery_model="SIMPLE", size_mb=12.5, log_size_mb=4.0, compatibility_level=160, is_read_only=False, create_date="2023-01-10T10:00:00"),
     DatabaseInfo(name="msdb", state="ONLINE", recovery_model="SIMPLE", size_mb=35.0, log_size_mb=12.0, compatibility_level=160, is_read_only=False, create_date="2023-01-10T10:00:00"),
-    DatabaseInfo(name="AppDb_Production (Demo)", state="ONLINE", recovery_model="FULL", size_mb=45200.0, log_size_mb=8200.0, compatibility_level=160, is_read_only=False, create_date="2023-06-15T14:30:00"),
-    DatabaseInfo(name="AppDb_Staging (Demo)", state="ONLINE", recovery_model="FULL", size_mb=41500.0, log_size_mb=6500.0, compatibility_level=160, is_read_only=False, create_date="2023-08-20T09:15:00"),
-    DatabaseInfo(name="Reporting_Warehouse (Demo)", state="ONLINE", recovery_model="SIMPLE", size_mb=128000.0, log_size_mb=15400.0, compatibility_level=150, is_read_only=False, create_date="2023-03-01T11:00:00"),
-    DatabaseInfo(name="Archive_2023 (Demo)", state="ONLINE", recovery_model="SIMPLE", size_mb=85000.0, log_size_mb=2100.0, compatibility_level=140, is_read_only=True, create_date="2024-01-01T00:00:00"),
+    DatabaseInfo(name="AppDb_Production", state="ONLINE", recovery_model="FULL", size_mb=45200.0, log_size_mb=8200.0, compatibility_level=160, is_read_only=False, create_date="2023-06-15T14:30:00"),
+    DatabaseInfo(name="AppDb_Staging", state="ONLINE", recovery_model="FULL", size_mb=41500.0, log_size_mb=6500.0, compatibility_level=160, is_read_only=False, create_date="2023-08-20T09:15:00"),
+    DatabaseInfo(name="Reporting_Warehouse", state="ONLINE", recovery_model="SIMPLE", size_mb=128000.0, log_size_mb=15400.0, compatibility_level=150, is_read_only=False, create_date="2023-03-01T11:00:00"),
+    DatabaseInfo(name="Archive_2023", state="ONLINE", recovery_model="SIMPLE", size_mb=85000.0, log_size_mb=2100.0, compatibility_level=140, is_read_only=True, create_date="2024-01-01T00:00:00"),
 ]
 
 DEMO_METADATA = ServerMetadata(
-    server_name="SQL-PROD-CLUSTER01 (Demo)",
+    server_name="SQL-PROD-CLUSTER01",
     version="Microsoft SQL Server 2022 (RTM-CU12) (KB5033663) - 16.0.4115.5 (X64)",
     edition="Enterprise Edition: Core-based Licensing (64-bit)",
     product_level="RTM",
@@ -1356,7 +1356,7 @@ DEMO_PLAN_ANTI_PATTERNS = PlanAntiPatternsSummary(
         PlanWarningQuery(
             plan_handle="0x06000500A1B2C3D4E5F60718293A4B5C6D7E8F9012345678",
             query_hash="0x9A8B7C6D5E4F3A2B",
-            database_name="AppDb_Production (Demo)",
+            database_name="AppDb_Production",
             query_text="SELECT o.OrderId, o.CustomerId, SUM(od.Quantity * od.UnitPrice) AS TotalAmount FROM dbo.Orders o INNER JOIN dbo.OrderDetails od ON o.OrderId = od.OrderId WHERE o.OrderDate >= '2026-01-01' GROUP BY o.OrderId, o.CustomerId ORDER BY TotalAmount DESC",
             warning_type="Sort Warning (TempDB Spill)",
             warning_severity="CRITICAL",
@@ -1373,7 +1373,7 @@ DEMO_PLAN_ANTI_PATTERNS = PlanAntiPatternsSummary(
         PlanWarningQuery(
             plan_handle="0x06000500B2C3D4E5F60718293A4B5C6D7E8F90123456789A",
             query_hash="0x8B7C6D5E4F3A2B1C",
-            database_name="AppDb_Production (Demo)",
+            database_name="AppDb_Production",
             query_text="SELECT CustomerId, AccountNumber, Balance, Email, CreatedDate FROM dbo.Customers WHERE IdentificationNumber = @p_IdNum",
             warning_type="Implicit Conversion (CONVERT_IMPLICIT)",
             warning_severity="CRITICAL",
@@ -1390,7 +1390,7 @@ DEMO_PLAN_ANTI_PATTERNS = PlanAntiPatternsSummary(
         PlanWarningQuery(
             plan_handle="0x06000500C3D4E5F60718293A4B5C6D7E8F90123456789AB1",
             query_hash="0x7C6D5E4F3A2B1C0D",
-            database_name="Reporting_Warehouse (Demo)",
+            database_name="Reporting_Warehouse",
             query_text="SELECT p.*, inv.StockQuantity, inv.WarehouseCode FROM dbo.Products p INNER HASH JOIN dbo.Inventory inv ON p.ProductId = inv.ProductId WHERE p.IsActive = 1",
             warning_type="Excessive Memory Grant (Bellek İsrafı)",
             warning_severity="WARNING",
@@ -1407,7 +1407,7 @@ DEMO_PLAN_ANTI_PATTERNS = PlanAntiPatternsSummary(
         PlanWarningQuery(
             plan_handle="0x06000500D4E5F60718293A4B5C6D7E8F90123456789AB1C2",
             query_hash="0x6D5E4F3A2B1C0D9E",
-            database_name="AppDb_Production (Demo)",
+            database_name="AppDb_Production",
             query_text="SELECT TransactionId, Amount, Status, TransactionDate FROM dbo.AccountTransactions WHERE Status = 'PENDING' AND TransactionDate >= DATEADD(day, -7, GETDATE())",
             warning_type="Missing Index in Plan (%94.2 Maliyet Kazancı)",
             warning_severity="WARNING",
