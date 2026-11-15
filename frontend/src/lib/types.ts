@@ -2759,3 +2759,47 @@ export interface RightSizingResponse {
   metrics: ResourceMetricUtilization[];
   recommendations: RightSizingAdvice[];
 }
+
+// ==========================================
+// 16. Lock Escalation & Contention Heatmap
+// ==========================================
+export interface LockContentionItem {
+  database_name: string;
+  schema_name: string;
+  table_name: string;
+  index_name: string;
+  index_type: string;
+  partition_number: number;
+  row_lock_count: number;
+  row_lock_wait_count: number;
+  row_lock_wait_ms: number;
+  page_lock_count: number;
+  page_lock_wait_count: number;
+  page_lock_wait_ms: number;
+  total_lock_wait_ms: number;
+  escalation_attempt_count: number;
+  escalation_count: number;
+  escalation_rate_pct: number;
+  page_latch_wait_ms: number;
+  page_io_latch_wait_ms: number;
+  lock_escalation_setting: string;
+  contention_severity: 'CRITICAL' | 'WARNING' | 'MODERATE' | 'HEALTHY';
+  diagnostic_verdict: string;
+  remediation_tsql: string;
+}
+
+export interface LockEscalationSummary {
+  total_objects_analyzed: number;
+  contended_objects_count: number;
+  escalated_objects_count: number;
+  total_escalation_count: number;
+  total_lock_wait_ms: number;
+  top_contended_object?: string | null;
+  analyzed_at: string;
+}
+
+export interface LockEscalationResponse {
+  summary: LockEscalationSummary;
+  items: LockContentionItem[];
+  active_database: string;
+}

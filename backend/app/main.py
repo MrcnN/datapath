@@ -42,6 +42,7 @@ from app.api import (
     adaptive_baselines,
     query_fingerprint,
     right_sizing,
+    lock_escalation,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -111,6 +112,7 @@ app.include_router(tempdb_forensics.router, prefix="/api")
 app.include_router(adaptive_baselines.router, prefix="/api")
 app.include_router(query_fingerprint.router, prefix="/api")
 app.include_router(right_sizing.router, prefix="/api")
+app.include_router(lock_escalation.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

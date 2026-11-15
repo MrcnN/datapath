@@ -76,7 +76,7 @@ export const primaryHubs: HubItem[] = [
     label: 'Kriz & Güvenilirlik',
     icon: AlertTriangle,
     description: 'Canlı kilitlenmeler, Deadlock grafiği, AlwaysOn replikaları, yedekleme geçmişi ve Extended Events.',
-    matchPrefixes: ['/incidents', '/alert-rules', '/connection-sentinel', '/extended-events', '/backups', '/high-availability'],
+    matchPrefixes: ['/incidents', '/alert-rules', '/connection-sentinel', '/extended-events', '/backups', '/high-availability', '/lock-escalation'],
   },
   {
     id: 'best-practices',

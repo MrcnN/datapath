@@ -66,6 +66,7 @@ export default function Router() {
       <Route path="/incidents" element={<IncidentCenterPage />} />
       <Route path="/alert-rules" element={<IncidentCenterPage initialTab="alert-rules" />} />
       <Route path="/connection-sentinel" element={<IncidentCenterPage initialTab="connection-sentinel" />} />
+      <Route path="/lock-escalation" element={<IncidentCenterPage initialTab="lock-escalation" />} />
       <Route path="/extended-events" element={<IncidentCenterPage initialTab="extended-events" />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
       <Route path="/high-availability" element={<HAPage />} />

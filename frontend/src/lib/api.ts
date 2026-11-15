@@ -73,6 +73,7 @@ import type {
   AdaptiveBaselineResponse,
   QueryFingerprintResponse,
   RightSizingResponse,
+  LockEscalationResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -949,4 +950,13 @@ export async function getQueryFingerprints(
 // ── Resource Right-Sizing & Cost Optimization Advisor ───────────────────
 export async function getRightSizingAdvisor(): Promise<RightSizingResponse> {
   return apiFetch<RightSizingResponse>('/api/instances/right-sizing');
+}
+
+
+// ── Lock Escalation & Contention Heatmap ──────────────────────────────
+export async function getLockEscalationAnalysis(database?: string): Promise<LockEscalationResponse> {
+  const params = new URLSearchParams();
+  if (database) params.append('database', database);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<LockEscalationResponse>('/api/incidents/lock-escalation' + q);
 }

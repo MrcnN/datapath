@@ -20,6 +20,7 @@ import ErrorLogViewer from './components/ErrorLogViewer';
 import IncidentTimeline from './components/IncidentTimeline';
 import ConnectionSentinel from './components/ConnectionSentinel';
 import AlertRulesStudio from './components/AlertRulesStudio';
+import LockEscalationStudio from './components/LockEscalationStudio';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import {
@@ -46,7 +47,7 @@ import { Shield, Database, Radio, Layers, Zap, ShieldAlert } from 'lucide-react'
 
 import styles from './IncidentCenterPage.module.css';
 
-type TabType = 'sessions' | 'alert-rules' | 'connection-sentinel' | 'radar' | 'blocking' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
+type TabType = 'sessions' | 'alert-rules' | 'connection-sentinel' | 'radar' | 'blocking' | 'lock-escalation' | 'deadlocks' | 'alwayson' | 'backups' | 'extended-events' | 'agent-jobs' | 'error-log' | 'timeline';
 
 interface TabItem {
   key: TabType;
@@ -60,7 +61,8 @@ const tabs: TabItem[] = [
   { key: 'connection-sentinel', label: 'Bağlantı Havuzu & Uyuyan İşlemler', icon: ShieldAlert },
   { key: 'radar', label: 'Anomali Radarı & Darboğaz', icon: Radio },
   { key: 'blocking', label: 'Engelleme Zincirleri', icon: AlertTriangle },
-  { key: 'deadlocks', label: 'Kilitlenme Analizi', icon: Flame },
+  { key: 'lock-escalation', label: 'Kilit Yükseltme & Çakışma Haritası', icon: Flame },
+  { key: 'deadlocks', label: 'Kilitlenme Analizi', icon: AlertOctagon },
   { key: 'alwayson', label: 'AlwaysOn & Replikalar', icon: Shield },
   { key: 'backups', label: 'Yedekleme & RPO Riski', icon: Database },
   { key: 'extended-events', label: 'Genişletilmiş Olaylar (XE)', icon: Layers },
@@ -88,8 +90,8 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
     setLoading(true);
     setError(null);
     try {
-      if (tab === 'sessions' || tab === 'radar' || tab === 'extended-events' || tab === 'alert-rules') {
-        // SessionsTable manages its own live data and auto-refresh interval
+      if (tab === 'sessions' || tab === 'radar' || tab === 'extended-events' || tab === 'alert-rules' || tab === 'lock-escalation') {
+        // Managed by their own internal state and live auto-refresh
         setLoading(false);
         return;
       } else if (tab === 'blocking') {
@@ -194,6 +196,9 @@ export default function IncidentCenterPage({ initialTab }: { initialTab?: TabTyp
                 blockingResult={blocking}
                 onRefresh={() => fetchTabData('blocking')}
               />
+            )}
+            {activeTab === 'lock-escalation' && (
+              <LockEscalationStudio />
             )}
                         {activeTab === 'radar' && <PredictiveAnomalyRadar />}
             {activeTab === 'deadlocks' && <DeadlockViewer />}
