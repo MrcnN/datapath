@@ -21,7 +21,6 @@ import {
 } from 'lucide-react';
 import { getLiveSessionsSummary } from '../../../lib/api';
 import type { LiveProcessSummary, Session } from '../../../lib/types';
-import DemoDataBanner from '../../../components/ui/DemoDataBanner';
 import styles from './LiveSessionCockpit.module.css';
 
 export default function LiveSessionCockpit() {
@@ -127,8 +126,6 @@ export default function LiveSessionCockpit() {
 
   return (
     <div className={styles.container}>
-      {summary?.is_demo && <DemoDataBanner />}
-
       {/* KPI Cards */}
       <div className={styles.kpiGrid}>
         <div className={styles.kpiCard}>

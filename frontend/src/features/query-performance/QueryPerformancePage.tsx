@@ -28,7 +28,6 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import {
   getQueryStoreOverview,
   getExpensiveQueries,
@@ -50,13 +49,14 @@ import CardinalityDriftViewer from './components/CardinalityDriftViewer';
 import TimeTravelCorrelator from './components/TimeTravelCorrelator';
 import AdaptiveBaselineStudio from './components/AdaptiveBaselineStudio';
 import QueryFingerprintStudio from './components/QueryFingerprintStudio';
+import MemoryGrantStudio from './components/MemoryGrantStudio';
 import WaitStatsPage from '../wait-stats/WaitStatsPage';
 import styles from './QueryPerformancePage.module.css';
 
-export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' } = {}) {
+export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'MEMORY_GRANTS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' } = {}) {
   const location = useLocation();
 
-  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' => {
+  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'MEMORY_GRANTS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' => {
     if (initialTab) return initialTab;
     if (location.pathname === '/time-travel') return 'TIME_TRAVEL';
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
@@ -64,10 +64,11 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     if (location.pathname === '/waits') return 'WAITS';
     if (location.pathname === '/adaptive-baselines') return 'REGRESSIONS';
     if (location.pathname === '/query-fingerprints') return 'QUERY_STORE';
+    if (location.pathname === '/memory-grants') return 'MEMORY_GRANTS';
     return 'QUERY_STORE';
   };
 
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL'>(resolveInitialTab);
+  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'MEMORY_GRANTS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL'>(resolveInitialTab);
   const [queryStoreSubView, setQueryStoreSubView] = useState<'queries' | 'fingerprints'>(location.pathname === '/query-fingerprints' ? 'fingerprints' : 'queries');
 
   useEffect(() => {
@@ -81,6 +82,8 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
       setActiveTab('WAITS');
     } else if (location.pathname === '/adaptive-baselines') {
       setActiveTab('REGRESSIONS');
+    } else if (location.pathname === '/memory-grants') {
+      setActiveTab('MEMORY_GRANTS');
     } else if (location.pathname === '/query-fingerprints') {
       setActiveTab('QUERY_STORE');
       setQueryStoreSubView('fingerprints');
@@ -457,8 +460,6 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
         subtitle="En çok CPU, süre ve mantıksal I/O tüketen ağır sorgular, Query Store çalışma istatistikleri ve plan gerilemeleri."
       />
 
-      {antiPatterns?.is_demo && <DemoDataBanner />}
-
       {/* Tabs */}
       <div className={styles.tabsContainer}>
         <button
@@ -539,6 +540,13 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
           Kardinalite & Parameter Sniffing
         </button>
         <button
+          className={`${styles.tabButton} ${activeTab === 'MEMORY_GRANTS' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('MEMORY_GRANTS')}
+        >
+          <Cpu size={16} />
+          Bellek Tahsisleri &amp; RESOURCE_SEMAPHORE
+        </button>
+        <button
           className={`${styles.tabButton} ${activeTab === 'WAITS' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('WAITS')}
         >
@@ -554,6 +562,10 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
 
       {activeTab === 'CARDINALITY_DRIFT' && (
         <CardinalityDriftViewer />
+      )}
+
+      {activeTab === 'MEMORY_GRANTS' && (
+        <MemoryGrantStudio />
       )}
 
       {activeTab === 'WAITS' && (

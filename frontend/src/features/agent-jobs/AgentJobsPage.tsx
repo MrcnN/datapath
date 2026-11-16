@@ -20,7 +20,6 @@ import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import { getAgentJobsSummary, getJobStepHistory } from '../../lib/api';
 import type { AgentJobsSummary, AgentJobDetail, JobStepHistory } from '../../lib/types';
 import styles from './AgentJobsPage.module.css';
@@ -239,8 +238,6 @@ export default function AgentJobsPage() {
         title="SQL Agent & Sistem Alarmları"
         subtitle="Zamanlanmış SQL Server Agent işleri, başarısız adımlar, sysalerts (Severity 17-25, Error 823-825) alarmları, Database Mail ve Webhook bildirimleri."
       />
-
-      {summary?.is_demo && <DemoDataBanner />}
 
       {/* Top Tab Switcher */}
       <div style={{ display: 'flex', gap: '8px', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>

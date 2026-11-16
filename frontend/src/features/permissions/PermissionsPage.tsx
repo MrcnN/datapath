@@ -15,7 +15,6 @@ import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import {
   getLogins,
   getDatabaseUsers,
@@ -209,8 +208,6 @@ export default function PermissionsPage({ initialTab }: PermissionsPageProps = {
         title="Kullanıcılar & Yetkiler"
         subtitle="Sunucu oturumları (logins), sysadmin rol üyeleri, yetim kullanıcılar (orphaned users) ve veri tabanı rol izin matrisi denetimi."
       />
-
-      {auditData?.is_demo && <DemoDataBanner />}
 
       <div className={styles.tabs}>
         <button

@@ -8,7 +8,6 @@ import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
 import CodeBlock from '../../components/ui/CodeBlock';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import CopyButton from '../../components/ui/CopyButton';
 import {
   getIndexSummary,
@@ -511,8 +510,6 @@ export default function IndexesPage({ initialTab }: { initialTab?: TabType } = {
         title="İndeks Analizi"
         subtitle="Eksik indeks fırsatları, hiç okunmayan gereksiz indeksler, mükerrer indeksler ve parçalanma oranlarını raporlar."
       />
-
-      {summary?.is_demo && <DemoDataBanner />}
 
       {/* KPI Cards */}
       {summary && (

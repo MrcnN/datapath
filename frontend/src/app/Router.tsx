@@ -42,6 +42,7 @@ export default function Router() {
       <Route path="/adaptive-baselines" element={<QueryPerformancePage initialTab="REGRESSIONS" />} />
       <Route path="/time-travel" element={<QueryPerformancePage initialTab="TIME_TRAVEL" />} />
       <Route path="/cardinality-drift" element={<QueryPerformancePage initialTab="CARDINALITY_DRIFT" />} />
+      <Route path="/memory-grants" element={<QueryPerformancePage initialTab="MEMORY_GRANTS" />} />
       <Route path="/query-rewriter" element={<QueryRewriterPage />} />
       <Route path="/execution-plan" element={<ExecutionPlanPage />} />
       <Route path="/waits" element={<QueryPerformancePage initialTab="WAITS" />} />

@@ -21,7 +21,6 @@ import { getIndexRoiOverview } from '../../../lib/api';
 import type { IndexRoiOverview, IndexRoiItem } from '../../../lib/types';
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import ErrorState from '../../../components/ui/ErrorState';
-import DemoDataBanner from '../../../components/ui/DemoDataBanner';
 import styles from './IndexRoiMatrix.module.css';
 
 interface IndexRoiMatrixProps {
@@ -125,8 +124,6 @@ export default function IndexRoiMatrix({ database }: IndexRoiMatrixProps) {
 
   return (
     <div className={styles.container}>
-      {data?.is_demo && <DemoDataBanner />}
-
       {/* Header */}
       <div className={styles.headerRow}>
         <div className={styles.titleArea}>

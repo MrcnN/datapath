@@ -2845,3 +2845,71 @@ export interface ConfigDriftResponse {
   available_baselines: BaselineProfileMeta[];
   full_alignment_script: string;
 }
+
+// ==========================================
+// 18. Memory Grant Starvation & Semaphores
+// ==========================================
+export interface ResourceSemaphoreStatus {
+  semaphore_id: number;
+  total_memory_mb: number;
+  available_memory_mb: number;
+  granted_memory_mb: number;
+  used_memory_mb: number;
+  grantee_count: number;
+  waiter_count: number;
+  timeout_error_count: number;
+  forced_grant_count: number;
+  utilization_pct: number;
+}
+
+export interface LiveMemoryGrantItem {
+  session_id: number;
+  request_id: number;
+  scheduler_id: number;
+  dop: number;
+  requested_memory_mb: number;
+  granted_memory_mb: number;
+  required_memory_mb: number;
+  used_memory_mb: number;
+  max_used_memory_mb: number;
+  ideal_memory_mb: number;
+  query_cost: number;
+  wait_time_ms: number;
+  wait_order?: number | null;
+  is_next_candidate: boolean;
+  status: 'GRANTED' | 'WAITING (RESOURCE_SEMAPHORE)' | string;
+  query_text: string;
+  remediation_hint: string;
+}
+
+export interface HistoricalMemoryWasterItem {
+  execution_count: number;
+  max_grant_mb: number;
+  avg_grant_mb: number;
+  max_used_grant_mb: number;
+  avg_used_grant_mb: number;
+  wasted_grant_pct: number;
+  total_spills: number;
+  query_text: string;
+  diagnostic_verdict: string;
+  remediation_tsql: string;
+}
+
+export interface MemoryGrantSummary {
+  server_name: string;
+  total_workspace_memory_mb: number;
+  available_workspace_memory_mb: number;
+  active_grants_count: number;
+  queued_waiters_count: number;
+  has_memory_starvation: boolean;
+  top_wasted_grant_mb: number;
+  total_spilling_queries_count: number;
+  evaluated_at: string;
+}
+
+export interface MemoryGrantResponse {
+  summary: MemoryGrantSummary;
+  semaphores: ResourceSemaphoreStatus[];
+  live_grants: LiveMemoryGrantItem[];
+  historical_wasters: HistoricalMemoryWasterItem[];
+}

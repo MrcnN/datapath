@@ -31,7 +31,6 @@ import type {
 import LoadingSpinner from '../../../components/ui/LoadingSpinner';
 import ErrorState from '../../../components/ui/ErrorState';
 import StatusBadge from '../../../components/ui/StatusBadge';
-import DemoDataBanner from '../../../components/ui/DemoDataBanner';
 import styles from './ConnectionSentinel.module.css';
 
 interface ConnectionSentinelProps {
@@ -125,8 +124,6 @@ export default function ConnectionSentinel({ database }: ConnectionSentinelProps
 
   return (
     <div className={styles.container}>
-      {data?.is_demo && <DemoDataBanner />}
-
       {/* Header Row */}
       <div className={styles.headerRow}>
         <div className={styles.titleArea}>

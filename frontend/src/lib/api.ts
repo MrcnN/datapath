@@ -75,6 +75,7 @@ import type {
   RightSizingResponse,
   LockEscalationResponse,
   ConfigDriftResponse,
+  MemoryGrantResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -969,4 +970,10 @@ export async function getConfigurationDrift(baseline?: string): Promise<ConfigDr
   if (baseline) params.append('baseline', baseline);
   const q = params.toString() ? '?' + params.toString() : '';
   return apiFetch<ConfigDriftResponse>('/api/configuration/drift' + q);
+}
+
+
+// ── Memory Grant Starvation & Resource Semaphore ──────────────────────
+export async function getMemoryGrantsAnalysis(): Promise<MemoryGrantResponse> {
+  return apiFetch<MemoryGrantResponse>('/api/query-performance/memory-grants');
 }

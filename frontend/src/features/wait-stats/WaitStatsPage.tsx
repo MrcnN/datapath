@@ -6,7 +6,6 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import { getWaitStatistics } from '../../lib/api';
 import type { WaitStatsSummary, WaitStatEntry } from '../../lib/types';
 import styles from './WaitStatsPage.module.css';
@@ -144,8 +143,6 @@ export default function WaitStatsPage({ embedded = false }: { embedded?: boolean
           subtitle="SQL Server'ı yavaşlatan bekleme türlerini, kaynak darboğazlarını ve CPU baskısını (Signal Wait) analiz eder."
         />
       )}
-
-      {summary?.is_demo && <DemoDataBanner />}
 
       {/* KPI Stats Cards */}
       {summary && (

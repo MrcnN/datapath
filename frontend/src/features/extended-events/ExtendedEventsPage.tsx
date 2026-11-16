@@ -22,7 +22,6 @@ import StatusBadge from '../../components/ui/StatusBadge';
 import LoadingSpinner from '../../components/ui/LoadingSpinner';
 import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
-import DemoDataBanner from '../../components/ui/DemoDataBanner';
 import { getExtendedEventsSummary } from '../../lib/api';
 import type {
   ExtendedEventsSummary,
@@ -286,8 +285,6 @@ GO`,
         title="Genişletilmiş Olaylar (XE)"
         subtitle="SQL Server Extended Events oturum yönetimi, ring_buffer ve event_file hedef ayrıştırıcısı ile derin kernel düzeyinde izleme."
       />}
-
-      {summary?.is_demo && <DemoDataBanner />}
 
       {/* KPI Cards */}
       {summary && (
