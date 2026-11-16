@@ -52,6 +52,7 @@ from app.api import (
     schedulers,
     memory_clerks,
     error_log_forensics,
+    autogrowth_audit,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -131,6 +132,7 @@ app.include_router(plan_poisoning.router, prefix="/api")
 app.include_router(schedulers.router, prefix="/api")
 app.include_router(memory_clerks.router, prefix="/api")
 app.include_router(error_log_forensics.router, prefix="/api")
+app.include_router(autogrowth_audit.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

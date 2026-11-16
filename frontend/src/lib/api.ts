@@ -85,6 +85,7 @@ import type {
   SchedulersResponse,
   MemoryClerksResponse,
   ErrorLogForensicsResponse,
+  AutoGrowthAuditResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -1044,4 +1045,10 @@ export async function getErrorLogForensicsAnalysis(maxRows: number = 1000): Prom
   if (maxRows) params.append('max_rows', maxRows.toString());
   const q = params.toString() ? '?' + params.toString() : '';
   return apiFetch<ErrorLogForensicsResponse>('/api/incidents/error-log-forensics' + q);
+}
+
+
+// ── Database Auto-Growth & Auto-Shrink Risk Audit ─────────────────────
+export async function getAutoGrowthAuditAnalysis(): Promise<AutoGrowthAuditResponse> {
+  return apiFetch<AutoGrowthAuditResponse>('/api/toolkit/autogrowth-audit');
 }

@@ -3290,3 +3290,40 @@ export interface ErrorLogForensicsResponse {
   recent_critical_entries: ClassifiedErrorLogEntry[];
   remediation_runbook: string;
 }
+
+// ==========================================
+// 26. Database Auto-Growth & Auto-Shrink Audit
+// ==========================================
+export interface DatabaseFileGrowthRiskItem {
+  database_name: string;
+  logical_name: string;
+  file_type: string;
+  physical_name: string;
+  current_size_mb: number;
+  is_percent_growth: boolean;
+  growth_setting: string;
+  effective_growth_mb: number;
+  is_auto_shrink_on: boolean;
+  is_auto_close_on: boolean;
+  risk_level: 'CRITICAL' | 'HIGH' | 'WARNING' | 'HEALTHY';
+  risk_reason: string;
+  remediation_tsql: string;
+}
+
+export interface AutoGrowthAuditSummary {
+  total_files_audited: number;
+  critical_risk_files: number;
+  percent_growth_files: number;
+  tiny_growth_files: number;
+  auto_shrink_databases: number;
+  auto_close_databases: number;
+  instant_file_initialization_enabled: boolean;
+  overall_health: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  evaluated_at: string;
+}
+
+export interface AutoGrowthAuditResponse {
+  summary: AutoGrowthAuditSummary;
+  items: DatabaseFileGrowthRiskItem[];
+  remediation_batch_script: string;
+}

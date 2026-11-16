@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { ShieldCheck, Sliders } from 'lucide-react';
+import { ShieldCheck, Sliders, HardDrive } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import BestPracticeBenchmarkView from './components/BestPracticeBenchmarkView';
 import ConfigDriftStudio from './components/ConfigDriftStudio';
+import AutoGrowthRiskStudio from './components/AutoGrowthRiskStudio';
 import styles from './BestPracticesPage.module.css';
 
-type BestPracticesTab = 'benchmark' | 'drift';
+type BestPracticesTab = 'benchmark' | 'drift' | 'autogrowth';
 
 export default function BestPracticesPage({ initialTab }: { initialTab?: BestPracticesTab } = {}) {
   const [activeTab, setActiveTab] = useState<BestPracticesTab>(initialTab || 'benchmark');
@@ -40,6 +41,17 @@ export default function BestPracticesPage({ initialTab }: { initialTab?: BestPra
           <Sliders size={14} />
           <span>Konfigürasyon Sapması &amp; Drift Radarı</span>
         </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'autogrowth'}
+          className={`${styles.tabBtn} ${activeTab === 'autogrowth' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('autogrowth')}
+        >
+          <HardDrive size={14} />
+          <span>Auto-Growth &amp; Auto-Shrink Riskleri</span>
+        </button>
       </div>
 
       {/* Tab 1: Mimari Uygunluk Karnesi */}
@@ -47,6 +59,9 @@ export default function BestPracticesPage({ initialTab }: { initialTab?: BestPra
 
       {/* Tab 2: Konfigürasyon Drift & Baseline Radarı */}
       {activeTab === 'drift' && <ConfigDriftStudio />}
+
+      {/* Tab 3: Auto-Growth & Auto-Shrink Risk Denetimi */}
+      {activeTab === 'autogrowth' && <AutoGrowthRiskStudio />}
     </div>
   );
 }

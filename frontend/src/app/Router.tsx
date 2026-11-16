@@ -87,6 +87,7 @@ export default function Router() {
       {/* 6. Güvenlik & Yönetim */}
       <Route path="/best-practices" element={<BestPracticesPage />} />
       <Route path="/config-drift" element={<BestPracticesPage initialTab="drift" />} />
+      <Route path="/autogrowth-audit" element={<BestPracticesPage initialTab="autogrowth" />} />
       <Route path="/permissions" element={<PermissionsPage />} />
       <Route path="/role-management" element={<RoleManagementPage />} />
       <Route path="/agent-jobs" element={<AgentJobsPage />} />
