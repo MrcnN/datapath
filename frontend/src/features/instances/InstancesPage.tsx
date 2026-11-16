@@ -18,9 +18,10 @@ import ServerConfigurationAudit from './components/ServerConfigurationAudit';
 import ServerProfilesManager from './components/ServerProfilesManager';
 import FleetOverviewStudio from './components/FleetOverviewStudio';
 import ResourceRightSizingStudio from './components/ResourceRightSizingStudio';
+import CpuSchedulersStudio from './components/CpuSchedulersStudio';
 import styles from './InstancesPage.module.css';
 
-type InstanceTab = 'fleet' | 'live-sessions' | 'right-sizing' | 'profiles' | 'configuration' | 'databases';
+type InstanceTab = 'fleet' | 'live-sessions' | 'right-sizing' | 'schedulers' | 'profiles' | 'configuration' | 'databases';
 
 export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab } = {}) {
   const [activeTab, setActiveTab] = useState<InstanceTab>(initialTab || 'fleet');
@@ -65,6 +66,17 @@ export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab
         >
           <TrendingDown size={14} />
           <span>Kaynak Boyutlandırma &amp; Optimizasyon</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'schedulers'}
+          className={`${styles.tabBtn} ${activeTab === 'schedulers' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('schedulers')}
+        >
+          <Cpu size={14} />
+          <span>CPU Zamanlayıcıları &amp; Thread Pool</span>
         </button>
 
         <button
@@ -117,6 +129,11 @@ export default function InstancesPage({ initialTab }: { initialTab?: InstanceTab
       {/* TAB 1.5: Kaynak Boyutlandırma & Maliyet Optimizasyonu */}
       {activeTab === 'right-sizing' && (
         <ResourceRightSizingStudio />
+      )}
+
+      {/* TAB 1.6: CPU SOS Zamanlayıcıları & İş Parçacığı Havuzu */}
+      {activeTab === 'schedulers' && (
+        <CpuSchedulersStudio />
       )}
 
       {/* TAB 2: Kayıtlı Sunucu Profilleri & Çoklu Ortam Yönetimi */}

@@ -82,6 +82,7 @@ import type {
   MaintenanceJobGenerateRequest,
   MaintenanceJobScriptResponse,
   PlanPoisoningResponse,
+  SchedulersResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -1020,4 +1021,10 @@ export async function getPlanPoisoningAnalysis(database?: string, minVariance: n
   if (minVariance) params.append('min_variance', minVariance.toString());
   const q = params.toString() ? '?' + params.toString() : '';
   return apiFetch<PlanPoisoningResponse>('/api/query-performance/plan-poisoning' + q);
+}
+
+
+// ── CPU SOS Schedulers & Worker Thread Pool ────────────────────────────
+export async function getSchedulersAnalysis(): Promise<SchedulersResponse> {
+  return apiFetch<SchedulersResponse>('/api/instances/schedulers');
 }

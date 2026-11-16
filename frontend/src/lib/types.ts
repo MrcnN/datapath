@@ -3129,3 +3129,59 @@ export interface PlanPoisoningResponse {
   summary: PlanPoisoningSummary;
   items: PoisonedQueryItem[];
 }
+
+// ==========================================
+// 23. CPU SOS Schedulers & Thread Pool
+// ==========================================
+export interface SchedulerCoreItem {
+  scheduler_id: number;
+  cpu_id: number;
+  numa_node_id: number;
+  status: string;
+  is_idle: boolean;
+  current_tasks_count: number;
+  runnable_tasks_count: number;
+  current_workers_count: number;
+  active_workers_count: number;
+  work_queue_count: number;
+  pending_disk_io_count: number;
+  yield_count: number;
+  load_factor: number;
+  health_status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+}
+
+export interface NumaNodeItem {
+  node_id: number;
+  node_state: string;
+  memory_node_id: number;
+  cpu_count: number;
+  online_scheduler_count: number;
+  active_worker_count: number;
+  avg_load_factor: number;
+}
+
+export interface ThreadPoolSummary {
+  max_workers_count: number;
+  total_active_workers: number;
+  worker_utilization_pct: number;
+  total_work_queue_count: number;
+  total_runnable_tasks: number;
+  avg_runnable_per_scheduler: number;
+  total_pending_disk_io: number;
+  visible_online_schedulers: number;
+  logical_cpu_count: number;
+  socket_count: number;
+  numa_nodes_count: number;
+  has_threadpool_starvation: boolean;
+  has_cpu_queue_pressure: boolean;
+  overall_health: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  verdict: string;
+  evaluated_at: string;
+}
+
+export interface SchedulersResponse {
+  summary: ThreadPoolSummary;
+  schedulers: SchedulerCoreItem[];
+  numa_nodes: NumaNodeItem[];
+  remediation_runbook: string;
+}
