@@ -210,7 +210,7 @@ def get_memory_clerks_analysis(params: ConnectionParams) -> MemoryClerksResponse
                 SELECT 
                     memory_node_id,
                     ROUND(pages_kb / 1024.0, 2) AS total_pages_mb,
-                    ROUND(foreign_pages_kb / 1024.0, 2) AS foreign_pages_mb
+                    ROUND(foreign_committed_kb / 1024.0, 2) AS foreign_pages_mb
                 FROM sys.dm_os_memory_nodes
                 WHERE memory_node_id <> 64
                 ORDER BY memory_node_id ASC;

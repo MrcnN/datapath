@@ -26,6 +26,7 @@ def _get_connection_params() -> ConnectionParams:
     )
 
 
+@router.get("", response_model=FleetOverviewResponse)
 @router.get("/overview", response_model=FleetOverviewResponse)
 def read_fleet_overview():
     """Tüm bağlı ve kayıtlı SQL Server instance'larının genel filo sağlık matrisini ve özet metriklerini getirir."""

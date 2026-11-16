@@ -126,7 +126,7 @@ def get_schedulers_analysis(params: ConnectionParams) -> SchedulersResponse:
                     cpu_count,
                     online_scheduler_count,
                     active_worker_count,
-                    avg_load_factor
+                    avg_load_balance AS avg_load_factor
                 FROM sys.dm_os_nodes
                 WHERE node_state_desc <> 'ONLINE DAC'
                 ORDER BY node_id ASC;
