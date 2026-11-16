@@ -84,6 +84,7 @@ import type {
   PlanPoisoningResponse,
   SchedulersResponse,
   MemoryClerksResponse,
+  ErrorLogForensicsResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -1034,4 +1035,13 @@ export async function getSchedulersAnalysis(): Promise<SchedulersResponse> {
 // ── Memory Clerks, Plan Cache Bloat & OS Memory ───────────────────────
 export async function getMemoryClerksAnalysis(): Promise<MemoryClerksResponse> {
   return apiFetch<MemoryClerksResponse>('/api/storage/memory-clerks');
+}
+
+
+// ── Error Log & Security Incident Forensics ───────────────────────────
+export async function getErrorLogForensicsAnalysis(maxRows: number = 1000): Promise<ErrorLogForensicsResponse> {
+  const params = new URLSearchParams();
+  if (maxRows) params.append('max_rows', maxRows.toString());
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<ErrorLogForensicsResponse>('/api/incidents/error-log-forensics' + q);
 }

@@ -79,6 +79,8 @@ export default function Router() {
       <Route path="/connection-sentinel" element={<IncidentCenterPage initialTab="connection-sentinel" />} />
       <Route path="/lock-escalation" element={<IncidentCenterPage initialTab="lock-escalation" />} />
       <Route path="/extended-events" element={<IncidentCenterPage initialTab="extended-events" />} />
+      <Route path="/error-log" element={<IncidentCenterPage initialTab="error-log" />} />
+      <Route path="/error-log-forensics" element={<IncidentCenterPage initialTab="error-log" />} />
       <Route path="/backups" element={<BackupRecoveryPage />} />
       <Route path="/high-availability" element={<HAPage />} />
 

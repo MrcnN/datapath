@@ -3241,3 +3241,52 @@ export interface MemoryClerksResponse {
   remediation_runbook: string;
   evaluated_at: string;
 }
+
+// ==========================================
+// 25. Error Log & Security Incident Forensics
+// ==========================================
+export interface LoginFailureDetail {
+  user_name: string;
+  client_ip: string;
+  state_code: number;
+  state_description: string;
+  failure_count: number;
+  first_attempt: string;
+  last_attempt: string;
+}
+
+export interface ErrorLogCategoryCount {
+  category: string;
+  count: number;
+  severity: 'CRITICAL' | 'HIGH' | 'WARNING' | 'INFO';
+}
+
+export interface ClassifiedErrorLogEntry {
+  id: number;
+  log_date: string;
+  process_info: string;
+  category: string;
+  severity: 'CRITICAL' | 'HIGH' | 'WARNING' | 'INFO';
+  message: string;
+  client_ip?: string | null;
+  user_name?: string | null;
+}
+
+export interface ErrorLogForensicsSummary {
+  total_log_entries: number;
+  error_count: number;
+  login_failures_count: number;
+  corruption_events_count: number;
+  memory_dump_count: number;
+  unique_attacking_ips: number;
+  audit_level: string;
+  evaluated_at: string;
+}
+
+export interface ErrorLogForensicsResponse {
+  summary: ErrorLogForensicsSummary;
+  categories: ErrorLogCategoryCount[];
+  top_failed_logins: LoginFailureDetail[];
+  recent_critical_entries: ClassifiedErrorLogEntry[];
+  remediation_runbook: string;
+}
