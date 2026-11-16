@@ -50,6 +50,7 @@ from app.api import (
     maintenance_generator,
     plan_poisoning,
     schedulers,
+    memory_clerks,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -127,6 +128,7 @@ app.include_router(executive_report.router, prefix="/api")
 app.include_router(maintenance_generator.router, prefix="/api")
 app.include_router(plan_poisoning.router, prefix="/api")
 app.include_router(schedulers.router, prefix="/api")
+app.include_router(memory_clerks.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

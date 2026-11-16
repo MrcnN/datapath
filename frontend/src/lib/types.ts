@@ -3185,3 +3185,59 @@ export interface SchedulersResponse {
   numa_nodes: NumaNodeItem[];
   remediation_runbook: string;
 }
+
+// ==========================================
+// 24. Memory Clerks & Plan Cache Bloat
+// ==========================================
+export interface MemoryClerkDetailItem {
+  clerk_type: string;
+  friendly_name: string;
+  category: string;
+  pages_mb: number;
+  virtual_memory_mb: number;
+  percentage_of_total: number;
+}
+
+export interface PlanCacheBloatSummary {
+  single_use_plans_count: number;
+  single_use_plans_mb: number;
+  multi_use_plans_count: number;
+  multi_use_plans_mb: number;
+  total_cache_plans_count: number;
+  total_cache_plans_mb: number;
+  adhoc_waste_percentage: number;
+  optimize_for_adhoc_enabled: boolean;
+  is_bloat_detected: boolean;
+  reclamation_potential_mb: number;
+}
+
+export interface OSMemoryState {
+  total_physical_memory_gb: number;
+  available_physical_memory_gb: number;
+  system_memory_state: string;
+  sql_memory_in_use_gb: number;
+  sql_memory_utilization_pct: number;
+  page_fault_count: number;
+  is_low_memory_grant_condition: boolean;
+}
+
+export interface NumaMemoryNodeItem {
+  node_id: number;
+  memory_node_id: number;
+  total_pages_mb: number;
+  foreign_pages_mb: number;
+  foreign_ratio_pct: number;
+  health_status: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+}
+
+export interface MemoryClerksResponse {
+  total_allocated_mb: number;
+  clerks: MemoryClerkDetailItem[];
+  plan_cache_bloat: PlanCacheBloatSummary;
+  os_memory: OSMemoryState;
+  numa_nodes: NumaMemoryNodeItem[];
+  overall_health: 'HEALTHY' | 'WARNING' | 'CRITICAL';
+  diagnostic_verdict: string;
+  remediation_runbook: string;
+  evaluated_at: string;
+}

@@ -83,6 +83,7 @@ import type {
   MaintenanceJobScriptResponse,
   PlanPoisoningResponse,
   SchedulersResponse,
+  MemoryClerksResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -1027,4 +1028,10 @@ export async function getPlanPoisoningAnalysis(database?: string, minVariance: n
 // ── CPU SOS Schedulers & Worker Thread Pool ────────────────────────────
 export async function getSchedulersAnalysis(): Promise<SchedulersResponse> {
   return apiFetch<SchedulersResponse>('/api/instances/schedulers');
+}
+
+
+// ── Memory Clerks, Plan Cache Bloat & OS Memory ───────────────────────
+export async function getMemoryClerksAnalysis(): Promise<MemoryClerksResponse> {
+  return apiFetch<MemoryClerksResponse>('/api/storage/memory-clerks');
 }
