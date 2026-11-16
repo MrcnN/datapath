@@ -2988,3 +2988,91 @@ export interface ExecutiveReportResponse {
   priority_actions: PriorityAction[];
   markdown_content: string;
 }
+
+// ==========================================
+// 21. Ola Hallengren & Maintenance Generator
+// ==========================================
+export interface CommandLogEntry {
+  id: number;
+  database_name?: string | null;
+  schema_name?: string | null;
+  object_name?: string | null;
+  command_type?: string | null;
+  command?: string | null;
+  start_time?: string | null;
+  end_time?: string | null;
+  error_number?: number;
+  error_message?: string | null;
+}
+
+export interface MaintenanceInstalledComponent {
+  name: string;
+  database: string;
+  object_type: string;
+  create_date?: string | null;
+  modify_date?: string | null;
+  is_installed: boolean;
+}
+
+export interface MaintenanceExistingJob {
+  job_id: string;
+  name: string;
+  enabled: boolean;
+  description?: string | null;
+  date_created?: string | null;
+  last_run_date?: string | null;
+  last_run_status?: string | null;
+}
+
+export interface MaintenanceStatusResponse {
+  is_ola_installed: boolean;
+  target_database: string;
+  components: MaintenanceInstalledComponent[];
+  installed_count: number;
+  total_components: number;
+  has_command_log: boolean;
+  recent_errors_count: number;
+  recent_executions: CommandLogEntry[];
+  existing_maintenance_jobs: MaintenanceExistingJob[];
+  sql_edition: string;
+  supports_online_rebuild: boolean;
+  supports_resumable_rebuild: boolean;
+}
+
+export interface MaintenanceJobGenerateRequest {
+  solution_type: 'OLA_HALLENGREN' | 'NATIVE_TSQL';
+  target_database: string;
+  backup_directory: string;
+  backup_retention_hours: number;
+  backup_compress: boolean;
+  backup_checksum: boolean;
+  backup_verify: boolean;
+  backup_diff_enabled: boolean;
+  backup_log_enabled: boolean;
+  backup_log_frequency_minutes: number;
+  index_optimize_enabled: boolean;
+  frag_reorganize_threshold: number;
+  frag_rebuild_threshold: number;
+  online_rebuild: boolean;
+  resumable_rebuild: boolean;
+  maxdop: number;
+  update_statistics: 'ALL' | 'INDEX' | 'COLUMNS' | 'NONE';
+  only_modified_statistics: boolean;
+  integrity_check_enabled: boolean;
+  integrity_mode: 'FULL' | 'PHYSICAL_ONLY';
+  operator_name?: string;
+  operator_email?: string;
+}
+
+export interface MaintenanceJobScriptResponse {
+  solution_type: string;
+  target_database: string;
+  ola_installer_url: string;
+  ola_deployment_script: string;
+  agent_jobs_script: string;
+  verification_script: string;
+  cleanup_script: string;
+  jobs_created_count: number;
+  job_names: string[];
+  execution_guidance: string[];
+}

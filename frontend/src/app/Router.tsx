@@ -56,6 +56,7 @@ export default function Router() {
       <Route path="/statistics" element={<StatisticsPage />} />
       <Route path="/hypothetical-indexes" element={<HypotheticalIndexPage />} />
       <Route path="/maintenance-planner" element={<MaintenancePlannerPage />} />
+      <Route path="/maintenance-automation" element={<MaintenancePlannerPage initialTab="automation" />} />
 
       {/* 4. Bellek & Depolama */}
       <Route path="/tempdb" element={<StoragePage initialTab="tempdb" />} />

@@ -78,6 +78,9 @@ import type {
   MemoryGrantResponse,
   LatchSpinlockResponse,
   ExecutiveReportResponse,
+  MaintenanceStatusResponse,
+  MaintenanceJobGenerateRequest,
+  MaintenanceJobScriptResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -990,4 +993,20 @@ export async function getLatchSpinlockStats(): Promise<LatchSpinlockResponse> {
 // ── Executive Health & Audit Report ──────────────────────────────────
 export async function getExecutiveHealthReport(): Promise<ExecutiveReportResponse> {
   return apiFetch<ExecutiveReportResponse>('/api/reports/executive-health');
+}
+
+
+// ── Ola Hallengren & Native Maintenance Generator ────────────────────
+export async function getMaintenanceStatus(targetDatabase: string = 'master'): Promise<MaintenanceStatusResponse> {
+  const params = new URLSearchParams();
+  if (targetDatabase) params.append('target_database', targetDatabase);
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<MaintenanceStatusResponse>('/api/maintenance/status' + q);
+}
+
+export async function generateMaintenanceJobs(request: MaintenanceJobGenerateRequest): Promise<MaintenanceJobScriptResponse> {
+  return apiFetch<MaintenanceJobScriptResponse>('/api/maintenance/generate-jobs', {
+    method: 'POST',
+    body: JSON.stringify(request),
+  });
 }
