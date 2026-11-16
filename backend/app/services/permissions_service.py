@@ -506,7 +506,7 @@ def get_rbac_matrix() -> RBACMatrixResponse:
             viewer_allowed=True,
             operator_allowed=True,
             senior_dba_allowed=True,
-            description="7 alt sistemin anlık kriz röntgenini çekme ve sağlık durumunu inceleme.",
+            description="7 alt sistemin anlık kriz durumunu inceleme ve sağlık durumunu analiz etme.",
         ),
         RolePermissionMatrixEntry(
             feature_id="tsql_remediation_gen",
