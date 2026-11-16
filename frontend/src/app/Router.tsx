@@ -32,6 +32,7 @@ export default function Router() {
     <Routes>
       {/* 1. Genel Bakış */}
       <Route path="/" element={<DashboardPage />} />
+      <Route path="/executive-report" element={<DashboardPage />} />
       <Route path="/instances" element={<InstancesPage />} />
       <Route path="/fleet" element={<InstancesPage initialTab="fleet" />} />
       <Route path="/right-sizing" element={<InstancesPage initialTab="right-sizing" />} />

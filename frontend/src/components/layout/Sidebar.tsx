@@ -36,7 +36,7 @@ export const primaryHubs: HubItem[] = [
     icon: LayoutDashboard,
     exact: true,
     description: 'Sistem sağlık skoru, kriz durumu, Z-Score anomali radarı ve birleşik sistem telemetrisi.',
-    matchPrefixes: ['/'],
+    matchPrefixes: ['/', '/executive-report'],
   },
   {
     id: 'instances',

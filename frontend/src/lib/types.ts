@@ -2955,3 +2955,36 @@ export interface LatchSpinlockResponse {
   latches: LatchStatItem[];
   spinlocks: SpinlockStatItem[];
 }
+
+// ==========================================
+// 20. Executive Health & Audit Report
+// ==========================================
+export interface ReportPillarSummary {
+  id: string;
+  name: string;
+  score: number;
+  max_weight: number;
+  status: 'healthy' | 'warning' | 'critical' | string;
+  findings: string[];
+  recommendations: string[];
+}
+
+export interface PriorityAction {
+  rank: number;
+  title: string;
+  category: string;
+  urgency: 'CRITICAL' | 'HIGH' | 'MEDIUM' | string;
+  impact: string;
+  remediation_tsql: string;
+}
+
+export interface ExecutiveReportResponse {
+  server_name: string;
+  overall_score: number;
+  health_status: 'healthy' | 'warning' | 'critical' | string;
+  generated_at: string;
+  pillars: ReportPillarSummary[];
+  key_risks: string[];
+  priority_actions: PriorityAction[];
+  markdown_content: string;
+}

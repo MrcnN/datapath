@@ -46,6 +46,7 @@ from app.api import (
     config_drift,
     memory_grants,
     latch_spinlock,
+    executive_report,
 )
 from app.core.config import settings
 from app.core.exceptions import (
@@ -119,6 +120,7 @@ app.include_router(lock_escalation.router, prefix="/api")
 app.include_router(config_drift.router, prefix="/api")
 app.include_router(memory_grants.router, prefix="/api")
 app.include_router(latch_spinlock.router, prefix="/api")
+app.include_router(executive_report.router, prefix="/api")
 
 
 # --- Custom Exception Handlers ---

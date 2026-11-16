@@ -30,8 +30,10 @@ import {
   Zap,
   TrendingUp,
   Wrench,
+  FileText,
 } from 'lucide-react';
 import PredictiveAnomalyRadar from './components/PredictiveAnomalyRadar';
+import ExecutiveReportModal from './components/ExecutiveReportModal';
 import {
   getInstanceMetadata,
   getDatabases,
@@ -71,6 +73,7 @@ export default function DashboardPage() {
   const [dbFilter, setDbFilter] = useState<DbFilterType>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [autoRefreshInterval, setAutoRefreshInterval] = useState<number>(0);
+  const [showExecutiveReport, setShowExecutiveReport] = useState<boolean>(false);
 
   const loadAllData = async (isManual = false) => {
     try {
@@ -266,6 +269,17 @@ export default function DashboardPage() {
             <option value={30}>30 sn</option>
             <option value={60}>60 sn</option>
           </select>
+
+          <button
+            type="button"
+            className={styles.refreshBtn}
+            onClick={() => setShowExecutiveReport(true)}
+            title="Yönetici Veritabanı Sağlık & Denetim Raporu Oluştur"
+            style={{ background: 'rgba(56, 189, 248, 0.12)', borderColor: 'rgba(56, 189, 248, 0.25)', color: '#38bdf8' }}
+          >
+            <FileText size={12} />
+            <span>Yönetici Raporu</span>
+          </button>
 
           <button
             type="button"
@@ -674,6 +688,9 @@ export default function DashboardPage() {
           sessions={sessions}
           onClose={() => setSelectedDbDetail(null)}
         />
+      )}
+      {showExecutiveReport && (
+        <ExecutiveReportModal onClose={() => setShowExecutiveReport(false)} />
       )}
     </div>
   );

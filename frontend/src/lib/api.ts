@@ -77,6 +77,7 @@ import type {
   ConfigDriftResponse,
   MemoryGrantResponse,
   LatchSpinlockResponse,
+  ExecutiveReportResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -983,4 +984,10 @@ export async function getMemoryGrantsAnalysis(): Promise<MemoryGrantResponse> {
 // ── Latch & Spinlock Contention Studio ────────────────────────────────
 export async function getLatchSpinlockStats(): Promise<LatchSpinlockResponse> {
   return apiFetch<LatchSpinlockResponse>('/api/wait-stats/latches-spinlocks');
+}
+
+
+// ── Executive Health & Audit Report ──────────────────────────────────
+export async function getExecutiveHealthReport(): Promise<ExecutiveReportResponse> {
+  return apiFetch<ExecutiveReportResponse>('/api/reports/executive-health');
 }
