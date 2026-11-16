@@ -3076,3 +3076,56 @@ export interface MaintenanceJobScriptResponse {
   job_names: string[];
   execution_guidance: string[];
 }
+
+// ==========================================
+// 22. Parameter Sniffing & Surgical Plan Eviction
+// ==========================================
+export interface SniffedParamDetail {
+  param_name: string;
+  compiled_value?: string | null;
+  runtime_value?: string | null;
+}
+
+export interface PoisonedQueryItem {
+  plan_handle: string;
+  sql_handle: string;
+  query_hash: string;
+  query_plan_hash?: string | null;
+  statement_text: string;
+  object_name?: string | null;
+  database_name?: string | null;
+  execution_count: number;
+  variance_ratio: number;
+  cpu_variance_ratio: number;
+  min_elapsed_ms: number;
+  avg_elapsed_ms: number;
+  max_elapsed_ms: number;
+  min_cpu_ms: number;
+  avg_cpu_ms: number;
+  max_cpu_ms: number;
+  min_logical_reads: number;
+  max_logical_reads: number;
+  compiled_params: SniffedParamDetail[];
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  diagnosis: string;
+  surgical_eviction_tsql: string;
+  database_scoped_clear_tsql: string;
+  sp_recompile_tsql: string;
+  permanent_hint_tsql: string;
+}
+
+export interface PlanPoisoningSummary {
+  total_suspect_queries: number;
+  critical_count: number;
+  high_count: number;
+  avg_variance_ratio: number;
+  highest_variance_ratio: number;
+  psp_optimization_enabled: boolean;
+  sql_major_version: number;
+  evaluated_at: string;
+}
+
+export interface PlanPoisoningResponse {
+  summary: PlanPoisoningSummary;
+  items: PoisonedQueryItem[];
+}

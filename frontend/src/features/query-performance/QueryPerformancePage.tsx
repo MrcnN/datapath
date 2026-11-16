@@ -21,6 +21,7 @@ import {
   ArrowUpRight,
   Wand2,
   Maximize2,
+  AlertOctagon,
 } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
@@ -50,13 +51,26 @@ import TimeTravelCorrelator from './components/TimeTravelCorrelator';
 import AdaptiveBaselineStudio from './components/AdaptiveBaselineStudio';
 import QueryFingerprintStudio from './components/QueryFingerprintStudio';
 import MemoryGrantStudio from './components/MemoryGrantStudio';
+import PlanPoisoningStudio from './components/PlanPoisoningStudio';
 import WaitStatsPage from '../wait-stats/WaitStatsPage';
 import styles from './QueryPerformancePage.module.css';
 
-export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'MEMORY_GRANTS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' } = {}) {
+type QueryPerformanceTab =
+  | 'PLAN_ANTI_PATTERNS'
+  | 'QUERY_STORE'
+  | 'REGRESSIONS'
+  | 'MEMORY_GRANTS'
+  | 'PLAN_VIEWER'
+  | 'REWRITER_STUDIO'
+  | 'CARDINALITY_DRIFT'
+  | 'WAITS'
+  | 'TIME_TRAVEL'
+  | 'PLAN_POISONING';
+
+export default function QueryPerformancePage({ initialTab }: { initialTab?: QueryPerformanceTab } = {}) {
   const location = useLocation();
 
-  const resolveInitialTab = (): 'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'MEMORY_GRANTS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL' => {
+  const resolveInitialTab = (): QueryPerformanceTab => {
     if (initialTab) return initialTab;
     if (location.pathname === '/time-travel') return 'TIME_TRAVEL';
     if (location.pathname === '/query-rewriter') return 'REWRITER_STUDIO';
@@ -65,10 +79,11 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
     if (location.pathname === '/adaptive-baselines') return 'REGRESSIONS';
     if (location.pathname === '/query-fingerprints') return 'QUERY_STORE';
     if (location.pathname === '/memory-grants') return 'MEMORY_GRANTS';
+    if (location.pathname === '/plan-poisoning' || location.pathname === '/surgical-eviction') return 'PLAN_POISONING';
     return 'QUERY_STORE';
   };
 
-  const [activeTab, setActiveTab] = useState<'PLAN_ANTI_PATTERNS' | 'QUERY_STORE' | 'REGRESSIONS' | 'MEMORY_GRANTS' | 'PLAN_VIEWER' | 'REWRITER_STUDIO' | 'CARDINALITY_DRIFT' | 'WAITS' | 'TIME_TRAVEL'>(resolveInitialTab);
+  const [activeTab, setActiveTab] = useState<QueryPerformanceTab>(resolveInitialTab);
   const [queryStoreSubView, setQueryStoreSubView] = useState<'queries' | 'fingerprints'>(location.pathname === '/query-fingerprints' ? 'fingerprints' : 'queries');
 
   useEffect(() => {
@@ -84,6 +99,8 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
       setActiveTab('REGRESSIONS');
     } else if (location.pathname === '/memory-grants') {
       setActiveTab('MEMORY_GRANTS');
+    } else if (location.pathname === '/plan-poisoning' || location.pathname === '/surgical-eviction') {
+      setActiveTab('PLAN_POISONING');
     } else if (location.pathname === '/query-fingerprints') {
       setActiveTab('QUERY_STORE');
       setQueryStoreSubView('fingerprints');
@@ -547,6 +564,13 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
           Bellek Tahsisleri &amp; RESOURCE_SEMAPHORE
         </button>
         <button
+          className={`${styles.tabButton} ${activeTab === 'PLAN_POISONING' ? styles.tabActive : ''}`}
+          onClick={() => setActiveTab('PLAN_POISONING')}
+        >
+          <AlertOctagon size={16} />
+          Plan Zehirlenmesi &amp; Cerrahi Tahliye
+        </button>
+        <button
           className={`${styles.tabButton} ${activeTab === 'WAITS' ? styles.tabActive : ''}`}
           onClick={() => setActiveTab('WAITS')}
         >
@@ -566,6 +590,10 @@ export default function QueryPerformancePage({ initialTab }: { initialTab?: 'PLA
 
       {activeTab === 'MEMORY_GRANTS' && (
         <MemoryGrantStudio />
+      )}
+
+      {activeTab === 'PLAN_POISONING' && (
+        <PlanPoisoningStudio />
       )}
 
       {activeTab === 'WAITS' && (

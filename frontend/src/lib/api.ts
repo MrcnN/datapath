@@ -81,6 +81,7 @@ import type {
   MaintenanceStatusResponse,
   MaintenanceJobGenerateRequest,
   MaintenanceJobScriptResponse,
+  PlanPoisoningResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -1009,4 +1010,14 @@ export async function generateMaintenanceJobs(request: MaintenanceJobGenerateReq
     method: 'POST',
     body: JSON.stringify(request),
   });
+}
+
+
+// ── Parameter Sniffing & Surgical Plan Eviction ────────────────────────
+export async function getPlanPoisoningAnalysis(database?: string, minVariance: number = 5.0): Promise<PlanPoisoningResponse> {
+  const params = new URLSearchParams();
+  if (database) params.append('database', database);
+  if (minVariance) params.append('min_variance', minVariance.toString());
+  const q = params.toString() ? '?' + params.toString() : '';
+  return apiFetch<PlanPoisoningResponse>('/api/query-performance/plan-poisoning' + q);
 }
