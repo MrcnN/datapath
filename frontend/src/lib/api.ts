@@ -76,6 +76,7 @@ import type {
   LockEscalationResponse,
   ConfigDriftResponse,
   MemoryGrantResponse,
+  LatchSpinlockResponse,
   TableSchemaInspection,
   GenerateMigrationRunbookRequest,
   MigrationRunbookResponse,
@@ -976,4 +977,10 @@ export async function getConfigurationDrift(baseline?: string): Promise<ConfigDr
 // ── Memory Grant Starvation & Resource Semaphore ──────────────────────
 export async function getMemoryGrantsAnalysis(): Promise<MemoryGrantResponse> {
   return apiFetch<MemoryGrantResponse>('/api/query-performance/memory-grants');
+}
+
+
+// ── Latch & Spinlock Contention Studio ────────────────────────────────
+export async function getLatchSpinlockStats(): Promise<LatchSpinlockResponse> {
+  return apiFetch<LatchSpinlockResponse>('/api/wait-stats/latches-spinlocks');
 }

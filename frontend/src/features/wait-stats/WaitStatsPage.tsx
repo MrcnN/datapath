@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Hourglass, Cpu, HardDrive, ShieldAlert, CheckCircle2, Search, Filter } from 'lucide-react';
+import { Hourglass, Cpu, HardDrive, ShieldAlert, CheckCircle2, Search, Filter, Lock } from 'lucide-react';
 import PageHeader from '../../components/layout/PageHeader';
 import DataTable, { type Column } from '../../components/ui/DataTable';
 import StatusBadge from '../../components/ui/StatusBadge';
@@ -8,14 +8,27 @@ import ErrorState from '../../components/ui/ErrorState';
 import EmptyState from '../../components/ui/EmptyState';
 import { getWaitStatistics } from '../../lib/api';
 import type { WaitStatsSummary, WaitStatEntry } from '../../lib/types';
+import LatchSpinlockStudio from './components/LatchSpinlockStudio';
 import styles from './WaitStatsPage.module.css';
 
-export default function WaitStatsPage({ embedded = false }: { embedded?: boolean } = {}) {
+export type WaitTab = 'waits' | 'latches' | 'spinlocks';
+
+interface WaitStatsPageProps {
+  embedded?: boolean;
+  initialTab?: WaitTab;
+}
+
+export default function WaitStatsPage({ embedded = false, initialTab = 'waits' }: WaitStatsPageProps = {}) {
+  const [activeTab, setActiveTab] = useState<WaitTab>(initialTab || 'waits');
   const [summary, setSummary] = useState<WaitStatsSummary | null>(null);
   const [search, setSearch] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setActiveTab(initialTab || 'waits');
+  }, [initialTab]);
 
   useEffect(() => {
     async function loadData() {
@@ -139,12 +152,53 @@ export default function WaitStatsPage({ embedded = false }: { embedded?: boolean
     <div className={embedded ? undefined : styles.container}>
       {!embedded && (
         <PageHeader
-          title="Bekleme İstatistikleri"
-          subtitle="SQL Server'ı yavaşlatan bekleme türlerini, kaynak darboğazlarını ve CPU baskısını (Signal Wait) analiz eder."
+          title="Bekleme İstatistikleri, Mandal & Spinlock Analizi"
+          subtitle="SQL Server'ı yavaşlatan bekleme türlerini, kaynak darboğazlarını, bellek mandallarını (PAGELATCH) ve spinlock CPU döngülerini analiz eder."
         />
       )}
 
-      {/* KPI Stats Cards */}
+      {/* Segmented Switcher */}
+      <div className={styles.tabsBar} role="tablist">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'waits'}
+          className={`${styles.tabBtn} ${activeTab === 'waits' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('waits')}
+        >
+          <Hourglass size={14} />
+          <span>Bekleme Türleri (sys.dm_os_wait_stats)</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'latches'}
+          className={`${styles.tabBtn} ${activeTab === 'latches' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('latches')}
+        >
+          <Lock size={14} />
+          <span>Mandal Çakışmaları (sys.dm_os_latch_stats)</span>
+        </button>
+
+        <button
+          type="button"
+          role="tab"
+          aria-selected={activeTab === 'spinlocks'}
+          className={`${styles.tabBtn} ${activeTab === 'spinlocks' ? styles.tabBtnActive : ''}`}
+          onClick={() => setActiveTab('spinlocks')}
+        >
+          <Cpu size={14} />
+          <span>Spinlock Çarpışmaları (sys.dm_os_spinlock_stats)</span>
+        </button>
+      </div>
+
+      {activeTab === 'latches' && <LatchSpinlockStudio initialSubTab="latches" />}
+      {activeTab === 'spinlocks' && <LatchSpinlockStudio initialSubTab="spinlocks" />}
+
+      {activeTab === 'waits' && (
+        <>
+          {/* KPI Stats Cards */}
       {summary && (
         <div className={styles.kpiGrid}>
           <div className={styles.kpiCard}>
@@ -281,6 +335,8 @@ export default function WaitStatsPage({ embedded = false }: { embedded?: boolean
         />
       ) : (
         <DataTable data={filteredWaits} columns={columns} />
+      )}
+        </>
       )}
     </div>
   );

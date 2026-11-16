@@ -46,6 +46,8 @@ export default function Router() {
       <Route path="/query-rewriter" element={<QueryRewriterPage />} />
       <Route path="/execution-plan" element={<ExecutionPlanPage />} />
       <Route path="/waits" element={<QueryPerformancePage initialTab="WAITS" />} />
+      <Route path="/latch-stats" element={<WaitStatsPage initialTab="latches" />} />
+      <Route path="/spinlock-stats" element={<WaitStatsPage initialTab="spinlocks" />} />
 
       {/* 3. İndeks & Bakım */}
       <Route path="/indexes" element={<IndexesPage />} />

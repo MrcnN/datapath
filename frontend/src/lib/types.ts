@@ -2913,3 +2913,45 @@ export interface MemoryGrantResponse {
   live_grants: LiveMemoryGrantItem[];
   historical_wasters: HistoricalMemoryWasterItem[];
 }
+
+// ==========================================
+// 19. Latch & Spinlock Contention Studio
+// ==========================================
+export interface LatchStatItem {
+  latch_class: string;
+  waiting_requests_count: number;
+  wait_time_ms: number;
+  avg_wait_ms: number;
+  max_wait_time_ms: number;
+  severity: 'CRITICAL' | 'WARNING' | 'NORMAL' | string;
+  description: string;
+  remediation_hint: string;
+}
+
+export interface SpinlockStatItem {
+  name: string;
+  collisions: number;
+  spins: number;
+  spins_per_collision: number;
+  sleep_time_ms: number;
+  backoffs: number;
+  severity: 'CRITICAL' | 'WARNING' | 'NORMAL' | string;
+  description: string;
+  remediation_hint: string;
+}
+
+export interface LatchSpinlockSummary {
+  total_latch_wait_ms: number;
+  top_latch_class?: string | null;
+  total_spinlock_collisions: number;
+  top_spinlock_name?: string | null;
+  high_collision_spinlocks_count: number;
+  has_cpu_spinlock_pressure: boolean;
+  evaluated_at: string;
+}
+
+export interface LatchSpinlockResponse {
+  summary: LatchSpinlockSummary;
+  latches: LatchStatItem[];
+  spinlocks: SpinlockStatItem[];
+}
